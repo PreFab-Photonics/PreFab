@@ -34,11 +34,11 @@ Install the latest version of `PreFab` locally using:
 pip install prefab
 ```
 
-<!-- ### Online
+### Online
 
 Run the latest version of `PreFab` online by following:
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?machine=basicLinux32gb&repo=570983770&ref=main&devcontainer_path=.devcontainer%2Fdevcontainer.json&location=EastUs) -->
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?machine=basicLinux32gb&repo=608330448&ref=main&devcontainer_path=.devcontainer%2Fdevcontainer.json&location=EastUs)
 
 ## Performance and Usage
 
