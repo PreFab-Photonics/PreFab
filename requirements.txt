@@ -2,3 +2,4 @@ matplotlib
 numpy
 gdspy
 opencv-python-headless
+requests
