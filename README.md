@@ -1,6 +1,6 @@
 # PreFab
 
-![PreFab logo](assets/logo.png)
+![PreFab logo](https://github.com/PreFab-Photonics/PreFab/blob/main/assets/logo.png?raw=true)
 
 `PreFab` models fabrication process induced structural variations in integrated photonic devices using **deep learning**. New insights into the capabilities of nanofabrication processes are uncovered and device design fidelity is enhanced in this *virtual nanofabrication environment*.
 
@@ -8,13 +8,13 @@
 
 `PreFab` predicts process-induced structural variations such as corner rounding (both over and under etching), washing away of small lines and islands, and filling of narrow holes and channels in planar photonic devices. The designer then resimulates their (predicted) design to rapidly prototype the expected performance and make any necessary corrections prior to nanofabrication.
 
-![Example of PreFab prediction](assets/promo_p.png) *Predicted fabrication variation of a star structure on a silicon-on-insulator e-beam lithography process.*
+![Example of PreFab prediction](https://github.com/PreFab-Photonics/PreFab/blob/main/assets/promo_p.png?raw=true) *Predicted fabrication variation of a star structure on a silicon-on-insulator e-beam lithography process.*
 
 ## Correction
 
 `PreFab` also makes automatic corrections to device designs so that the fabricated outcome is closer to the nominal design. Less structural variation generally means less performance degradation from simulation to experiment.
 
-![Example of PreFab correction](assets/promo_c.png) *Corrected fabrication of a star structure on a silicon-on-insulator e-beam lithography process.*
+![Example of PreFab correction](https://github.com/PreFab-Photonics/PreFab/blob/main/assets/promo_c.png?raw=true) *Corrected fabrication of a star structure on a silicon-on-insulator e-beam lithography process.*
 
 ## Models
 
