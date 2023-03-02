@@ -40,6 +40,10 @@ Run the latest version of `PreFab` online by following:
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?machine=basicLinux32gb&repo=608330448&ref=main&devcontainer_path=.devcontainer%2Fdevcontainer.json&location=EastUs)
 
+## Getting Started
+
+Please see the notebooks in `/examples` to get started with making predictions.
+
 ## Performance and Usage
 
 Currently, `PreFab` models are accessed through a serverless cloud platform that has the following limitations to keep in mind:
