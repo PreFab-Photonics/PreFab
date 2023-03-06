@@ -22,8 +22,8 @@ Each photonic foundry requires its own *predictor* and *corrector* models. These
 
 | Foundry | Process | Latest Version (Date) | Type | Status | Name | Usage|
 | --- | ------- | --------------- | --------- | ----- | ---------------- | ---|
-| ANT | [NanoSOI](https://www.appliednt.com/nanosoi-fabrication-service/) | v2 (Jan 9 2023) | Predictor | Beta | p_ANT_NanoSOI_v2 | Open |
-| ANT | [NanoSOI](https://www.appliednt.com/nanosoi-fabrication-service/) | v2 (Jan 9 2023) | Corrector | Beta | c_ANT_NanoSOI_v2 | Open |
+| ANT | [NanoSOI](https://www.appliednt.com/nanosoi-fabrication-service/) | v3 (Mar 5 2023) | Predictor | Beta | p_ANT_NanoSOI_v3 | Open |
+| ANT | [NanoSOI](https://www.appliednt.com/nanosoi-fabrication-service/) | v3 (Mar 5 2023) | Corrector | Beta | c_ANT_NanoSOI_v3 | Open |
 
 *This list will update over time. Usage is subject to change. Please contact us or create an issue if you would like to see a new foundry and process modelled.*
 
