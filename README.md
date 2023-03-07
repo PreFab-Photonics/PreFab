@@ -51,9 +51,9 @@ Please see the notebooks in `/examples` to get started with making predictions.
 
 Currently, `PreFab` models are accessed through a serverless cloud platform that has the following limitations to keep in mind:
 
-- Inferencing is done on a CPU and will thus be relatively slow. GPU inferencing to come in future updates.
-- The first prediction may be slow, as the cloud server may have to perform a cold start and load the necessary model(s). After the first prediction, the server will be "hot" for some time and the subsequent predictions will be much quicker.
-- Please be mindful of your usage. Start with small examples before scaling up to larger device designs, and please keep usage down to a reasonable amount in these early stages. Thank you!
+- 🐢 Inferencing is done on a CPU and will thus be relatively slow. GPU inferencing to come in future updates.
+- 🥶 The first prediction may be slow, as the cloud server may have to perform a cold start and load the necessary model(s). After the first prediction, the server will be "hot" for some time and the subsequent predictions will be much quicker.
+- 😊 Please be mindful of your usage. Start with small examples before scaling up to larger device designs, and please keep usage down to a reasonable amount in these early stages. Thank you!
 
 <!-- ## Documentation
 
