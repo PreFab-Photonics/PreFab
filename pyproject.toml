@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "prefab"
-version = "0.2.0"
+version = "0.2.2"
 authors = [
     {name = "Dusan Gostimirovic", email="dusan@prefabphotonics.com"},
 ]
@@ -22,7 +22,8 @@ dependencies = [
     "matplotlib",
     "numpy",
     "gdspy",
-    "opencv-python-headless"
+    "opencv-python-headless",
+    "requests"
 ]
 
 [project.urls]
