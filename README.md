@@ -45,7 +45,7 @@ Run the latest version of `PreFab` online by following:
 
 ## Getting Started
 
-Please see the notebooks in `/examples` to get started with making predictions.
+Please see the notebooks in [`/examples`](https://github.com/PreFab-Photonics/PreFab/tree/main/examples) to get started with making predictions.
 
 ## Performance and Usage
 
