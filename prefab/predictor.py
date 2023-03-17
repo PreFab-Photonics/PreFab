@@ -5,7 +5,6 @@ the cloud for rapid and secure processing.
 """
 
 import base64
-import json
 import numpy as np
 import requests
 import cv2
@@ -53,18 +52,21 @@ class Predictor():
             likeliness. Inbetween pixel values indicate uncertainty in the
             prediction.
         """
-        gcf_url = 'https://prefab-predict-svvxsal6ra-uc.a.run.app'
+        url = 'https://prefab-photonics--predict.modal.run'
 
-        img = cv2.imencode('.png', 255*device)[1].tobytes()
-        img_base64 = base64.b64encode(img).decode('utf-8')
-        data = json.dumps({'img': img_base64,
-                           'step_length': step_length,
-                           'model_name': self.model_name,
-                           'model_num': 0})
+        device_img = cv2.imencode('.png', 255*device)[1].tobytes()
+        device_img_base64 = base64.b64encode(device_img).decode('utf-8')
+        predict_data = {'device': device_img_base64,
+                        'step_length': step_length,
+                        'model_name': self.model_name,
+                        'model_num': 0}
 
-        response = requests.post(gcf_url, json=data, timeout=200)
-        response_data = np.fromstring(response.content, np.uint8)
-        prediction = cv2.imdecode(response_data, 0)/255
+        prediction_img_base64 = requests.post(url, json=predict_data,
+                                              timeout=200)
+
+        prediction_img_data = base64.b64decode(prediction_img_base64.json())
+        prediction_img = np.frombuffer(prediction_img_data, np.uint8)
+        prediction = cv2.imdecode(prediction_img, 0)/255
 
         if binary:
             prediction = binarize(prediction)
