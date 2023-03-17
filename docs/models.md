@@ -4,10 +4,10 @@ Each photonic foundry requires its own *predictor* and *corrector* models. These
 
 | Foundry | Process | Version (Date) | Type | Status | Name | Usage|
 | --- | ------- | --------------- | --------- | ----- | ---------------- | ---|
-| ANT | NanoSOI | v1 (Nov 4 2022) | Predictor | Alpha | p_ANT_NanoSOI_v1 | Open |
-| ANT | NanoSOI | v1 (Nov 4 2022) | Corrector | Alpha | c_ANT_NanoSOI_v1 | Open |
-| ANT | NanoSOI | v2 (Jan 9 2023) | Predictor | Beta | p_ANT_NanoSOI_v2 | Open |
-| ANT | NanoSOI | v2 (Jan 9 2023) | Corrector | Beta | c_ANT_NanoSOI_v2 | Open |
+| ANT | NanoSOI | v1 (Nov 4 2022) | Predictor | Alpha | p_ANT_NanoSOI_v1 | Closed |
+| ANT | NanoSOI | v1 (Nov 4 2022) | Corrector | Alpha | c_ANT_NanoSOI_v1 | Closed |
+| ANT | NanoSOI | v2 (Jan 9 2023) | Predictor | Beta | p_ANT_NanoSOI_v2 | Closed |
+| ANT | NanoSOI | v2 (Jan 9 2023) | Corrector | Beta | c_ANT_NanoSOI_v2 | Closed |
 | ANT | NanoSOI | v3 (Mar 5 2023) | Predictor | Beta | p_ANT_NanoSOI_v3 | Open |
 | ANT | NanoSOI | v3 (Mar 5 2023) | Corrector | Beta | c_ANT_NanoSOI_v3 | Open |
 
