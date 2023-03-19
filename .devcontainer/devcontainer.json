@@ -2,5 +2,8 @@
 	"name": "PreFab Codespace",
 	"image": "mcr.microsoft.com/devcontainers/python:0-3.10",
 	"features": {},
-	"postCreateCommand": "pip3 install --user -r requirements.txt"
+	"postCreateCommand": [
+		"pip3 install --user -r requirements.txt",
+		"pip install e ."
+	]
 }
