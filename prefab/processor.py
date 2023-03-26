@@ -1,6 +1,7 @@
 """Processing functions for device numpy matrices.
 """
 
+import copy
 import numpy as np
 import cv2
 
@@ -10,38 +11,45 @@ def binarize(device: np.ndarray, eta: float = 0.5, beta: float = np.inf) \
     """Binarizes a device using the sigmoid function.
 
     The thresholding level (eta) and degree of binarization (beta) can be
-    adjusted in this binarization function.
+    adjusted in this soft binarization function.
 
     Args:
         device: A numpy matrix representing the shape of a nonbinary device.
         eta: A float (0 to 1) indicating the threshold level for binarization.
-        beta: A float indicating the degree of binarization.
+            Smaller values simulate under-etching; larger values simulate over-
+            etching.
+        beta: A float indicating the steepness of the sigmoid function (and
+            the degree of binarization).
 
     Returns:
         A numpy matrix representing the shape of a binarized device.
     """
     num = np.tanh(beta*eta) + np.tanh(beta*(device - eta))
     den = np.tanh(beta*eta) + np.tanh(beta*(1 - eta))
-    device = num/den
-    return device
+    device_bin = num/den
+    return device_bin
 
 
 def binarize_hard(device: np.ndarray, eta: float = 0.5) -> np.ndarray:
     """Binarizes a device using the step function.
 
     Only the thresholding level (eta) can be adjusted in this binarization
-    function.
+    function. Compared to the sigmoid function with beta = np.inf, this
+    function is less less likely to produce NaNs. Sometimes useful.
 
     Args:
         device: A numpy matrix representing the shape of a nonbinary device.
         eta: A float (0 to 1) indicating the threshold level for binarization.
+            Smaller values simulate under-etching; larger values simulate over-
+            etching.
 
     Returns:
         A numpy matrix representing the shape of a binarized device.
     """
-    device[device < eta] = 0
-    device[device >= eta] = 1
-    return device
+    device_bin = copy.deepcopy(device)
+    device_bin[device_bin < eta] = 0
+    device_bin[device_bin >= eta] = 1
+    return device_bin
 
 
 def trim(device: np.ndarray) -> np.ndarray:
@@ -59,7 +67,7 @@ def trim(device: np.ndarray) -> np.ndarray:
 
 
 def clip(device: np.ndarray, margin: int) -> np.ndarray:
-    """Zeros the boundaries of a device by a specified amount.
+    """Zeros the boundaries of a device by a specified margin.
 
     Args:
         device: A numpy matrix representing the shape of a device.
@@ -72,22 +80,23 @@ def clip(device: np.ndarray, margin: int) -> np.ndarray:
     """
     mask = np.zeros_like(device)
     mask[margin:-margin, margin:-margin] = 1
-    device = mask*device
-    return device
+    device_clipped = mask*device
+    return device_clipped
 
 
 def pad(device: np.ndarray, slice_length: int, padding: int = 1) -> np.ndarray:
-    """Pads a device matrix to a multiple of the slice length.
+    """Pads a device matrix to a multiple of the predictor slice length.
 
     Padding helps to reduce prediction inaccuracy at the boundaries of a
-    device. This padding also ensures the device shape is a multiple of the
-    length of the slice to be used.
+    device. For convenience, this padding also ensures the device shape is a
+    multiple of the length of the slice to be used.
 
     Args:
         device: A numpy matrix representing the shape of a device.
         slice_length: An int indicating the length of the slice (in pixels) to
             be used.
-        padding: An int indicating the padding factor.
+        padding: An int indicating the padding factor. A factor of 1 is often
+            sufficient.
 
     Returns:
         A numpy matrix representing the shape of a padded device.
@@ -103,7 +112,7 @@ def pad(device: np.ndarray, slice_length: int, padding: int = 1) -> np.ndarray:
 
 
 def get_contour(device: np.ndarray, linewidth: int = None) -> np.ndarray:
-    """Gets the contour of a device matrix.
+    """Creates a contour of a device for visualization.
 
     Args:
         device: A numpy matrix representing the shape of a device.
@@ -114,9 +123,9 @@ def get_contour(device: np.ndarray, linewidth: int = None) -> np.ndarray:
         A numpy matrix representing the contour of a device.
     """
     if linewidth is None:
-        linewidth = int(device.shape[0]/100)
-    _, thresh = cv2.threshold(device.astype(np.uint8), 0.5, 1, 0)
-    contours, _ = cv2.findContours(thresh, 2, 1)
+        linewidth = device.shape[0]//100
+    device_bin = binarize_hard(device).astype(np.uint8)
+    contours, _ = cv2.findContours(device_bin, mode=2, method=1)
     overlay = np.zeros_like(device)
     cv2.drawContours(overlay, contours, -1, (255, 255, 255), linewidth)
     overlay = np.ma.masked_where(overlay == 0, overlay)
@@ -124,10 +133,12 @@ def get_contour(device: np.ndarray, linewidth: int = None) -> np.ndarray:
 
 
 def get_uncertainty(prediction: np.ndarray) -> np.ndarray:
-    """Gets the uncertainty profile of a prediction.
+    """Calculates the uncertainty profile of a raw prediction.
 
-    The uncertainty of a (nonbinary) prediction highlights pixel values that
-    have values closer to 0.5 (neither fully core nor cladding).
+    The uncertainty of a (raw, nonbinary) prediction highlights pixels that
+    have values between core (1) and cladding (0). The edge of the predicted
+    structure is most likely to be found where uncertainty is highest, but can
+    appear anywhere within the "uncertainty band".
 
     Args:
         prediction: A numpy matrix representing the shape of a nonbinary
