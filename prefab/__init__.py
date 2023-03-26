@@ -1,7 +1,7 @@
 """Import PreFab as pf.
 """
 
-from prefab.predictor import Predictor
+from prefab.predictor import predict
 
 from prefab.io import load_device_img
 from prefab.io import load_device_gds
@@ -15,7 +15,7 @@ from prefab.processor import get_contour
 from prefab.processor import get_uncertainty
 
 __all__ = (
-    "Predictor",
+    "predict",
     "load_device_img",
     "load_device_gds",
     "binarize",
