@@ -37,9 +37,11 @@ Install the latest version of `PreFab` locally using:
 pip install prefab
 ```
 
+Alternatively, you can clone this repository and then install in development mode using the command `pip install -e .` in its directory. This will allow any changes made to the source code to be reflected in your Python module.
+
 ### Online
 
-Run the latest version of `PreFab` online by following:
+You can also run the latest version of `PreFab` online by following:
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?machine=basicLinux32gb&repo=608330448&ref=main&devcontainer_path=.devcontainer%2Fdevcontainer.json&location=EastUs)
 
