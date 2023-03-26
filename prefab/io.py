@@ -12,7 +12,7 @@ def load_device_img(path: str, device_length: int) -> np.ndarray:
     """Loads a device in from an image file.
 
     A device is loaded from an image file and processed to prepare for
-    prediction.
+    prediction. Processing includes scaling, binarization, and padding.
 
     Args:
         path: A string indicating the path of the device image.
@@ -37,18 +37,18 @@ def load_device_gds(path: str, cell_name: str,
     """Loads a device in from a GDSII layout file.
 
     A device is loaded from a GDSII layout file and processed to prepare for
-    prediction.
+    prediction. Processing includes scaling and padding. Only the first layer
+    (silicon) is loaded.
 
     Args:
         path: A string indicating the path of the GDSII layout file.
-        cell_name: A string indicating the name of the GDSII cell.
+        cell_name: A string indicating the name of the GDSII cell to be loaded.
         coords: A list of coordinates (list of ints in nm), represented as
             [[xmin, ymin], [xmax, ymax]], indicating the portion of the cell to
             be loaded. If None the entire cell is loaded.
 
     Returns:
-        A numpy matrix representing the shape of a loaded device (not yet
-        prepared for prediction).
+        A numpy matrix representing the shape of a loaded device.
     """
     gds = gdspy.GdsLibrary(infile=path)
     cell = gds.cells[cell_name]
@@ -58,11 +58,11 @@ def load_device_gds(path: str, cell_name: str,
                        int(bounds[1][0] - bounds[0][0])))
 
     contours = []
-    for k, _ in enumerate(polygons):
+    for polygon in polygons:
         contour = []
-        for j, _ in enumerate(polygons[k]):
-            contour.append([[int(1000*polygons[k][j][0] - bounds[0][0]),
-                             int(1000*polygons[k][j][1] - bounds[0][1])]])
+        for vertex in polygon:
+            contour.append([[int(1000*vertex[0] - bounds[0][0]),
+                             int(1000*vertex[1] - bounds[0][1])]])
         contours.append(np.array(contour))
     cv2.drawContours(device, contours, -1, (1, 1, 1), -1)
 
