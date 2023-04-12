@@ -64,7 +64,9 @@ def load_device_gds(path: str, cell_name: str,
             contour.append([[int(1000*vertex[0] - bounds[0][0]),
                              int(1000*vertex[1] - bounds[0][1])]])
         contours.append(np.array(contour))
-    cv2.drawContours(device, contours, -1, (1, 1, 1), -1)
+
+    for contour in contours:
+        cv2.fillPoly(img=device, pts=[contour], color=(1, 1, 1))
 
     if coords is not None:
         device = device[int(coords[0][1] - bounds[0][1]):
