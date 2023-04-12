@@ -37,7 +37,15 @@ Install the latest version of `PreFab` locally using:
 pip install prefab
 ```
 
-Alternatively, you can clone this repository and then install in development mode using the command `pip install -e .` in its directory. This will allow any changes made to the source code to be reflected in your Python module.
+Alternatively, you can clone this repository and then install in development mode using:
+
+```sh
+git clone https://github.com/PreFab-Photonics/PreFab.git
+cd PreFab
+pip install -e .
+```
+
+This will allow any changes made to the source code to be reflected in your Python module.
 
 ### Online
 
