@@ -5,6 +5,7 @@ from prefab.predictor import predict
 
 from prefab.io import load_device_img
 from prefab.io import load_device_gds
+from prefab.io import device_to_cell
 
 from prefab.processor import binarize
 from prefab.processor import binarize_hard
@@ -25,4 +26,5 @@ __all__ = (
     "pad",
     "get_contour",
     "get_uncertainty",
+    "device_to_cell"
 )

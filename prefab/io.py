@@ -5,7 +5,7 @@ import matplotlib.image as img
 import numpy as np
 import gdspy
 import cv2
-from prefab.processor import pad, trim, binarize_hard
+from prefab.processor import pad, binarize_hard
 
 
 def load_device_img(path: str, device_length: int) -> np.ndarray:
@@ -24,11 +24,9 @@ def load_device_img(path: str, device_length: int) -> np.ndarray:
         prediction.
     """
     device = img.imread(path)[:, :, 1]
-    device = trim(device)
     scale = device_length/device.shape[1]
     device = cv2.resize(device, (0, 0), fx=scale, fy=scale)
     device = binarize_hard(device)
-    device = pad(device, slice_length=128, padding=2)
     return device
 
 
@@ -77,3 +75,39 @@ def load_device_gds(path: str, cell_name: str,
     device = np.flipud(device)
     device = pad(device, slice_length=128, padding=2)
     return device
+
+def device_to_cell(device: np.ndarray, cell_name: str,
+                   library: gdspy.GdsLibrary, res: float, layer: int = 1) \
+                    -> gdspy.Cell:
+    """Converts a device to a gdspy cell (for GDSII export).
+
+    Args:
+        device: A numpy matrix representing the shape of a device.
+        cell_name: A str indicating the name of the cell to be created.
+        library: A gdspy library for the cell to be added to.
+        res: A float indicating the resolution (in pixels/nm) of the device.
+        layer: An int indicating the GDSII layer to be used.
+
+    Returns:
+        A gdspy cell representing the GDSII layout of a device.
+    """
+    device = np.flipud(device)
+    contours = cv2.findContours(device.astype(np.uint8), 2, 1)
+
+    outers = []
+    inners = []
+    for idx, contour in enumerate(contours[0]):
+        if len(contour) > 2:
+            contour = contour/1000  # μm to nm
+            points = contour.squeeze().tolist()
+            points = list(tuple(sub) for sub in points)
+            if contours[1][0][idx][3] == -1:
+                outers.append(points)
+            else:
+                inners.append(points)
+
+    poly = gdspy.boolean(outers, inners, 'xor', layer=layer)
+    poly = poly.scale(res, res)
+    cell = library.new_cell(cell_name)
+    cell.add(poly)
+    return cell

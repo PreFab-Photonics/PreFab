@@ -9,7 +9,7 @@ import cv2
 from prefab.processor import binarize
 
 
-def predict(device: np.ndarray, model_name: str, step_length: int = 64,
+def predict(device: np.ndarray, model_name: str, model_num: str,
             binary: bool = False) -> np.ndarray:
     """Makes a complete prediction of a device.
 
@@ -20,11 +20,10 @@ def predict(device: np.ndarray, model_name: str, step_length: int = 64,
 
     Args:
         device: A binary numpy matrix representing the shape of a device.
-        model_type: A string indicating the name of the model. See
+        model_name: A string indicating the name of the model. See
             documentation for names of available models.
-        step_length: An integer indicating the step length (in pixels) for
-            slicing. A smaller step length results in a more accurate
-            prediction, as feature is predicted from multiple perspectives.
+        model_num: A string indicating the number of the model. See
+            documentation for names of available models.
         binary: A bool indicating if the prediction will be binarized.
 
     Returns:
@@ -40,8 +39,7 @@ def predict(device: np.ndarray, model_name: str, step_length: int = 64,
     device_img_base64 = base64.b64encode(device_img).decode('utf-8')
     predict_data = {'device': device_img_base64,
                     'model_name': model_name,
-                    'step_length': step_length,
-                    'model_num': 0}
+                    'model_num': model_num}
 
     prediction_img_base64 = requests.post(function_url, json=predict_data,
                                           timeout=200)
