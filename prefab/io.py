@@ -1,113 +1,148 @@
-"""Loading and exporting functions for device images/matrices.
+"""
+This module offers tools to import, export, and preprocess device layouts in multiple formats for
+nanofabrication prediction tasks.
 """
 
+
+from typing import Optional, List
 import matplotlib.image as img
 import numpy as np
 import gdspy
 import cv2
-from prefab.processor import pad, binarize_hard
+from prefab.processor import binarize_hard
 
 
-def load_device_img(path: str, device_length: int) -> np.ndarray:
-    """Loads a device in from an image file.
+def load_device_img(path: str, img_length_nm: int = None) -> np.ndarray:
+    """
+    Load, process and scale device image from file for prediction.
 
-    A device is loaded from an image file and processed to prepare for
-    prediction. Processing includes scaling, binarization, and padding.
+    This function reads an image file, scales it according to the provided image length in 
+    nanometers, and performs preprocessing tasks such as binarization, preparing it for prediction.
 
-    Args:
-        path: A string indicating the path of the device image.
-        device_length: An int indicating the length of the device (in nm) to
-            be predicted.
+    Parameters
+    ----------
+    path : str
+        Path to the device image file.
 
-    Returns:
-        A numpy matrix representing the shape of a loaded device prepared for
-        prediction.
+    img_length_nm : int, optional
+        Desired length of the device image in nanometers for scaling. If not provided, 
+        the length of the original image is used.
+
+    Returns
+    -------
+    np.ndarray
+        A 2D numpy array representing the preprocessed and scaled device, ready for prediction.
     """
     device = img.imread(path)[:, :, 1]
-    scale = device_length/device.shape[1]
+    if img_length_nm is None:
+        img_length_nm = device.shape[1]
+    scale = img_length_nm / device.shape[1]
     device = cv2.resize(device, (0, 0), fx=scale, fy=scale)
     device = binarize_hard(device)
     return device
 
 
 def load_device_gds(path: str, cell_name: str,
-                    coords: list[list[int]] = None) -> np.ndarray:
-    """Loads a device in from a GDSII layout file.
+                    coords: Optional[List[List[int]]] = None) -> np.ndarray:
+    """
+    Load and process a device layout from a GDSII file.
 
-    A device is loaded from a GDSII layout file and processed to prepare for
-    prediction. Processing includes scaling and padding. Only the first layer
-    (silicon) is loaded.
+    This function reads a device layout from a GDSII file, performs necessary 
+    preprocessing tasks such as scaling and padding, and prepares it for prediction.
+    Only the first layer (silicon) is loaded.
 
-    Args:
-        path: A string indicating the path of the GDSII layout file.
-        cell_name: A string indicating the name of the GDSII cell to be loaded.
-        coords: A list of coordinates (list of ints in nm), represented as
-            [[xmin, ymin], [xmax, ymax]], indicating the portion of the cell to
-            be loaded. If None the entire cell is loaded.
+    Parameters
+    ----------
+    path : str
+        Path to the GDSII layout file.
 
-    Returns:
-        A numpy matrix representing the shape of a loaded device.
+    cell_name : str
+        Name of the GDSII cell to be loaded.
+
+    coords : List[List[int]], optional
+        A list of coordinates [[xmin, ymin], [xmax, ymax]] in nm, defining the 
+        region of the cell to be loaded. If None, the entire cell is loaded.
+
+    Returns
+    -------
+    np.ndarray
+        A 2D numpy array representing the preprocessed device layout, ready for prediction.
     """
     gds = gdspy.GdsLibrary(infile=path)
     cell = gds.cells[cell_name]
     polygons = cell.get_polygons(by_spec=(1, 0))
-    bounds = 1000*cell.get_bounding_box()
+    bounds = 1000 * cell.get_bounding_box()
     device = np.zeros((int(bounds[1][1] - bounds[0][1]),
                        int(bounds[1][0] - bounds[0][0])))
 
-    contours = []
-    for polygon in polygons:
-        contour = []
-        for vertex in polygon:
-            contour.append([[int(1000*vertex[0] - bounds[0][0]),
-                             int(1000*vertex[1] - bounds[0][1])]])
-        contours.append(np.array(contour))
+    contours = [np.array([[[int(1000*vertex[0] - bounds[0][0]),
+                            int(1000*vertex[1] - bounds[0][1])]] for vertex in polygon],
+                            dtype=np.int32)
+                            for polygon in polygons]
 
     for contour in contours:
         cv2.fillPoly(img=device, pts=[contour], color=(1, 1, 1))
 
     if coords is not None:
-        device = device[int(coords[0][1] - bounds[0][1]):
-                        int(coords[1][1] - bounds[0][1]),
-                        int(coords[0][0] - bounds[0][0]):
-                        int(coords[1][0] - bounds[0][0])]
+        device = device[int(coords[0][1] - bounds[0][1]):int(coords[1][1] - bounds[0][1]),
+                        int(coords[0][0] - bounds[0][0]):int(coords[1][0] - bounds[0][0])]
 
     device = np.flipud(device)
-    device = pad(device, slice_length=128, padding=2)
+    device = np.pad(device, 100)
     return device
 
+
 def device_to_cell(device: np.ndarray, cell_name: str,
-                   library: gdspy.GdsLibrary, res: float, layer: int = 1) \
-                    -> gdspy.Cell:
-    """Converts a device to a gdspy cell (for GDSII export).
+                   library: gdspy.GdsLibrary, resolution: float = 1.0,
+                   layer: int = 1) -> gdspy.Cell:
+    """Converts a device layout to a gdspy cell for GDSII export.
 
-    Args:
-        device: A numpy matrix representing the shape of a device.
-        cell_name: A str indicating the name of the cell to be created.
-        library: A gdspy library for the cell to be added to.
-        res: A float indicating the resolution (in pixels/nm) of the device.
-        layer: An int indicating the GDSII layer to be used.
+    This function creates a cell that represents a device layout. The created cell
+    is ready to be exported as a GDSII file.
 
-    Returns:
-        A gdspy cell representing the GDSII layout of a device.
+    Parameters
+    ----------
+    device : np.ndarray
+        A 2D numpy array representing the device layout.
+        
+    cell_name : str
+        Name for the new cell.
+        
+    library : gdspy.GdsLibrary
+        Library to which the cell will be added.
+
+    resolution : float, optional
+        The resolution of the device in pixels per nm. Default is 1.0.
+
+    layer : int, optional
+        The GDSII layer to be used for the polygons. Default is 1.
+
+    Returns
+    -------
+    gdspy.Cell
+        The newly created cell containing the device layout.
     """
     device = np.flipud(device)
-    contours = cv2.findContours(device.astype(np.uint8), 2, 1)
+    contours, hierarchy = cv2.findContours(device.astype(np.uint8), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
-    outers = []
-    inners = []
-    for idx, contour in enumerate(contours[0]):
+    outer_polygons = []
+    inner_polygons = []
+    
+    for idx, contour in enumerate(contours):
         if len(contour) > 2:
-            contour = contour/1000  # μm to nm
-            points = contour.squeeze().tolist()
-            points = list(tuple(sub) for sub in points)
-            if contours[1][0][idx][3] == -1:
-                outers.append(points)
-            else:
-                inners.append(points)
+            contour = contour / 1000  # μm to nm
+            points = [tuple(point) for point in contour.squeeze().tolist()]
 
-    poly = gdspy.boolean(outers, inners, 'xor', layer=layer)
-    poly = poly.scale(res, res)
-    cell = library.new_cell(cell_name)
-    cell.add(poly)
+            if hierarchy[0][idx][3] == -1:
+                outer_polygons.append(points)
+            else:
+                inner_polygons.append(points)
+
+    polygons = gdspy.boolean(outer_polygons, inner_polygons, 'xor', layer=layer)
+    polygons.scale(resolution, resolution)
+
+    cell = library.new_cell(f"{cell_name}")
+    cell.add(polygons)
+
     return cell
+

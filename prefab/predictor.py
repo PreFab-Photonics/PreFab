@@ -1,37 +1,47 @@
-"""Makes predictions of fabrication variations in photonic devices using ML
-models on the cloud.
+"""
+A module for making predictions on fabrication variations in photonic devices 
+using machine learning models deployed in the cloud.
 """
 
 import base64
 import numpy as np
 import requests
 import cv2
-from prefab.processor import binarize
+from prefab.processor import binarize_hard
 
 
 def predict(device: np.ndarray, model_name: str, model_num: str,
-            binary: bool = False) -> np.ndarray:
-    """Makes a complete prediction of a device.
+            binarize: bool = False) -> np.ndarray:
+    """
+    Generates a prediction for a photonic device using a specified cloud-based ML model.
 
-    A prediction is made by sending an image of a device to a cloud
-    function that inferences the model. If the model is a corrector (i.e.,
-    self.model_type = 'c'), the result can be interpreted as a correction
-    instead.
+    The function sends an image of the device to a cloud function, which uses the specified 
+    machine learning model to generate a prediction. If the model is a corrector (i.e., 
+    the model type is 'c'), the result can be interpreted as a correction.
 
-    Args:
-        device: A binary numpy matrix representing the shape of a device.
-        model_name: A string indicating the name of the model. See
-            documentation for names of available models.
-        model_num: A string indicating the number of the model. See
-            documentation for names of available models.
-        binary: A bool indicating if the prediction will be binarized.
+    Parameters
+    ----------
+    device : np.ndarray
+        A binary numpy matrix representing the shape of a device.
 
-    Returns:
-        A numpy matrix representing the shape of a predicted device. Pixel
-        values closer to 1 indicate high core material likeliness, while
-        pixel values closer to 0 indicate high cladding material
-        likeliness. Inbetween pixel values indicate uncertainty in the
-        prediction.
+    model_name : str
+        The name of the ML model to use for the prediction. 
+        Consult the module's documentation for available models.
+
+    model_num : str
+        The version number of the ML model. 
+        Consult the module's documentation for available versions.
+
+    binarize : bool, optional
+        If set to True, the prediction will be binarized (default is False).
+
+    Returns
+    -------
+    np.ndarray
+        A numpy matrix representing the predicted shape of the device. Pixel values closer 
+        to 1 indicate a higher likelihood of core material, while pixel values closer to 0 
+        suggest a higher likelihood of cladding material. Pixel values in between represent 
+        prediction uncertainty.
     """
     function_url = 'https://prefab-photonics--predict.modal.run'
 
@@ -41,14 +51,13 @@ def predict(device: np.ndarray, model_name: str, model_num: str,
                     'model_name': model_name,
                     'model_num': model_num}
 
-    prediction_img_base64 = requests.post(function_url, json=predict_data,
-                                          timeout=200)
+    prediction_img_base64 = requests.post(function_url, json=predict_data, timeout=200)
 
     prediction_img_data = base64.b64decode(prediction_img_base64.json())
     prediction_img = np.frombuffer(prediction_img_data, np.uint8)
-    prediction = cv2.imdecode(prediction_img, 0)/255
+    prediction = cv2.imdecode(prediction_img, 0) / 255
 
-    if binary:
-        prediction = binarize(prediction)
+    if binarize:
+        prediction = binarize_hard(prediction)
 
     return prediction

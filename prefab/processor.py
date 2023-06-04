@@ -1,151 +1,189 @@
-"""Processing functions for device numpy matrices.
+"""
+This module provides tools for processing and analyzing device matrices in nanofabrication
+prediction tasks. It includes functionality for image binarization, contour generation, and
+prediction uncertainty computation.
 """
 
-import copy
+from typing import Optional
 import numpy as np
 import cv2
 
 
-def binarize(device: np.ndarray, eta: float = 0.5, beta: float = np.inf) \
-             -> np.ndarray:
-    """Binarizes a device using the sigmoid function.
-
-    The thresholding level (eta) and degree of binarization (beta) can be
-    adjusted in this soft binarization function.
-
-    Args:
-        device: A numpy matrix representing the shape of a nonbinary device.
-        eta: A float (0 to 1) indicating the threshold level for binarization.
-            Smaller values simulate under-etching; larger values simulate over-
-            etching.
-        beta: A float indicating the steepness of the sigmoid function (and
-            the degree of binarization).
-
-    Returns:
-        A numpy matrix representing the shape of a binarized device.
+def binarize(device: np.ndarray, eta: float = 0.5, beta: float = np.inf) -> np.ndarray:
     """
-    num = np.tanh(beta*eta) + np.tanh(beta*(device - eta))
-    den = np.tanh(beta*eta) + np.tanh(beta*(1 - eta))
-    device_bin = num/den
+    Applies soft binarization to a device image using a sigmoid function.
+
+    The binarization process can be controlled by adjusting the thresholding level (`eta`) 
+    and the steepness of the sigmoid function (`beta`). `eta` influences the threshold level 
+    for binarization, simulating under-etching for smaller values and over-etching for larger 
+    values. `beta` controls the steepness of the sigmoid function, thereby determining the 
+    degree of binarization.
+
+    Parameters
+    ----------
+    device : np.ndarray
+        A 2D numpy array representing the grayscale device image to be binarized.
+
+    eta : float, optional
+        Threshold level for binarization, with values between 0 and 1. Default is 0.5.
+
+    beta : float, optional
+        Controls the steepness of the sigmoid function and thereby the degree of 
+        binarization. Default is infinity, resulting in maximum binarization.
+
+    Returns
+    -------
+    np.ndarray
+        A 2D numpy array representing the binarized device image.
+    """
+    numerator = np.tanh(beta*eta) + np.tanh(beta*(device - eta))
+    denominator = np.tanh(beta*eta) + np.tanh(beta*(1 - eta))
+    device_bin = numerator / denominator
     return device_bin
 
 
 def binarize_hard(device: np.ndarray, eta: float = 0.5) -> np.ndarray:
-    """Binarizes a device using the step function.
-
-    Only the thresholding level (eta) can be adjusted in this binarization
-    function. Compared to the sigmoid function with beta = np.inf, this
-    function is less less likely to produce NaNs. Sometimes useful.
-
-    Args:
-        device: A numpy matrix representing the shape of a nonbinary device.
-        eta: A float (0 to 1) indicating the threshold level for binarization.
-            Smaller values simulate under-etching; larger values simulate over-
-            etching.
-
-    Returns:
-        A numpy matrix representing the shape of a binarized device.
     """
-    device_bin = copy.deepcopy(device)
+    Applies hard binarization to a device image using a step function.
+
+    The binarization process depends solely on the threshold level (`eta`), which
+    controls the demarcation point for determining the binary values in the output image.
+    Smaller `eta` values simulate under-etching (more pixels are turned off), while 
+    larger `eta` values simulate over-etching (more pixels are turned on). Compared to the
+    sigmoid binarization function, this hard binarization method is less likely to produce 
+    NaN values and may sometimes yield better results.
+
+    Parameters
+    ----------
+    device : np.ndarray
+        A 2D numpy array representing the grayscale device image to be binarized.
+
+    eta : float, optional
+        Threshold level for binarization, with values between 0 and 1. Default is 0.5.
+
+    Returns
+    -------
+    np.ndarray
+        A 2D numpy array representing the binarized device image.
+    """
+    device_bin = np.copy(device)
     device_bin[device_bin < eta] = 0
     device_bin[device_bin >= eta] = 1
     return device_bin
 
 
-def trim(device: np.ndarray) -> np.ndarray:
-    """Trims the empty padding of a device.
-
-    Args:
-        device: A numpy matrix representing the shape of a binary device.
-
-    Returns:
-        A numpy matrix of equal or reduced size to the input device,
-        representing the shape of a device with no padding.
+def remove_padding(device: np.ndarray) -> np.ndarray:
     """
-    x_range, y_range = np.nonzero(device)
-    return device[x_range.min():x_range.max()+1, y_range.min():y_range.max()+1]
+    Removes the empty padding from the edges of a device.
 
+    This function eliminates rows and columns from the edges of the device matrix 
+    that are entirely zeros, effectively removing any unnecessary padding present 
+    in the device representation.
 
-def clip(device: np.ndarray, margin: int) -> np.ndarray:
-    """Zeros the boundaries of a device by a specified margin.
+    Parameters
+    ----------
+    device : np.ndarray
+        A 2D numpy array representing the shape of a binary device.
 
-    Args:
-        device: A numpy matrix representing the shape of a device.
-        margin: An int indicating the distance (in pixels) from the boundaries
-            to be zeroed.
-
-    Returns:
-        A numpy matrix representing the shape of a device with zeroed
-        boundaries.
+    Returns
+    -------
+    np.ndarray
+        A 2D numpy array representing the shape of a device without any extraneous padding,
+        of equal or smaller size compared to the input device.
     """
-    mask = np.zeros_like(device)
-    mask[margin:-margin, margin:-margin] = 1
-    device_clipped = mask*device
-    return device_clipped
+    nonzero_rows, nonzero_cols = np.nonzero(device)
+    trimmed_device = device[nonzero_rows.min():nonzero_rows.max()+1, 
+                            nonzero_cols.min():nonzero_cols.max()+1]
+    return trimmed_device
 
 
-def pad(device: np.ndarray, slice_length: int, padding: int = 1) -> np.ndarray:
-    """Pads a device matrix to a multiple of the predictor slice length.
-
-    Padding helps to reduce prediction inaccuracy at the boundaries of a
-    device. For convenience, this padding also ensures the device shape is a
-    multiple of the length of the slice to be used.
-
-    Args:
-        device: A numpy matrix representing the shape of a device.
-        slice_length: An int indicating the length of the slice (in pixels) to
-            be used.
-        padding: An int indicating the padding factor. A factor of 1 is often
-            sufficient.
-
-    Returns:
-        A numpy matrix representing the shape of a padded device.
+def zero_boundary(device: np.ndarray, margin: int) -> np.ndarray:
     """
-    pady = (slice_length*np.ceil(device.shape[0]/slice_length) -
-            device.shape[0])/2 + slice_length*(padding - 1)/2
-    padx = (slice_length*np.ceil(device.shape[1]/slice_length) -
-            device.shape[1])/2 + slice_length*(padding - 1)/2
-    device = np.pad(device, [(int(np.ceil(pady)), int(np.floor(pady))),
-                    (int(np.ceil(padx)), int(np.floor(padx)))],
-                    mode='constant')
-    return device
+    Sets the boundaries of a device matrix to zero up to a specified margin.
+
+    This function zeroes the outermost rows and columns of the device matrix 
+    up to a distance (margin) from the boundaries, effectively creating a 
+    "zeroed" frame around the device representation.
+
+    Parameters
+    ----------
+    device : np.ndarray
+        A 2D numpy array representing the shape of a device.
+
+    margin : int
+        The distance (in pixels) from the boundaries that should be zeroed.
+
+    Returns
+    -------
+    np.ndarray
+        A 2D numpy array representing the shape of the device with its outermost 
+        rows and columns up to 'margin' distance set to zero.
+    """
+    zeroed_device = device.copy()
+    zeroed_device[:margin, :] = 0
+    zeroed_device[-margin:, :] = 0
+    zeroed_device[:, :margin] = 0
+    zeroed_device[:, -margin:] = 0
+    return zeroed_device
 
 
-def get_contour(device: np.ndarray, linewidth: int = None) -> np.ndarray:
-    """Creates a contour of a device for visualization.
+def generate_device_contour(device: np.ndarray, linewidth: Optional[int] = None) -> np.ndarray:
+    """
+    Generates a contour of a device for visualization purposes.
 
-    Args:
-        device: A numpy matrix representing the shape of a device.
-        linewidth: An int indicating the width of the contour line. If None a
-            reasonable width will be chosen by default.
+    This function generates a binary contour of a device's shape which can be overlaid 
+    on top of the device's image for better visualization. The thickness of the contour 
+    line can be specified, with a default value calculated as 1% of the device's height.
 
-    Returns:
-        A numpy matrix representing the contour of a device.
+    Parameters
+    ----------
+    device : np.ndarray
+        A 2D numpy array representing the device's shape.
+
+    linewidth : int, optional
+        The width of the contour line. If not provided, the linewidth is set 
+        to 1% of the device's height.
+
+    Returns
+    -------
+    np.ndarray
+        A 2D numpy array (same shape as the input device) representing the device's contour.
     """
     if linewidth is None:
-        linewidth = device.shape[0]//100
-    device_bin = binarize_hard(device).astype(np.uint8)
-    contours, _ = cv2.findContours(device_bin, mode=2, method=1)
-    overlay = np.zeros_like(device)
-    cv2.drawContours(overlay, contours, -1, (255, 255, 255), linewidth)
-    overlay = np.ma.masked_where(overlay == 0, overlay)
-    return overlay
+        linewidth = device.shape[0] // 100
+
+    binary_device = binarize_hard(device).astype(np.uint8)
+    contours, _ = cv2.findContours(binary_device, mode=cv2.RETR_CCOMP,
+                                   method=cv2.CHAIN_APPROX_SIMPLE)
+
+    contour_overlay = np.zeros_like(device)
+    cv2.drawContours(contour_overlay, contours, -1, (255, 255, 255), linewidth)
+
+    return np.ma.masked_where(contour_overlay == 0, contour_overlay)
 
 
-def get_uncertainty(prediction: np.ndarray) -> np.ndarray:
-    """Calculates the uncertainty profile of a raw prediction.
-
-    The uncertainty of a (raw, nonbinary) prediction highlights pixels that
-    have values between core (1) and cladding (0). The edge of the predicted
-    structure is most likely to be found where uncertainty is highest, but can
-    appear anywhere within the "uncertainty band".
-
-    Args:
-        prediction: A numpy matrix representing the shape of a nonbinary
-            prediction.
-
-    Returns:
-        A numpy matrix representing the uncertainty of a nonbinary prediction.
+def calculate_prediction_uncertainty(prediction: np.ndarray) -> np.ndarray:
     """
-    uncertainty = 1 - 2*np.abs(0.5 - prediction)
+    Computes the uncertainty profile of a non-binary prediction matrix.
+
+    This function quantifies the level of uncertainty in a given prediction matrix by 
+    identifying the areas between the core (value 1) and cladding (value 0). These regions 
+    often correspond to the boundaries of the predicted structure and are represented by 
+    pixel values ranging between 0 and 1 in the prediction matrix. The function calculates 
+    the uncertainty as the distance from the pixel value to the nearest extreme (0 or 1), 
+    highlighting regions of maximum uncertainty.
+
+    Parameters
+    ----------
+    prediction : np.ndarray
+        A 2D numpy array representing the non-binary prediction matrix of a device shape.
+
+    Returns
+    -------
+    np.ndarray
+        A 2D numpy array (same shape as the input prediction matrix) representing the 
+        uncertainty profile of the prediction. Higher values correspond to areas of higher 
+        uncertainty.
+    """
+    uncertainty = 1 - 2 * np.abs(0.5 - prediction)
     return uncertainty
