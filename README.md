@@ -8,7 +8,7 @@
 
 `PreFab` accurately predicts process-induced structural alterations such as corner rounding, washing away of small lines and islands, and filling of narrow holes in planar photonic devices. This enables designers to quickly prototype expected performance and rectify designs prior to nanofabrication.
 
-![Example of PreFab prediction](https://github.com/PreFab-Photonics/PreFab/blob/main/assets/promo_p.png?raw=true) *Predicted fabrication variation of a star structure on a silicon-on-insulator e-beam lithography process.*
+![Example of PreFab prediction](https://github.com/PreFab-Photonics/PreFab/blob/main/assets/promo_p.png?raw=true)
 
 ## Correction
 
