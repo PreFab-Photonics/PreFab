@@ -3,7 +3,6 @@ This module offers tools to import, export, and preprocess device layouts in mul
 nanofabrication prediction tasks.
 """
 
-
 from typing import Optional, List
 import matplotlib.image as img
 import numpy as np
@@ -92,9 +91,8 @@ def load_device_gds(path: str, cell_name: str,
     return device
 
 
-def device_to_cell(device: np.ndarray, cell_name: str,
-                   library: gdspy.GdsLibrary, resolution: float = 1.0,
-                   layer: int = 1) -> gdspy.Cell:
+def device_to_cell(device: np.ndarray, cell_name: str, library: gdspy.GdsLibrary,
+                   resolution: float = 1.0, layer: int = 1, approximation_mode: int = 2) -> gdspy.Cell:
     """Converts a device layout to a gdspy cell for GDSII export.
 
     This function creates a cell that represents a device layout. The created cell
@@ -104,10 +102,10 @@ def device_to_cell(device: np.ndarray, cell_name: str,
     ----------
     device : np.ndarray
         A 2D numpy array representing the device layout.
-        
+
     cell_name : str
         Name for the new cell.
-        
+
     library : gdspy.GdsLibrary
         Library to which the cell will be added.
 
@@ -117,17 +115,27 @@ def device_to_cell(device: np.ndarray, cell_name: str,
     layer : int, optional
         The GDSII layer to be used for the polygons. Default is 1.
 
+    approximation_mode : int, optional
+        The approximation method to be used for finding contours. Possible values are 1, 2, 3, and
+        4. Larger values mean more approximation. Default is 1.
+
     Returns
     -------
     gdspy.Cell
         The newly created cell containing the device layout.
     """
+    approximation_method_mapping = {1: cv2.CHAIN_APPROX_NONE,
+                                    2: cv2.CHAIN_APPROX_SIMPLE,
+                                    3: cv2.CHAIN_APPROX_TC89_L1,
+                                    4: cv2.CHAIN_APPROX_TC89_KCOS}
+
     device = np.flipud(device)
-    contours, hierarchy = cv2.findContours(device.astype(np.uint8), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(device.astype(np.uint8), cv2.RETR_CCOMP,
+                                           approximation_method_mapping[approximation_mode])
 
     outer_polygons = []
     inner_polygons = []
-    
+
     for idx, contour in enumerate(contours):
         if len(contour) > 2:
             contour = contour / 1000  # μm to nm
@@ -141,8 +149,7 @@ def device_to_cell(device: np.ndarray, cell_name: str,
     polygons = gdspy.boolean(outer_polygons, inner_polygons, 'xor', layer=layer)
     polygons.scale(resolution, resolution)
 
-    cell = library.new_cell(f"{cell_name}")
+    cell = library.new_cell(cell_name)
     cell.add(polygons)
 
     return cell
-
