@@ -187,3 +187,22 @@ def calculate_prediction_uncertainty(prediction: np.ndarray) -> np.ndarray:
     """
     uncertainty = 1 - 2 * np.abs(0.5 - prediction)
     return uncertainty
+
+def mse(prediction: np.ndarray, device: np.ndarray) -> float:
+    """
+    Computes the mean squared error (MSE) between a prediction and a device matrix.
+
+    Parameters
+    ----------
+    prediction : np.ndarray
+        A 2D numpy array representing the non-binary prediction matrix of a device shape.
+
+    device : np.ndarray
+        A 2D numpy array representing the non-binary device matrix of a device shape.
+
+    Returns
+    -------
+    float
+        The mean squared error between the prediction and device matrices.
+    """
+    return np.mean((prediction - device)**2)
