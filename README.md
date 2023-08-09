@@ -20,10 +20,9 @@
 
 `PreFab` accommodates unique *predictor* and *corrector* models for each photonic foundry, regularly updated based on recent fabrication data. Current models include (see full list on [`docs/models.md`](docs/models.md)):
 
-| Foundry | Process | Latest Version | Latest Dataset | Type | Full Name | Status | Usage |
-| ------- | ------- | -------------- | -------------- | ---- | --------- |------- | ----- |
-| ANT | [NanoSOI](https://www.appliednt.com/nanosoi-fabrication-service/) | v5 (Jun 3 2023) | v4 (Apr 12 2023) | Predictor | p_ANT_NanoSOI_v5_d4 | Beta | Open |
-| ANT | [NanoSOI](https://www.appliednt.com/nanosoi-fabrication-service/) | v5 (Jun 3 2023) | v4 (Apr 12 2023) | Corrector | c_ANT_NanoSOI_v5_d4 | Beta | Open |
+| Foundry | Process | Latest Version | Latest Dataset | Model Name | Model Tag | Status | Usage |
+| ------- | ------- | -------------- | -------------- | ---------- |---------- | ------ | ----- |
+| ANT | [NanoSOI](https://www.appliednt.com/nanosoi-fabrication-service/) | v5 (Jun 3 2023) | v4 (Apr 12 2023) | ANT_NanoSOI | v5-d4 | Beta | Open |
 
 *New models and foundries are regularly added. Usage may change. For additional foundry and process models, feel free to contact us or raise an issue.*
 
