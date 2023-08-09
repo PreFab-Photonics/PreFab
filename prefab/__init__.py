@@ -6,8 +6,9 @@ Usage:
     import prefab as pf
 """
 
-# Prediction
+# Prediction and Correction
 from prefab.predictor import predict
+from prefab.predictor import correct
 
 # I/O Utilities
 # Function to load/save device images and gds files
@@ -25,7 +26,8 @@ from prefab.processor import (
     remove_padding,                # Trims excess padding from device images
     zero_boundary,                 # Applies zero boundary to device images
     generate_device_contour,       # Generates contour of device images
-    calculate_prediction_uncertainty # Computes prediction uncertainty for device images
+    calculate_prediction_uncertainty, # Computes prediction uncertainty for device images
+    mse                            # Computes mean squared error between two images
 )
 
 __all__ = (
@@ -39,4 +41,5 @@ __all__ = (
     "zero_boundary",
     "generate_device_contour",
     "calculate_prediction_uncertainty",
+    "mse"
 )
