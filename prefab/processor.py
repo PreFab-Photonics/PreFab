@@ -72,6 +72,40 @@ def binarize_hard(device: np.ndarray, eta: float = 0.5) -> np.ndarray:
     return device_bin
 
 
+def ternarize(device: np.ndarray, eta1: float = 0.33, eta2: float = 0.66) -> np.ndarray:
+    """
+    Applies ternarization to a device image using two thresholds.
+
+    This function performs a ternarization process on a given device image, dividing it into three
+    distinct regions based on two threshold values (`eta1` and `eta2`). It assigns three different
+    values (0, 1, or 2) to each pixel based on its intensity in relation to the thresholds.
+    Pixels with intensity less than `eta1` are assigned 0, pixels with intensity greater than or 
+    equal to `eta2` are assigned 2, and pixels with intensity between `eta1` and `eta2` are 
+    assigned 1. This function can be useful for categorizing different regions in a device image.
+
+    Parameters
+    ----------
+    device : np.ndarray
+        A 2D numpy array representing the grayscale device image to be ternarized.
+
+    eta1 : float, optional
+        First threshold level for ternarization, with values between 0 and 1. Default is 0.33.
+
+    eta2 : float, optional
+        Second threshold level for ternarization, with values between 0 and 1. Default is 0.66.
+
+    Returns
+    -------
+    np.ndarray
+        A 2D numpy array representing the ternarized device image.
+    """
+    device_ter = np.copy(device)
+    device_ter[device_ter < eta1] = 0
+    device_ter[device_ter >= eta2] = 1
+    device_ter[(device_ter >= eta1) & (device_ter < eta2)] = 0.5
+    return device_ter
+
+
 def remove_padding(device: np.ndarray) -> np.ndarray:
     """
     Removes the empty padding from the edges of a device.

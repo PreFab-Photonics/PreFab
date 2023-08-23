@@ -23,6 +23,7 @@ from prefab.io import (
 from prefab.processor import (
     binarize,                      # Soft binarization of grayscale images
     binarize_hard,                 # Hard binarization of grayscale images
+    ternarize,                     # Ternarization of grayscale images
     remove_padding,                # Trims excess padding from device images
     zero_boundary,                 # Applies zero boundary to device images
     generate_device_contour,       # Generates contour of device images
@@ -37,6 +38,7 @@ __all__ = (
     "device_to_cell",
     "binarize",
     "binarize_hard",
+    "ternarize",
     "remove_padding",
     "zero_boundary",
     "generate_device_contour",
