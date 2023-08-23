@@ -9,7 +9,7 @@ import requests
 from cv2 import imencode, imdecode, IMREAD_GRAYSCALE
 from prefab.processor import binarize_hard
 
-def predict(device: np.ndarray, model_name: str, model_tag: str,
+def predict(device: np.ndarray, model_name: str, model_tags: str,
             binarize: bool = False) -> np.ndarray:
     """
     Generates a prediction for a photonic device using a specified cloud-based ML model.
@@ -26,9 +26,9 @@ def predict(device: np.ndarray, model_name: str, model_tag: str,
         The name of the ML model to use for the prediction. 
         Consult the module's documentation for available models.
 
-    model_num : str
-        The version number of the ML model. 
-        Consult the module's documentation for available versions.
+    model_tags : Union[str, List[str]]
+        The tags of the ML model. 
+        Consult the module's documentation for available tags.
 
     binarize : bool, optional
         If set to True, the prediction will be binarized (default is False).
@@ -45,7 +45,7 @@ def predict(device: np.ndarray, model_name: str, model_tag: str,
 
     predict_data = {'device': _encode_image(device),
                     'model_name': model_name,
-                    'model_tag': model_tag}
+                    'model_tags': model_tags}
 
     prediction = _decode_image(requests.post(function_url, json=predict_data, timeout=200))
 
@@ -54,7 +54,7 @@ def predict(device: np.ndarray, model_name: str, model_tag: str,
 
     return prediction
 
-def correct(device: np.ndarray, model_name: str, model_tag: str,
+def correct(device: np.ndarray, model_name: str, model_tags: str,
             binarize: bool = False) -> np.ndarray:
     """
     Generates a correction for a photonic device using a specified cloud-based ML model.
@@ -71,9 +71,9 @@ def correct(device: np.ndarray, model_name: str, model_tag: str,
         The name of the ML model to use for the correction. 
         Consult the module's documentation for available models.
 
-    model_num : str
-        The version number of the ML model. 
-        Consult the module's documentation for available versions.
+    model_tags : Union[str, List[str]]
+        The tags of the ML model. 
+        Consult the module's documentation for available tags.
 
     binarize : bool, optional
         If set to True, the correction will be binarized (default is False).
@@ -90,7 +90,7 @@ def correct(device: np.ndarray, model_name: str, model_tag: str,
 
     correct_data = {'device': _encode_image(device),
                     'model_name': model_name,
-                    'model_tag': model_tag}
+                    'model_tags': model_tags}
 
     correction = _decode_image(requests.post(function_url, json=correct_data, timeout=200))
 
