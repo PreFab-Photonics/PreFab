@@ -2,7 +2,7 @@
 
 ![PreFab logo](https://github.com/PreFab-Photonics/PreFab/blob/main/assets/logo.png?raw=true)
 
-`PreFab` leverages **deep learning** to model fabrication-induced structural variations in integrated photonic devices. Through this *virtual nanofabrication environment*, we uncover valuable insights into nanofabrication processes and enhance device design accuracy.
+`PreFab` leverages **deep learning** to model fabrication-induced structural variations in integrated photonic devices. Through this _virtual nanofabrication environment_, we uncover valuable insights into nanofabrication processes and enhance device design accuracy.
 
 ## Prediction
 
@@ -18,16 +18,16 @@
 
 ## Models
 
-`PreFab` accommodates unique *predictor* and *corrector* models for each photonic foundry, regularly updated based on recent fabrication data. Current models include (see full list on [`docs/models.md`](docs/models.md)):
+`PreFab` accommodates unique _predictor_ and _corrector_ models for each photonic foundry, regularly updated based on recent fabrication data. Current models include (see full list on [`docs/models.md`](docs/models.md)):
 
-| Foundry | Process | Latest Version | Latest Dataset | Model Name | Model Tag | Status |
-| ------- | ------- | -------------- | -------------- | ---------- |---------- | ------ |
-| ANT | [NanoSOI](https://www.appliednt.com/nanosoi-fabrication-service/) | v5 (Jun 3 2023) | d4 (Apr 12 2023) | ANT_NanoSOI | v5-d4 | Beta |
-| ANT | [SiN (Upper Edge)](https://www.appliednt.com/nanosoi/sys/resources/specs_nitride/) | v5 (Jun 3 2023) | d0 (Jun 1 2023) | ANT_SiN | v5-d0-upper | Alpha |
-| ANT | [SiN (Lower Edge)](https://www.appliednt.com/nanosoi/sys/resources/specs_nitride/) | v5 (Jun 3 2023) | d0 (Jun 1 2023) | ANT_SiN | v5-d0-lower | Alpha |
-| SiEPICfab | [SOI](https://siepic.ca/fabrication/) | v5 (Jun 3 2023) | d0 (Jun 14 2023) | SiEPICfab_SOI | v5-d0 | Alpha |
+| Foundry   | Process                                                                            | Latest Version  | Latest Dataset   | Model Name    | Model Tag   | Status |
+| --------- | ---------------------------------------------------------------------------------- | --------------- | ---------------- | ------------- | ----------- | ------ |
+| ANT       | [NanoSOI](https://www.appliednt.com/nanosoi-fabrication-service/)                  | v5 (Jun 3 2023) | d4 (Apr 12 2023) | ANT_NanoSOI   | v5-d4       | Beta   |
+| ANT       | [SiN (Upper Edge)](https://www.appliednt.com/nanosoi/sys/resources/specs_nitride/) | v5 (Jun 3 2023) | d0 (Jun 1 2023)  | ANT_SiN       | v5-d0-upper | Alpha  |
+| ANT       | [SiN (Lower Edge)](https://www.appliednt.com/nanosoi/sys/resources/specs_nitride/) | v5 (Jun 3 2023) | d0 (Jun 1 2023)  | ANT_SiN       | v5-d0-lower | Alpha  |
+| SiEPICfab | [SOI](https://siepic.ca/fabrication/)                                              | v5 (Jun 3 2023) | d0 (Jun 14 2023) | SiEPICfab_SOI | v5-d0       | Alpha  |
 
-*New models and foundries are regularly added. Usage may change. For additional foundry and process models, feel free to contact us or raise an issue.*
+_New models and foundries are regularly added. Usage may change. For additional foundry and process models, feel free to contact us or raise an issue._
 
 ## Installation
 

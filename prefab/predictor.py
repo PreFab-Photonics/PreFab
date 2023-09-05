@@ -9,12 +9,14 @@ import requests
 from cv2 import imencode, imdecode, IMREAD_GRAYSCALE
 from prefab.processor import binarize_hard
 
-def predict(device: np.ndarray, model_name: str, model_tags: str,
-            binarize: bool = False) -> np.ndarray:
+
+def predict(
+    device: np.ndarray, model_name: str, model_tags: str, binarize: bool = False
+) -> np.ndarray:
     """
     Generates a prediction for a photonic device using a specified cloud-based ML model.
 
-    The function sends an image of the device to a cloud function, which uses the specified 
+    The function sends an image of the device to a cloud function, which uses the specified
     machine learning model to generate a prediction.
 
     Parameters
@@ -23,11 +25,11 @@ def predict(device: np.ndarray, model_name: str, model_tags: str,
         A binary numpy matrix representing the shape of a device.
 
     model_name : str
-        The name of the ML model to use for the prediction. 
+        The name of the ML model to use for the prediction.
         Consult the module's documentation for available models.
 
     model_tags : Union[str, List[str]]
-        The tags of the ML model. 
+        The tags of the ML model.
         Consult the module's documentation for available tags.
 
     binarize : bool, optional
@@ -36,30 +38,36 @@ def predict(device: np.ndarray, model_name: str, model_tags: str,
     Returns
     -------
     np.ndarray
-        A numpy matrix representing the predicted shape of the device. Pixel values closer 
-        to 1 indicate a higher likelihood of core material, while pixel values closer to 0 
-        suggest a higher likelihood of cladding material. Pixel values in between represent 
+        A numpy matrix representing the predicted shape of the device. Pixel values closer
+        to 1 indicate a higher likelihood of core material, while pixel values closer to 0
+        suggest a higher likelihood of cladding material. Pixel values in between represent
         prediction uncertainty.
     """
-    function_url = 'https://prefab-photonics--predict.modal.run'
+    function_url = "https://prefab-photonics--predict.modal.run"
 
-    predict_data = {'device': _encode_image(device),
-                    'model_name': model_name,
-                    'model_tags': model_tags}
+    predict_data = {
+        "device": _encode_image(device),
+        "model_name": model_name,
+        "model_tags": model_tags,
+    }
 
-    prediction = _decode_image(requests.post(function_url, json=predict_data, timeout=200))
+    prediction = _decode_image(
+        requests.post(function_url, json=predict_data, timeout=200)
+    )
 
     if binarize:
         prediction = binarize_hard(prediction)
 
     return prediction
 
-def correct(device: np.ndarray, model_name: str, model_tags: str,
-            binarize: bool = False) -> np.ndarray:
+
+def correct(
+    device: np.ndarray, model_name: str, model_tags: str, binarize: bool = False
+) -> np.ndarray:
     """
     Generates a correction for a photonic device using a specified cloud-based ML model.
 
-    The function sends an image of the device to a cloud function, which uses the specified 
+    The function sends an image of the device to a cloud function, which uses the specified
     machine learning model to generate a correction.
 
     Parameters
@@ -68,11 +76,11 @@ def correct(device: np.ndarray, model_name: str, model_tags: str,
         A binary numpy matrix representing the shape of a device.
 
     model_name : str
-        The name of the ML model to use for the correction. 
+        The name of the ML model to use for the correction.
         Consult the module's documentation for available models.
 
     model_tags : Union[str, List[str]]
-        The tags of the ML model. 
+        The tags of the ML model.
         Consult the module's documentation for available tags.
 
     binarize : bool, optional
@@ -81,23 +89,28 @@ def correct(device: np.ndarray, model_name: str, model_tags: str,
     Returns
     -------
     np.ndarray
-        A numpy matrix representing the corrected shape of the device. Pixel values closer 
-        to 1 indicate a higher likelihood of core material, while pixel values closer to 0 
-        suggest a higher likelihood of cladding material. Pixel values in between represent 
+        A numpy matrix representing the corrected shape of the device. Pixel values closer
+        to 1 indicate a higher likelihood of core material, while pixel values closer to 0
+        suggest a higher likelihood of cladding material. Pixel values in between represent
         correction uncertainty.
     """
-    function_url = 'https://prefab-photonics--correct.modal.run'
+    function_url = "https://prefab-photonics--correct.modal.run"
 
-    correct_data = {'device': _encode_image(device),
-                    'model_name': model_name,
-                    'model_tags': model_tags}
+    correct_data = {
+        "device": _encode_image(device),
+        "model_name": model_name,
+        "model_tags": model_tags,
+    }
 
-    correction = _decode_image(requests.post(function_url, json=correct_data, timeout=200))
+    correction = _decode_image(
+        requests.post(function_url, json=correct_data, timeout=200)
+    )
 
     if binarize:
         correction = binarize_hard(correction)
 
     return correction
+
 
 def _encode_image(image: np.ndarray) -> str:
     """
@@ -113,9 +126,10 @@ def _encode_image(image: np.ndarray) -> str:
     str
         The base64 encoded string of the image.
     """
-    encoded_image = imencode('.png', 255 * image)[1].tobytes()
-    encoded_image_base64 = base64.b64encode(encoded_image).decode('utf-8')
+    encoded_image = imencode(".png", 255 * image)[1].tobytes()
+    encoded_image_base64 = base64.b64encode(encoded_image).decode("utf-8")
     return encoded_image_base64
+
 
 def _decode_image(encoded_image_base64: str) -> np.ndarray:
     """
