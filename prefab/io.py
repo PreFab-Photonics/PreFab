@@ -3,10 +3,10 @@ This module offers tools to import, export, and preprocess device layouts in mul
 nanofabrication prediction tasks.
 """
 
-from typing import Optional, List
+from typing import Optional, List, Tuple
 import matplotlib.image as img
 import numpy as np
-import gdspy
+import gdstk
 import cv2
 from prefab.processor import binarize_hard
 
@@ -42,14 +42,17 @@ def load_device_img(path: str, img_length_nm: int = None) -> np.ndarray:
 
 
 def load_device_gds(
-    path: str, cell_name: str, coords: Optional[List[List[int]]] = None
+    path: str,
+    cell_name: str,
+    coords: Optional[List[List[int]]] = None,
+    layer: Tuple[int, int] = (1, 0),
 ) -> np.ndarray:
     """
     Load and process a device layout from a GDSII file.
 
     This function reads a device layout from a GDSII file, performs necessary
     preprocessing tasks such as scaling and padding, and prepares it for prediction.
-    Only the first layer (silicon) is loaded.
+    Only the specified layer is loaded.
 
     Parameters
     ----------
@@ -63,15 +66,20 @@ def load_device_gds(
         A list of coordinates [[xmin, ymin], [xmax, ymax]] in nm, defining the
         region of the cell to be loaded. If None, the entire cell is loaded.
 
+    layer : Tuple[int, int], optional
+        A tuple specifying the layer to be loaded. Default is (1, 0).
+
     Returns
     -------
     np.ndarray
         A 2D numpy array representing the preprocessed device layout, ready for prediction.
     """
-    gds = gdspy.GdsLibrary(infile=path)
-    cell = gds.cells[cell_name]
-    polygons = cell.get_polygons(by_spec=(1, 0))
-    bounds = 1000 * cell.get_bounding_box()
+    gds = gdstk.read_gds(path)
+    cell = gds[cell_name]
+    polygons = cell.get_polygons(layer=layer)
+    bounds = tuple(
+        tuple(1000 * x for x in sub_tuple) for sub_tuple in cell.bounding_box()
+    )
     device = np.zeros(
         (int(bounds[1][1] - bounds[0][1]), int(bounds[1][0] - bounds[0][0]))
     )
@@ -85,36 +93,43 @@ def load_device_gds(
                         int(1000 * vertex[1] - bounds[0][1]),
                     ]
                 ]
-                for vertex in polygon
+                for vertex in polygon.points
             ],
             dtype=np.int32,
         )
         for polygon in polygons
     ]
 
-    for contour in contours:
-        cv2.fillPoly(img=device, pts=[contour], color=(1, 1, 1))
+    cv2.fillPoly(img=device, pts=contours, color=(1, 1, 1))
 
     if coords is not None:
-        device = device[
+        new_device = np.zeros(
+            (int(bounds[1][1] - bounds[0][1]), int(bounds[1][0] - bounds[0][0]))
+        )
+        new_device[
+            int(coords[0][1] - bounds[0][1]) : int(coords[1][1] - bounds[0][1]),
+            int(coords[0][0] - bounds[0][0]) : int(coords[1][0] - bounds[0][0]),
+        ] = device[
             int(coords[0][1] - bounds[0][1]) : int(coords[1][1] - bounds[0][1]),
             int(coords[0][0] - bounds[0][0]) : int(coords[1][0] - bounds[0][0]),
         ]
+        device = new_device
 
     device = np.flipud(device)
     device = np.pad(device, 100)
+
     return device
 
 
 def device_to_cell(
     device: np.ndarray,
     cell_name: str,
-    library: gdspy.GdsLibrary,
+    library: gdstk.Library,
     resolution: float = 1.0,
     layer: int = 1,
     approximation_mode: int = 2,
-) -> gdspy.Cell:
-    """Converts a device layout to a gdspy cell for GDSII export.
+) -> gdstk.Cell:
+    """Converts a device layout to a gdstk cell for GDSII export.
 
     This function creates a cell that represents a device layout. The created cell
     is ready to be exported as a GDSII file.
@@ -127,7 +142,7 @@ def device_to_cell(
     cell_name : str
         Name for the new cell.
 
-    library : gdspy.GdsLibrary
+    library : gdstk.Library
         Library to which the cell will be added.
 
     resolution : float, optional
@@ -142,7 +157,7 @@ def device_to_cell(
 
     Returns
     -------
-    gdspy.Cell
+    gdstk.Cell
         The newly created cell containing the device layout.
     """
     approximation_method_mapping = {
@@ -172,10 +187,12 @@ def device_to_cell(
             else:
                 inner_polygons.append(points)
 
-    polygons = gdspy.boolean(outer_polygons, inner_polygons, "xor", layer=layer)
-    polygons.scale(resolution, resolution)
+    polygons = gdstk.boolean(outer_polygons, inner_polygons, "xor", layer=layer)
+    for polygon in polygons:
+        polygon.scale(resolution, resolution)
 
     cell = library.new_cell(cell_name)
-    cell.add(polygons)
+    for polygon in polygons:
+        cell.add(polygon)
 
     return cell
