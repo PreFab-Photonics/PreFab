@@ -15,7 +15,7 @@ from prefab.predictor import correct
 from prefab.io import (
     load_device_img,  # Load device from an image file
     load_device_gds,  # Load device from a GDSII file
-    device_to_cell,  # Convert a device layout to a gdspy cell
+    device_to_cell,  # Convert a device layout to a gdstk cell
 )
 
 # Import image processing utilities

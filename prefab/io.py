@@ -76,7 +76,7 @@ def load_device_gds(
     """
     gds = gdstk.read_gds(path)
     cell = gds[cell_name]
-    polygons = cell.get_polygons(layer=layer)
+    polygons = cell.get_polygons(layer=layer[0], datatype=layer[1])
     bounds = tuple(
         tuple(1000 * x for x in sub_tuple) for sub_tuple in cell.bounding_box()
     )
@@ -148,8 +148,8 @@ def device_to_cell(
     resolution : float, optional
         The resolution of the device in pixels per nm. Default is 1.0.
 
-    layer : int, optional
-        The GDSII layer to be used for the polygons. Default is 1.
+    layer : Tuple[int, int], optional
+        A tuple specifying the layer to be exported. Default is (1, 0).
 
     approximation_mode : int, optional
         The approximation method to be used for finding contours. Possible values are 1, 2, 3, and
@@ -187,7 +187,9 @@ def device_to_cell(
             else:
                 inner_polygons.append(points)
 
-    polygons = gdstk.boolean(outer_polygons, inner_polygons, "xor", layer=layer)
+    polygons = gdstk.boolean(
+        outer_polygons, inner_polygons, "xor", layer=layer[0], datatype=layer[1]
+    )
     for polygon in polygons:
         polygon.scale(resolution, resolution)
 
