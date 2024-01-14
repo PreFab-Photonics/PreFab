@@ -22,7 +22,7 @@
 
 | Foundry   | Process                                                                            | Latest Version  | Latest Dataset   | Model Name    | Model Tag   | Status |
 | --------- | ---------------------------------------------------------------------------------- | --------------- | ---------------- | ------------- | ----------- | ------ |
-| ANT       | [NanoSOI](https://www.appliednt.com/nanosoi-fabrication-service/)                  | v5 (Jun 3 2023) | d4 (Apr 12 2023) | ANT_NanoSOI   | v5-d4       | Beta   |
+| ANT       | [NanoSOI](https://www.appliednt.com/nanosoi-fabrication-service/)                  | v6 (Nov 24 2023) | d7 (Nov 24 2023) | ANT_NanoSOI   | v6-d7       | Beta   |
 | ANT       | [SiN (Upper Edge)](https://www.appliednt.com/nanosoi/sys/resources/specs_nitride/) | v5 (Jun 3 2023) | d0 (Jun 1 2023)  | ANT_SiN       | v5-d0-upper | Alpha  |
 | ANT       | [SiN (Lower Edge)](https://www.appliednt.com/nanosoi/sys/resources/specs_nitride/) | v5 (Jun 3 2023) | d0 (Jun 1 2023)  | ANT_SiN       | v5-d0-lower | Alpha  |
 | SiEPICfab | [SOI](https://siepic.ca/fabrication/)                                              | v5 (Jun 3 2023) | d0 (Jun 14 2023) | SiEPICfab_SOI | v5-d0       | Alpha  |
