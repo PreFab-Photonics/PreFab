@@ -126,7 +126,7 @@ def device_to_cell(
     cell_name: str,
     library: gdstk.Library,
     resolution: float = 1.0,
-    layer: int = 1,
+    layer: Tuple[int, int] = (1, 0),
     approximation_mode: int = 2,
 ) -> gdstk.Cell:
     """Converts a device layout to a gdstk cell for GDSII export.
