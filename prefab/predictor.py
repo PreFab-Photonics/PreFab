@@ -4,9 +4,11 @@ using machine learning models deployed in the cloud.
 """
 
 import base64
+
 import numpy as np
 import requests
-from cv2 import imencode, imdecode, IMREAD_GRAYSCALE
+from cv2 import IMREAD_GRAYSCALE, imdecode, imencode
+
 from prefab.processor import binarize_hard
 
 
@@ -49,6 +51,7 @@ def predict(
         "device": _encode_image(device),
         "model_name": model_name,
         "model_tags": model_tags,
+        "binary": binarize,
     }
 
     prediction = _decode_image(
@@ -62,7 +65,11 @@ def predict(
 
 
 def correct(
-    device: np.ndarray, model_name: str, model_tags: str, binarize: bool = False
+    device: np.ndarray,
+    model_name: str,
+    model_tags: str,
+    binarize: bool = True,
+    multi_correct: bool = False,
 ) -> np.ndarray:
     """
     Generates a correction for a photonic device using a specified cloud-based ML model.
@@ -84,7 +91,11 @@ def correct(
         Consult the module's documentation for available tags.
 
     binarize : bool, optional
-        If set to True, the correction will be binarized (default is False).
+        If set to True, the correction will be binarized (default is True).
+
+    multi_correct : bool, optional
+        If set to True, the correction will be generated using a iterative approach.
+        (default is False).
 
     Returns
     -------
@@ -100,14 +111,13 @@ def correct(
         "device": _encode_image(device),
         "model_name": model_name,
         "model_tags": model_tags,
+        "binary": binarize,
+        "multi_correct": multi_correct,
     }
 
     correction = _decode_image(
         requests.post(function_url, json=correct_data, timeout=200)
     )
-
-    if binarize:
-        correction = binarize_hard(correction)
 
     return correction
 
