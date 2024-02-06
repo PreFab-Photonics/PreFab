@@ -4,9 +4,11 @@ using machine learning models deployed in the cloud.
 """
 
 import base64
+import os
 
 import numpy as np
 import requests
+import toml
 from cv2 import IMREAD_GRAYSCALE, imdecode, imencode
 
 from prefab.processor import binarize_hard
@@ -54,9 +56,43 @@ def predict(
         "binary": binarize,
     }
 
-    prediction = _decode_image(
-        requests.post(function_url, json=predict_data, timeout=200)
+    with open(os.path.expanduser("~/.prefab.toml"), "r") as file:
+        content = file.readlines()
+        for line in content:
+            if "access_token" in line:
+                access_token = line.split("=")[1].strip().strip('"')
+            if "refresh_token" in line:
+                refresh_token = line.split("=")[1].strip().strip('"')
+                break
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "X-Refresh-Token": refresh_token,
+    }
+    response = requests.post(
+        url=function_url,
+        json=predict_data,
+        headers=headers,
     )
+
+    if response.status_code != 200:
+        raise ValueError(response.text)
+    else:
+        response_data = response.json()
+        if "error" in response_data:
+            raise ValueError(response_data["error"])
+        if "prediction" in response_data:
+            prediction = _decode_image(response_data["prediction"])
+        if "new_refresh_token" in response_data:
+            prefab_file_path = os.path.expanduser("~/.prefab.toml")
+            with open(prefab_file_path, "w", encoding="utf-8") as toml_file:
+                toml.dump(
+                    {
+                        "access_token": response_data["new_access_token"],
+                        "refresh_token": response_data["new_refresh_token"],
+                    },
+                    toml_file,
+                )
 
     if binarize:
         prediction = binarize_hard(prediction)
@@ -115,9 +151,43 @@ def correct(
         "multi_correct": multi_correct,
     }
 
-    correction = _decode_image(
-        requests.post(function_url, json=correct_data, timeout=200)
+    with open(os.path.expanduser("~/.prefab.toml"), "r") as file:
+        content = file.readlines()
+        for line in content:
+            if "access_token" in line:
+                access_token = line.split("=")[1].strip().strip('"')
+            if "refresh_token" in line:
+                refresh_token = line.split("=")[1].strip().strip('"')
+                break
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "X-Refresh-Token": refresh_token,
+    }
+    response = requests.post(
+        url=function_url,
+        json=correct_data,
+        headers=headers,
     )
+
+    if response.status_code != 200:
+        raise ValueError(response.text)
+    else:
+        response_data = response.json()
+        if "error" in response_data:
+            raise ValueError(response_data["error"])
+        if "correction" in response_data:
+            correction = _decode_image(response_data["correction"])
+        if "new_refresh_token" in response_data:
+            prefab_file_path = os.path.expanduser("~/.prefab.toml")
+            with open(prefab_file_path, "w", encoding="utf-8") as toml_file:
+                toml.dump(
+                    {
+                        "access_token": response_data["new_access_token"],
+                        "refresh_token": response_data["new_refresh_token"],
+                    },
+                    toml_file,
+                )
 
     return correction
 
@@ -155,7 +225,7 @@ def _decode_image(encoded_image_base64: str) -> np.ndarray:
     np.ndarray
         The decoded image in numpy array format.
     """
-    encoded_image = base64.b64decode(encoded_image_base64.json())
+    encoded_image = base64.b64decode(encoded_image_base64)
     decoded_image = np.frombuffer(encoded_image, np.uint8)
     decoded_image = imdecode(decoded_image, IMREAD_GRAYSCALE) / 255
     return decoded_image

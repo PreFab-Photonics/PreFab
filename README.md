@@ -18,16 +18,16 @@
 
 ## Models
 
-`PreFab` accommodates unique _predictor_ and _corrector_ models for each photonic foundry, regularly updated based on recent fabrication data. Current models include (see full list on [`docs/models.md`](docs/models.md)):
+`PreFab` accommodates unique _predictor_ and _corrector_ models for each photonic foundry, regularly updated based on recent fabrication data. Current models include (see full list on [`docs/models.md`](https://github.com/PreFab-Photonics/PreFab/blob/main/docs/models.md)):
 
-| Foundry   | Process                                                                            | Latest Version  | Latest Dataset   | Model Name    | Model Tag   | Status |
-| --------- | ---------------------------------------------------------------------------------- | --------------- | ---------------- | ------------- | ----------- | ------ |
+| Foundry   | Process                                                                            | Latest Version   | Latest Dataset   | Model Name    | Model Tag   | Status |
+| --------- | ---------------------------------------------------------------------------------- | ---------------- | ---------------- | ------------- | ----------- | ------ |
 | ANT       | [NanoSOI](https://www.appliednt.com/nanosoi-fabrication-service/)                  | v6 (Nov 24 2023) | d7 (Nov 24 2023) | ANT_NanoSOI   | v6-d7       | Beta   |
-| ANT       | [SiN (Upper Edge)](https://www.appliednt.com/nanosoi/sys/resources/specs_nitride/) | v5 (Jun 3 2023) | d0 (Jun 1 2023)  | ANT_SiN       | v5-d0-upper | Alpha  |
-| ANT       | [SiN (Lower Edge)](https://www.appliednt.com/nanosoi/sys/resources/specs_nitride/) | v5 (Jun 3 2023) | d0 (Jun 1 2023)  | ANT_SiN       | v5-d0-lower | Alpha  |
-| SiEPICfab | [SOI](https://siepic.ca/fabrication/)                                              | v5 (Jun 3 2023) | d0 (Jun 14 2023) | SiEPICfab_SOI | v5-d0       | Alpha  |
+| ANT       | [SiN (Upper Edge)](https://www.appliednt.com/nanosoi/sys/resources/specs_nitride/) | v5 (Jun 3 2023)  | d0 (Jun 1 2023)  | ANT_SiN       | v5-d0-upper | Alpha  |
+| ANT       | [SiN (Lower Edge)](https://www.appliednt.com/nanosoi/sys/resources/specs_nitride/) | v5 (Jun 3 2023)  | d0 (Jun 1 2023)  | ANT_SiN       | v5-d0-lower | Alpha  |
+| SiEPICfab | [SOI](https://siepic.ca/fabrication/)                                              | v5 (Jun 3 2023)  | d0 (Jun 14 2023) | SiEPICfab_SOI | v5-d0       | Alpha  |
 
-_New models and foundries are regularly added. Usage may change. For additional foundry and process models, feel free to contact us or raise an issue._
+_New models and foundries are to be added. Usage may change. For additional foundry and process models, feel free to contact us or raise an issue._
 
 ## Installation
 
@@ -55,16 +55,28 @@ Use `PreFab` online through GitHub Codespaces:
 
 ## Getting Started
 
-Visit [`/examples`](https://github.com/PreFab-Photonics/PreFab/tree/main/examples) for usage notebooks.
+### Account setup
+
+Before you can make PreFab requests, you will need to [create an account](https://www.prefabphotonics.com/login).
+
+To link your account, you will need a token. You can do this by running the following command in your terminal. This will open a browser window where you can log in and authenticate your token.
+
+```sh
+python3 -m prefab setup
+```
+
+### Guides
+
+Visit [`/examples`](https://github.com/PreFab-Photonics/PreFab/tree/main/examples) or our [Guides](https://www.prefabphotonics.com/docs/guides/predictions) to get started with your first predictions.
 
 ## Performance and Usage
 
 `PreFab` models are served via a serverless cloud platform. Please note:
 
-- 🐢 CPU inferencing may result in slower performance. Future updates will introduce GPU inferencing.
+- 🐢 CPU inference may result in slower performance. Future updates will introduce GPU inference.
 - 🥶 The first prediction may take longer due to cold start server loading. Subsequent predictions will be faster.
 - 😊 Be considerate of usage. Start small and limit usage during the initial stages. Thank you!
 
 ## License
 
-This project is licensed under the LGPL-2.1 license. © 2023 PreFab Photonics.
+This project is licensed under the LGPL-2.1 license. © 2024 PreFab Photonics.
