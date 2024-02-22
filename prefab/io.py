@@ -3,11 +3,13 @@ This module offers tools to import, export, and preprocess device layouts in mul
 nanofabrication prediction tasks.
 """
 
-from typing import Optional, List, Tuple
+from typing import List, Optional, Tuple
+
+import cv2
+import gdstk
 import matplotlib.image as img
 import numpy as np
-import gdstk
-import cv2
+
 from prefab.processor import binarize_hard
 
 
@@ -116,9 +118,9 @@ def load_device_gds(
         device = new_device
 
     device = np.flipud(device)
-    device = np.pad(device, 100)
+    device = np.pad(device, 200)
 
-    return device
+    return device.astype(np.float32)
 
 
 def device_to_cell(
@@ -170,31 +172,43 @@ def device_to_cell(
     device = np.flipud(device)
     contours, hierarchy = cv2.findContours(
         device.astype(np.uint8),
-        cv2.RETR_CCOMP,
+        cv2.RETR_TREE,
         approximation_method_mapping[approximation_mode],
     )
 
-    outer_polygons = []
-    inner_polygons = []
+    hierarchy_polygons = {}
 
     for idx, contour in enumerate(contours):
+        level = 0
+        current_idx = idx
+        while hierarchy[0][current_idx][3] != -1:
+            level += 1
+            current_idx = hierarchy[0][current_idx][3]
+
         if len(contour) > 2:
             contour = contour / 1000  # μm to nm
             points = [tuple(point) for point in contour.squeeze().tolist()]
-
-            if hierarchy[0][idx][3] == -1:
-                outer_polygons.append(points)
-            else:
-                inner_polygons.append(points)
-
-    polygons = gdstk.boolean(
-        outer_polygons, inner_polygons, "xor", layer=layer[0], datatype=layer[1]
-    )
-    for polygon in polygons:
-        polygon.scale(resolution, resolution)
+            if level not in hierarchy_polygons:
+                hierarchy_polygons[level] = []
+            hierarchy_polygons[level].append(points)
 
     cell = library.new_cell(cell_name)
-    for polygon in polygons:
+    processed_polygons = []
+    # Process polygons by hierarchy level, alternating between adding and XORing
+    for level in sorted(hierarchy_polygons.keys()):
+        operation = "or" if level % 2 == 0 else "xor"
+        polygons_to_process = hierarchy_polygons[level]
+
+        if polygons_to_process:
+            processed_polygons = gdstk.boolean(
+                polygons_to_process,
+                processed_polygons,
+                operation,
+                layer=layer[0],
+                datatype=layer[1],
+            )
+    for polygon in processed_polygons:
+        polygon.scale(resolution, resolution)
         cell.add(polygon)
 
     return cell
