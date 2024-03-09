@@ -27,7 +27,7 @@
 | ANT       | [SiN (Lower Edge)](https://www.appliednt.com/nanosoi/sys/resources/specs_nitride/) | v5 (Jun 3 2023)  | d0 (Jun 1 2023)  | ANT_SiN       | v5-d0-lower | Alpha  |
 | SiEPICfab | [SOI](https://siepic.ca/fabrication/)                                              | v5 (Jun 3 2023)  | d0 (Jun 14 2023) | SiEPICfab_SOI | v5-d0       | Alpha  |
 
-_New models and foundries are to be added. Usage may change. For additional foundry and process models, feel free to contact us or raise an issue._
+> _New models and foundries are to be added. Usage may change. For additional foundry and process models, feel free to contact us or raise an issue._
 
 ## Installation
 
