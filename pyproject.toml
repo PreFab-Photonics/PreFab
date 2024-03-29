@@ -28,3 +28,6 @@ dependencies = [
 
 [project.urls]
 "Homepage" = "https://github.com/PreFab-Photonics/PreFab"
+
+[tool.ruff.lint]
+select = ["E", "F", "UP", "B", "SIM", "I"]
