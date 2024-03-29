@@ -1,17 +1,17 @@
-"""Provides functions to create Device objects from various data sources."""
+"""Provides functions to create Devices from various data sources."""
 
 import cv2
 import gdstk
 import numpy as np
 
-from prefab.device import Device, geometry
+from .device import Device, geometry
 
 
 def from_ndarray(
     ndarray: np.ndarray, ndarray_width_nm: int = None, binarize: bool = True, **kwargs
 ) -> Device:
     """
-    Create a Device from an ndarray, optionally resizing and binarizing the input array.
+    Create a Device from an ndarray.
 
     Parameters
     ----------
@@ -23,7 +23,7 @@ def from_ndarray(
         resizing is performed.
     binarize : bool, optional
         If True, the input array will be binarized (converted to binary values) before
-        conversion to a Device object. This is useful for processing grayscale images jh
+        conversion to a Device object. This is useful for processing grayscale images
         into binary masks. Defaults to True.
     **kwargs
         Additional keyword arguments to be passed to the Device constructor.
@@ -39,7 +39,7 @@ def from_ndarray(
         scale = ndarray_width_nm / device_array.shape[1]
         device_array = cv2.resize(device_array, dsize=(0, 0), fx=scale, fy=scale)
     if binarize:
-        device_array = geometry.binarize(device_array)
+        device_array = geometry.binarize_hard(device_array)
     return Device(device_array=device_array, **kwargs)
 
 
@@ -47,7 +47,7 @@ def from_img(
     img_path: str, img_width_nm: int = None, binarize: bool = True, **kwargs
 ) -> Device:
     """
-    Create a Device from an image file, optionally resizing and binarizing the image.
+    Create a Device from an image file.
 
     Parameters
     ----------
@@ -75,7 +75,7 @@ def from_img(
         scale = img_width_nm / device_array.shape[1]
         device_array = cv2.resize(device_array, dsize=(0, 0), fx=scale, fy=scale)
     if binarize:
-        device_array = geometry.binarize(device_array)
+        device_array = geometry.binarize_hard(device_array)
     return Device(device_array=device_array, **kwargs)
 
 
@@ -87,7 +87,7 @@ def from_gds(
     **kwargs,
 ):
     """
-    Create a Device from a GDS file by specifying the path, cell name, and layer.
+    Create a Device from a GDS cell.
 
     Parameters
     ----------
@@ -126,7 +126,7 @@ def from_gdstk(
     **kwargs,
 ):
     """
-    Create a Device from a gdstk.Cell, optionally specifying the layer.
+    Create a Device from a gdstk cell.
 
     Parameters
     ----------
@@ -159,7 +159,6 @@ def _gdstk_to_device_array(
     bounds: tuple[tuple[int, int], tuple[int, int]] = None,
 ) -> np.ndarray:
     polygons = gdstk_cell.get_polygons(layer=gds_layer[0], datatype=gds_layer[1])
-
     if bounds:
         polygons = gdstk.slice(
             polygons, position=(bounds[0][0], bounds[1][0]), axis="x"
