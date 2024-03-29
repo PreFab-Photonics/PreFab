@@ -8,10 +8,6 @@ def normalize(device_array: np.ndarray) -> np.ndarray:
     """
     Normalize the input numpy array to have values between 0 and 1.
 
-    This function subtracts the minimum value of the array from all elements and then
-    divides by the range of the array's values, effectively scaling all elements to lie
-    between 0 and 1.
-
     Parameters
     ----------
     device_array : np.ndarray
@@ -32,11 +28,6 @@ def binarize(
 ) -> np.ndarray:
     """
     Binarize the input numpy array based on a threshold and a scaling factor.
-
-    This function applies a hyperbolic tangent function to scale the input array
-    elements. Elements greater than a threshold (eta) are scaled towards 1, and those
-    below towards 0, based on the scaling factor (beta). The scaling factor controls the
-    sharpness of the transition between 0 and 1.
 
     Parameters
     ----------
@@ -62,11 +53,6 @@ def binarize_hard(device_array: np.ndarray, eta: float = 0.5) -> np.ndarray:
     """
     Apply a hard threshold to binarize the input numpy array.
 
-    This is an alternative to the `binarize` function and can be more stable against
-    numerical issues. This function sets elements of the array to 0 if they are less
-    than the threshold (eta) and to 1 if they are equal or greater. This results in a
-    binary array with elements being either 0 or 1, based on the threshold.
-
     Parameters
     ----------
     device_array : np.ndarray
@@ -88,11 +74,6 @@ def ternarize(
     """
     Ternarizes the input numpy array based on two thresholds.
 
-    This function sets elements of the array to 0 if they are less than the first
-    threshold (eta1), to 1 if they are greater than or equal to the second threshold
-    (eta2), and to 0.5 if they are in between the two thresholds. This results in a
-    ternary array with elements being either 0, 0.5, or 1, based on the thresholds.
-
     Parameters
     ----------
     device_array : np.ndarray
@@ -113,12 +94,6 @@ def ternarize(
 def trim(device_array: np.ndarray, buffer_thickness: int = 0) -> np.ndarray:
     """
     Trims the input numpy array by removing rows and columns that are completely zero.
-
-    This function identifies the non-zero elements of the array and calculates the
-    minimum and maximum row and column indices that contain non-zero elements. It then
-    optionally adds a buffer around these indices and returns the sub-array defined by
-    these indices. This can be useful for focusing on the relevant parts of an array
-    while removing unnecessary zero-padding.
 
     Parameters
     ----------
@@ -152,11 +127,7 @@ def trim(device_array: np.ndarray, buffer_thickness: int = 0) -> np.ndarray:
 
 def blur(device_array: np.ndarray, sigma: float = 1.0) -> np.ndarray:
     """
-    Apply Gaussian blur to the input numpy array and normalizes the result.
-
-    This function uses OpenCV's GaussianBlur to apply a Gaussian blur to the input
-    array. The sigma parameter controls the radius of the blur. After blurring, the
-    result is normalized to have values between 0 and 1.
+    Apply Gaussian blur to the input numpy array and normalize the result.
 
     Parameters
     ----------
