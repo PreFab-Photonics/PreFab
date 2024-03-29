@@ -72,7 +72,7 @@ def ternarize(
     device_array: np.ndarray, eta1: float = 1 / 3, eta2: float = 2 / 3
 ) -> np.ndarray:
     """
-    Ternarizes the input numpy array based on two thresholds.
+    Ternarize the input numpy array based on two thresholds.
 
     Parameters
     ----------
@@ -93,7 +93,7 @@ def ternarize(
 
 def trim(device_array: np.ndarray, buffer_thickness: int = 0) -> np.ndarray:
     """
-    Trims the input numpy array by removing rows and columns that are completely zero.
+    Trim the input numpy array by removing rows and columns that are completely zero.
 
     Parameters
     ----------
