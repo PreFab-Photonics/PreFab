@@ -1,17 +1,18 @@
-"""Main entry point for the Prefab CLI."""
+"""Provides the main entry point for the Prefab CLI."""
+
 import argparse
 import os
 import threading
 import webbrowser
+from contextlib import suppress
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import toml
 
 
 def store_jwt_securely(jwt, refresh_token):
-    """
-    Store the JWT and refresh token securely in a TOML file.
-    """
+    """Store the JWT and refresh token securely in a TOML file."""
+
     prefab_file_path = os.path.expanduser("~/.prefab.toml")
     with open(prefab_file_path, "w", encoding="utf-8") as toml_file:
         toml.dump({"access_token": jwt, "refresh_token": refresh_token}, toml_file)
@@ -28,9 +29,7 @@ class GracefulHTTPServer(HTTPServer):
 
 
 class CallbackHandler(BaseHTTPRequestHandler):
-    """
-    A request handler for the HTTP server that handles the OAuth callback.
-    """
+    """A request handler for the HTTP server that handles the OAuth callback."""
 
     def do_GET(self):
         if self.path.startswith("/callback"):
@@ -68,10 +67,8 @@ def main():
         webbrowser.open("https://www.prefabphotonics.com/token-flow")
         httpd = GracefulHTTPServer(("localhost", args.port), CallbackHandler)
         print("Started token authentication flow on the web browser...")
-        try:
+        with suppress(KeyboardInterrupt):
             httpd.serve_forever()
-        except KeyboardInterrupt:
-            pass
         httpd.server_close()
     else:
         print(f"Command {args.command} not recognized.")
