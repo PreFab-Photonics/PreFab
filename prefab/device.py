@@ -1,3 +1,5 @@
+"""Provides the Device class for representing photonic devices."""
+
 from typing import Optional
 
 import cv2
@@ -14,7 +16,8 @@ from . import geometry
 
 
 class BufferSpec(BaseModel):
-    """Defines the specifications for a buffer zone around a device.
+    """
+    Defines the specifications for a buffer zone around a device.
 
     This class is used to specify the mode and thickness of a buffer zone that is added
     around the device geometry. The buffer zone can be used for various purposes such as
@@ -151,8 +154,15 @@ class Device(BaseModel):
             raise ValueError("device_array must be a 2D array.")
         return values
 
+    # def predict(self) -> "Device":
+    #     pass
+
+    # def correct(self) -> "Device":
+    #     pass
+
     def to_ndarray(self) -> np.ndarray:
-        """Converts the device geometry to a numpy ndarray.
+        """
+        Converts the device geometry to a numpy ndarray.
 
         This method applies the buffer specifications to crop the device array if
         necessary, based on the buffer mode ('edge' or 'constant'). It then returns the
@@ -180,7 +190,8 @@ class Device(BaseModel):
         return ndarray
 
     def to_img(self, img_path: str = "prefab_device.png"):
-        """Exports the device geometry as an image file.
+        """
+        Exports the device geometry as an image file.
 
         This method converts the device geometry to a numpy ndarray using `to_ndarray`,
         scales the values to the range [0, 255] for image representation, and saves the
@@ -202,7 +213,8 @@ class Device(BaseModel):
         gds_layer: tuple[int, int] = (1, 0),
         contour_approx_mode: int = 2,
     ):
-        """Exports the device geometry as a GDSII file.
+        """
+        Exports the device geometry as a GDSII file.
 
         This method converts the device geometry into a format suitable for GDSII files.
         The conversion involves contour approximation to simplify the geometry while
@@ -239,7 +251,8 @@ class Device(BaseModel):
         gds_layer: tuple[int, int] = (1, 0),
         contour_approx_mode: int = 2,
     ):
-        """Converts the device geometry to a GDSTK cell object.
+        """
+        Converts the device geometry to a GDSTK cell object.
 
         This method prepares the device geometry for GDSII file export by converting it
         into a GDSTK cell object. GDSTK is a Python module for creating and manipulating
@@ -337,7 +350,8 @@ class Device(BaseModel):
     def plot(
         self, show_buffer: bool = True, ax: Optional[Axes] = None, **kwargs
     ) -> Axes:
-        """Visualizes the device along with its buffer zones.
+        """
+        Visualizes the device along with its buffer zones.
 
         This method plots the device geometry, allowing for the visualization of the
         device along with its buffer zones if specified. The plot can be customized with
@@ -376,7 +390,8 @@ class Device(BaseModel):
         ax: Optional[Axes] = None,
         **kwargs,
     ):
-        """Visualizes the contour of the device along with optional buffer zones.
+        """
+        Visualizes the contour of the device along with optional buffer zones.
 
         This method plots the contour of the device geometry, emphasizing the edges and
         boundaries of the device. The contour plot can be customized with various
@@ -430,7 +445,8 @@ class Device(BaseModel):
     def plot_uncertainty(
         self, show_buffer: bool = True, ax: Optional[Axes] = None, **kwargs
     ):
-        """Visualizes the uncertainty in the edge positions of the predicted device.
+        """
+        Visualizes the uncertainty in the edge positions of the predicted device.
 
         This method plots the predicted device geometry with an overlay indicating the
         uncertainty associated with the positions of the edges of the device. The
@@ -525,7 +541,8 @@ class Device(BaseModel):
         ax.add_patch(right_rect)
 
     def normalize(self) -> "Device":
-        """Normalize the device geometry.
+        """
+        Normalize the device geometry.
 
         Returns
         -------
