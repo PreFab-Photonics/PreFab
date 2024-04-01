@@ -5,8 +5,8 @@ Usage:
     import prefab as pf
 """
 
-from prefab import geometry, read
-from prefab.device import BufferSpec, Device
+from . import geometry, read
+from .device import BufferSpec, Device
 
 __all__ = [
     "Device",

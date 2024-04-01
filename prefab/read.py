@@ -4,7 +4,8 @@ import cv2
 import gdstk
 import numpy as np
 
-from .device import Device, geometry
+from . import geometry
+from .device import Device
 
 
 def from_ndarray(
