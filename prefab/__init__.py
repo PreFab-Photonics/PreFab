@@ -5,7 +5,7 @@ Usage:
     import prefab as pf
 """
 
-from . import geometry, read
+from . import compare, geometry, read
 from .device import BufferSpec, Device
 
 __all__ = [
@@ -13,4 +13,5 @@ __all__ = [
     "BufferSpec",
     "geometry",
     "read",
+    "compare",
 ]
