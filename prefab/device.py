@@ -79,6 +79,10 @@ class Device(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
+    @property
+    def shape(self) -> tuple[int, int]:
+        return self.device_array.shape
+
     def __init__(
         self, device_array: np.ndarray, buffer_spec: Optional[BufferSpec] = None
     ):
@@ -106,6 +110,11 @@ class Device(BaseModel):
             or correction and for ensuring seamless integration with the surrounding
             circuitry. By default, a generous padding is applied to accommodate isolated
             structures.
+
+        Attributes
+        ----------
+        shape : tuple[int, int]
+            The shape of the device array.
 
         Raises
         ------
@@ -654,3 +663,61 @@ class Device(BaseModel):
             device_array=self.device_array, sigma=sigma
         )
         return self.model_copy(update={"device_array": blurred_device_array})
+
+    def rotate(self, angle: float) -> "Device":
+        """
+        Rotate the device geometry by a given angle.
+
+        Parameters
+        ----------
+        angle : float
+            The angle of rotation in degrees. Positive values mean counter-clockwise
+            rotation.
+
+        Returns
+        -------
+        Device
+            A new instance of the Device with the rotated geometry.
+        """
+        rotated_device_array = geometry.rotate(
+            device_array=self.device_array, angle=angle
+        )
+        return self.model_copy(update={"device_array": rotated_device_array})
+
+    def erode(self, kernel_size: int = 3) -> "Device":
+        """
+        Erode the device geometry by removing small areas of overlap.
+
+        Parameters
+        ----------
+        kernel_size : int
+            The size of the kernel used for erosion.
+
+        Returns
+        -------
+        Device
+            A new instance of the Device with the eroded geometry.
+        """
+        eroded_device_array = geometry.erode(
+            device_array=self.device_array, kernel_size=kernel_size
+        )
+        return self.model_copy(update={"device_array": eroded_device_array})
+
+    def dilate(self, kernel_size: int = 3) -> "Device":
+        """
+        Dilate the device geometry by expanding areas of overlap.
+
+        Parameters
+        ----------
+        kernel_size : int
+            The size of the kernel used for dilation.
+
+        Returns
+        -------
+        Device
+            A new instance of the Device with the dilated geometry.
+        """
+        dilated_device_array = geometry.dilate(
+            device_array=self.device_array, kernel_size=kernel_size
+        )
+        return self.model_copy(update={"device_array": dilated_device_array})

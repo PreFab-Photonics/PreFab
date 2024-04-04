@@ -68,6 +68,28 @@ def binarize_hard(device_array: np.ndarray, eta: float = 0.5) -> np.ndarray:
     return np.where(device_array < eta, 0.0, 1.0)
 
 
+def binarize_sem(sem_array: np.ndarray) -> np.ndarray:
+    """
+    Binarize a grayscale SEM (Scanning Electron Microscope) image.
+
+    This function applies Otsu's method to automatically determine the optimal threshold
+    value for binarization of a grayscale SEM image.
+
+    Parameters
+    ----------
+    sem_array : np.ndarray
+        The input SEM image array to be binarized.
+
+    Returns
+    -------
+    np.ndarray
+        The binarized SEM image array with elements scaled to 0 or 1.
+    """
+    return cv2.threshold(
+        sem_array.astype("uint8"), 0, 1, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+    )[1]
+
+
 def ternarize(
     device_array: np.ndarray, eta1: float = 1 / 3, eta2: float = 2 / 3
 ) -> np.ndarray:
@@ -143,3 +165,69 @@ def blur(device_array: np.ndarray, sigma: float = 1.0) -> np.ndarray:
         The blurred and normalized array with values scaled between 0 and 1.
     """
     return normalize(cv2.GaussianBlur(device_array, ksize=(0, 0), sigmaX=sigma))
+
+
+def rotate(device_array: np.ndarray, angle: float) -> np.ndarray:
+    """
+    Rotate the input numpy array by a given angle.
+
+    Parameters
+    ----------
+    device_array : np.ndarray
+        The input array to be rotated.
+    angle : float
+        The angle of rotation in degrees. Positive values mean counter-clockwise
+        rotation.
+
+    Returns
+    -------
+    np.ndarray
+        The rotated array.
+    """
+    center = (device_array.shape[1] / 2, device_array.shape[0] / 2)
+    rotation_matrix = cv2.getRotationMatrix2D(center=center, angle=angle)
+    return cv2.warpAffine(
+        device_array,
+        M=rotation_matrix,
+        dsize=(device_array.shape[1], device_array.shape[0]),
+    )
+
+
+def erode(device_array: np.ndarray, kernel_size: int) -> np.ndarray:
+    """
+    Erode the input numpy array using a specified kernel size and number of iterations.
+
+    Parameters
+    ----------
+    device_array : np.ndarray
+        The input array representing the device geometry to be eroded.
+    kernel_size : int
+        The size of the kernel used for erosion.
+
+    Returns
+    -------
+    np.ndarray
+        The eroded array.
+    """
+    kernel = np.ones((kernel_size, kernel_size), dtype=np.uint8)
+    return cv2.erode(device_array, kernel=kernel)
+
+
+def dilate(device_array: np.ndarray, kernel_size: int) -> np.ndarray:
+    """
+    Dilate the input numpy array using a specified kernel size.
+
+    Parameters
+    ----------
+    device_array : np.ndarray
+        The input array representing the device geometry to be dilated.
+    kernel_size : int
+        The size of the kernel used for dilation.
+
+    Returns
+    -------
+    np.ndarray
+        The dilated array.
+    """
+    kernel = np.ones((kernel_size, kernel_size), dtype=np.uint8)
+    return cv2.dilate(device_array, kernel=kernel)
