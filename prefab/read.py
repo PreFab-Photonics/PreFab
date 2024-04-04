@@ -1,5 +1,7 @@
 """Provides functions to create Devices from various data sources."""
 
+import re
+
 import cv2
 import gdstk
 import numpy as np
@@ -194,3 +196,100 @@ def _gdstk_to_device_array(
     cv2.fillPoly(img=device_array, pts=contours, color=(1, 1, 1))
     device_array = np.flipud(device_array)
     return device_array
+
+
+def from_sem(
+    sem_path: str,
+    sem_resolution: float = None,
+    sem_resolution_key: str = None,
+    binarize: bool = True,
+    bounds: tuple[tuple[int, int], tuple[int, int]] = None,
+    **kwargs,
+) -> Device:
+    """
+    Create a Device from a Scanning Electron Microscope (SEM) image file.
+
+    Parameters
+    ----------
+    sem_path : str
+        The file path to the SEM image.
+    sem_resolution : float, optional
+        The resolution of the SEM image in nanometers per pixel. If not provided, it
+        will be extracted from the image metadata using the `sem_resolution_key`.
+    sem_resolution_key : str, optional
+        The key to look for in the SEM image metadata to extract the resolution.
+        Required if `sem_resolution` is not provided.
+    binarize : bool, optional
+        If True, the SEM image will be binarized (converted to binary values) before
+        conversion to a Device object. This is useful for processing grayscale images
+        into binary masks. Defaults to True.
+    bounds : tuple[tuple[int, int], tuple[int, int]], optional
+        A tuple specifying the bounds for cropping the image before conversion,
+        formatted as ((min_x, min_y), (max_x, max_y)). If None, the entire image is
+        used.
+    **kwargs
+        Additional keyword arguments to be passed to the Device constructor.
+
+    Returns
+    -------
+    Device
+        A Device object representing the processed SEM image.
+
+    Raises
+    ------
+    ValueError
+        If neither `sem_resolution` nor `sem_resolution_key` is provided.
+    """
+    if sem_resolution is None and sem_resolution_key is not None:
+        sem_resolution = get_sem_resolution(sem_path, sem_resolution_key)
+    elif sem_resolution is None:
+        raise ValueError("Either sem_resolution or resolution_key must be provided.")
+
+    device_array = cv2.imread(sem_path, flags=cv2.IMREAD_GRAYSCALE)
+    if sem_resolution is not None:
+        device_array = cv2.resize(
+            device_array, dsize=(0, 0), fx=sem_resolution, fy=sem_resolution
+        )
+    if bounds is not None:
+        device_array = device_array[
+            -bounds[1][1] : -bounds[0][1], bounds[0][0] : bounds[1][0]
+        ]
+    if binarize:
+        device_array = geometry.binarize_sem(device_array)
+    return Device(device_array=device_array, **kwargs)
+
+
+def get_sem_resolution(sem_path: str, resolution_key: str) -> float:
+    """
+    Extracts the resolution of a Scanning Electron Microscope (SEM) image from its
+    metadata.
+
+    Parameters
+    ----------
+    sem_path : str
+        The file path to the SEM image.
+    resolution_key : str
+        The key to look for in the SEM image metadata to extract the resolution.
+
+    Returns
+    -------
+    float
+        The resolution of the SEM image in nanometers per pixel.
+
+    Raises
+    ------
+    ValueError
+        If the resolution key is not found in the SEM image metadata.
+    """
+    with open(sem_path, "rb") as file:
+        resolution_key_bytes = resolution_key.encode("utf-8")
+        for line in file:
+            if resolution_key_bytes in line:
+                line_str = line.decode("utf-8")
+                match = re.search(r"-?\d+(\.\d+)?", line_str)
+                if match:
+                    value = float(match.group())
+                    if value > 100:
+                        value /= 1000
+                    return value
+    raise ValueError(f"Resolution key '{resolution_key}' not found in {sem_path}.")
