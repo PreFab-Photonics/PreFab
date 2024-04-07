@@ -90,6 +90,48 @@ def binarize_sem(sem_array: np.ndarray) -> np.ndarray:
     )[1]
 
 
+def binarize_monte_carlo(
+    device_array: np.ndarray,
+    threshold_noise_std: float,
+    threshold_blur_std: float,
+) -> np.ndarray:
+    """
+    Binarize the input numpy array using a Monte Carlo approach with Gaussian blurring.
+
+    This function applies a dynamic thresholding technique where the threshold value is
+    determined by a base value perturbed by Gaussian-distributed random noise. The
+    threshold is then spatially varied across the array using Gaussian blurring,
+    simulating a more realistic scenario where the threshold is not uniform across the
+    device.
+
+    Parameters
+    ----------
+    device_array : np.ndarray
+        The input array to be binarized.
+    threshold_noise_std : float
+        The standard deviation of the Gaussian distribution used to generate noise for
+        the threshold values. This controls the amount of randomness in the threshold.
+    threshold_blur_std : float
+        The standard deviation for the Gaussian kernel used in blurring the threshold
+        map. This controls the spatial variation of the threshold across the array.
+
+    Returns
+    -------
+    np.ndarray
+        The binarized array with elements set to 0 or 1 based on the dynamically
+        generated threshold.
+    """
+    base_threshold = np.clip(np.random.normal(loc=0.5, scale=0.5 / 2), 0.4, 0.6)
+    threshold_noise = np.random.normal(
+        loc=0, scale=threshold_noise_std, size=device_array.shape
+    )
+    spatial_threshold = cv2.GaussianBlur(
+        threshold_noise, ksize=(0, 0), sigmaX=threshold_blur_std
+    )
+    dynamic_threshold = base_threshold + spatial_threshold
+    return np.where(device_array < dynamic_threshold, 0.0, 1.0)
+
+
 def ternarize(
     device_array: np.ndarray, eta1: float = 1 / 3, eta2: float = 2 / 3
 ) -> np.ndarray:
@@ -185,7 +227,7 @@ def rotate(device_array: np.ndarray, angle: float) -> np.ndarray:
         The rotated array.
     """
     center = (device_array.shape[1] / 2, device_array.shape[0] / 2)
-    rotation_matrix = cv2.getRotationMatrix2D(center=center, angle=angle)
+    rotation_matrix = cv2.getRotationMatrix2D(center=center, angle=angle, scale=1)
     return cv2.warpAffine(
         device_array,
         M=rotation_matrix,
