@@ -1,5 +1,7 @@
 """Provides the Device class for representing photonic devices."""
 
+import base64
+import struct
 from typing import Optional
 
 import cv2
@@ -7,6 +9,7 @@ import gdstk
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
+import requests
 from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
@@ -163,11 +166,65 @@ class Device(BaseModel):
             raise ValueError("device_array must be a 2D array.")
         return values
 
-    # def predict(self) -> "Device":
-    #     pass
+    def _encode_array(self, array):
+        array_shape = struct.pack(">II", len(array), len(array[0]))
+        serialized_array = array_shape + array.tobytes()
+        encoded_array = base64.b64encode(serialized_array).decode("utf-8")
+        return encoded_array
 
-    # def correct(self) -> "Device":
-    #     pass
+    def _decode_array(self, encoded_array):
+        serialized_array = base64.b64decode(encoded_array)
+        array = np.frombuffer(serialized_array, dtype=np.float32, offset=8)
+        array.shape = struct.unpack(">II", serialized_array[:8])
+        return array
+
+    def _predict(
+        self,
+        model_name: str,
+        model_tags: list[str],
+        model_type: str,
+        binarize: bool,
+    ) -> "Device":
+        function_url = "https://prefab-photonics--predict-dev.modal.run"
+
+        predict_data = {
+            "device_array": self._encode_array(self.device_array),
+            "model_name": model_name,
+            "model_tags": model_tags,
+            "model_type": model_type,
+            "binary": binarize,
+        }
+        response = requests.post(url=function_url, json=predict_data)
+        prediction_array = self._decode_array(response.json())
+        if binarize:
+            prediction_array = geometry.binarize_hard(prediction_array)
+        return self.model_copy(update={"device_array": prediction_array})
+
+    def predict(
+        self,
+        model_name: str,
+        model_tags: list[str],
+        binarize: bool = False,
+    ) -> "Device":
+        return self._predict(
+            model_name=model_name,
+            model_tags=model_tags,
+            model_type="p",
+            binarize=binarize,
+        )
+
+    def correct(
+        self,
+        model_name: str,
+        model_tags: list[str],
+        binarize: bool = False,
+    ) -> "Device":
+        return self._predict(
+            model_name=model_name,
+            model_tags=model_tags,
+            model_type="c",
+            binarize=binarize,
+        )
 
     def to_ndarray(self) -> np.ndarray:
         """
@@ -599,6 +656,44 @@ class Device(BaseModel):
         """
         binarized_device_array = geometry.binarize_hard(
             device_array=self.device_array, eta=eta
+        )
+        return self.model_copy(update={"device_array": binarized_device_array})
+
+    def binarize_monte_carlo(
+        self,
+        threshold_noise_std: float = 2.0,
+        threshold_blur_std: float = 9.0,
+    ) -> "Device":
+        """
+        Binarize the device geometry using a Monte Carlo approach with Gaussian
+        blurring.
+
+        This method applies a dynamic thresholding technique where the threshold value
+        is determined by a base value perturbed by Gaussian-distributed random noise.
+        The threshold is then spatially varied across the device array using Gaussian
+        blurring, simulating a more realistic scenario where the threshold is not
+        uniform across the device.
+
+        Parameters
+        ----------
+        threshold_noise_std : float, optional
+            The standard deviation of the Gaussian distribution used to generate noise
+            for the threshold values. This controls the amount of randomness in the
+            threshold. Defaults to 2.0.
+        threshold_blur_std : float, optional
+            The standard deviation for the Gaussian kernel used in blurring the
+            threshold map. This controls the spatial variation of the threshold across
+            the array. Defaults to 9.0.
+
+        Returns
+        -------
+        Device
+            A new instance of the Device with the binarized geometry.
+        """
+        binarized_device_array = geometry.binarize_monte_carlo(
+            device_array=self.device_array,
+            threshold_noise_std=threshold_noise_std,
+            threshold_blur_std=threshold_blur_std,
         )
         return self.model_copy(update={"device_array": binarized_device_array})
 
