@@ -1,4 +1,4 @@
-# Operating System Files
+# OS files
 .DS_Store
 
 # Python artifacts
@@ -8,5 +8,5 @@ __pycache__/
 # Build artifacts
 dist/
 
-# Test directories
+# Personal directories
 tests/
