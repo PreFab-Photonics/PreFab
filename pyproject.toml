@@ -5,11 +5,11 @@ build-backend = "hatchling.build"
 [project]
 name = "prefab"
 version = "0.5.2"
+description = "Machine learning based prediction of photonic device fabrication"
 authors = [
     {name = "Dusan Gostimirovic", email="dusan@prefabphotonics.com"},
 ]
-keywords = ["photonics", "nanofabrication", "machine learning", "layout"]
-description = "Machine learning based prediction of photonic device fabrication"
+keywords = ["photonics", "nanofabrication", "machine learning"]
 readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
@@ -19,15 +19,16 @@ classifiers = [
 ]
 license = {file = "LICENSE"}
 dependencies = [
+    "gdstk",
     "matplotlib",
     "numpy",
-    "gdspy",
     "opencv-python-headless",
-    "requests"
+    "pydantic",
+    "requests",
+    "toml"
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/PreFab-Photonics/PreFab"
-
-[tool.ruff.lint]
-select = ["E", "F", "UP", "B", "SIM", "I"]
+Homepage = "https://github.com/PreFab-Photonics/PreFab"
+Repository = "https://github.com/PreFab-Photonics/PreFab"
+Website = "https://prefabphotonics.com"

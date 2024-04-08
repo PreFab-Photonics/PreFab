@@ -1,5 +1,7 @@
+gdstk
 matplotlib
 numpy
-gdstk
 opencv-python-headless
+pydantic
 requests
+toml

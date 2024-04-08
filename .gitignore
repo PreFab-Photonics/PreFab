@@ -1,6 +1,12 @@
-# files and directories to ignore
+# Operating System Files
 .DS_Store
-.ipynb_checkpoints
+
+# Python artifacts
 __pycache__/
+.ipynb_checkpoints
+
+# Build artifacts
 dist/
+
+# Test directories
 tests/
