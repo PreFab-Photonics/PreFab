@@ -1,7 +1,9 @@
 """Provides the Device class for representing photonic devices."""
 
 import base64
+import os
 import struct
+import warnings
 from typing import Optional
 
 import cv2
@@ -10,6 +12,7 @@ import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
+import toml
 from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
@@ -166,6 +169,23 @@ class Device(BaseModel):
             raise ValueError("device_array must be a 2D array.")
         return values
 
+    def is_binary(self) -> bool:
+        """
+        Check if the device geometry is binary.
+
+        Returns
+        -------
+        bool
+            True if the device geometry is binary, False otherwise.
+        """
+        unique_values = np.unique(self.device_array)
+        return (
+            np.array_equal(unique_values, [0, 1])
+            or np.array_equal(unique_values, [1, 0])
+            or np.array_equal(unique_values, [0])
+            or np.array_equal(unique_values, [1])
+        )
+
     def _encode_array(self, array):
         array_shape = struct.pack(">II", len(array), len(array[0]))
         serialized_array = array_shape + array.tobytes()
@@ -183,8 +203,15 @@ class Device(BaseModel):
         model_name: str,
         model_tags: list[str],
         model_type: str,
-        binarize: bool,
+        binarize: bool = False,
     ) -> "Device":
+        if not self.is_binary():
+            warnings.warn(
+                "The device is not binary. Prediction accuracy will be affected.",
+                UserWarning,
+                stacklevel=2,
+            )
+
         function_url = "https://prefab-photonics--predict-dev.modal.run"
 
         predict_data = {
@@ -194,10 +221,42 @@ class Device(BaseModel):
             "model_type": model_type,
             "binary": binarize,
         }
-        response = requests.post(url=function_url, json=predict_data)
-        prediction_array = self._decode_array(response.json())
-        if binarize:
-            prediction_array = geometry.binarize_hard(prediction_array)
+
+        with open(os.path.expanduser("~/.prefab.toml")) as file:
+            content = file.readlines()
+            for line in content:
+                if "access_token" in line:
+                    access_token = line.split("=")[1].strip().strip('"')
+                if "refresh_token" in line:
+                    refresh_token = line.split("=")[1].strip().strip('"')
+                    break
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "X-Refresh-Token": refresh_token,
+        }
+
+        response = requests.post(url=function_url, json=predict_data, headers=headers)
+
+        if response.status_code != 200:
+            raise ValueError(response.text)
+        else:
+            response_data = response.json()
+            if "error" in response_data:
+                raise ValueError(response_data["error"])
+            if "prediction_array" in response_data:
+                prediction_array = self._decode_array(response_data["prediction_array"])
+                if binarize:
+                    prediction_array = geometry.binarize_hard(prediction_array)
+            if "new_refresh_token" in response_data:
+                prefab_file_path = os.path.expanduser("~/.prefab.toml")
+                with open(prefab_file_path, "w", encoding="utf-8") as toml_file:
+                    toml.dump(
+                        {
+                            "access_token": response_data["new_access_token"],
+                            "refresh_token": response_data["new_refresh_token"],
+                        },
+                        toml_file,
+                    )
         return self.model_copy(update={"device_array": prediction_array})
 
     def predict(
@@ -206,6 +265,36 @@ class Device(BaseModel):
         model_tags: list[str],
         binarize: bool = False,
     ) -> "Device":
+        """
+        Predict the nanofabrication outcome of the device using a specified model.
+
+        This method sends the device geometry to a serverless prediction service, which
+        uses a specified machine learning model to predict the outcome of the
+        nanofabrication process.
+
+        Parameters
+        ----------
+        model_name : str
+            The name of the model to use for prediction.
+        model_tags : list[str]
+            A list of tags associated with the model. These tags can be used to specify
+            model versions or configurations.
+        binarize : bool, optional
+            If True, the predicted device geometry will be binarized using a threshold
+            method. This is useful for converting probabilistic predictions into binary
+            geometries. Defaults to False.
+
+        Returns
+        -------
+        Device
+            A new instance of the Device class with the predicted geometry.
+
+        Raises
+        ------
+        ValueError
+            If the prediction service returns an error or if the response from the
+            service cannot be processed correctly.
+        """
         return self._predict(
             model_name=model_name,
             model_tags=model_tags,
@@ -217,13 +306,79 @@ class Device(BaseModel):
         self,
         model_name: str,
         model_tags: list[str],
-        binarize: bool = False,
+        binarize: bool = True,
     ) -> "Device":
+        """
+        Correct the nanofabrication outcome of the device using a specified model.
+
+        This method sends the device geometry to a serverless correction service, which
+        uses a specified machine learning model to correct the outcome of the
+        nanofabrication process. The correction aims to adjust the device geometry to
+        compensate for known fabrication errors and improve the accuracy of the final
+        device structure.
+
+        Parameters
+        ----------
+        model_name : str
+            The name of the model to use for correction.
+        model_tags : list[str]
+            A list of tags associated with the model. These tags can be used to specify
+            model versions or configurations.
+        binarize : bool, optional
+            If True, the corrected device geometry will be binarized using a threshold
+            method. This is useful for converting probabilistic corrections into binary
+            geometries. Defaults to True.
+
+        Returns
+        -------
+        Device
+            A new instance of the Device class with the corrected geometry.
+
+        Raises
+        ------
+        ValueError
+            If the correction service returns an error or if the response from the
+            service cannot be processed correctly.
+        """
         return self._predict(
             model_name=model_name,
             model_tags=model_tags,
             model_type="c",
             binarize=binarize,
+        )
+
+    def semulate(
+        self,
+        model_name: str,
+        model_tags: list[str],
+    ) -> "Device":
+        """
+        Simulate the appearance of the device as if viewed under a Scanning Electron
+        Microscope (SEM).
+
+        This method applies a specified machine learning model to transform the device
+        geometry into a style that resembles an SEM image. This can be useful for
+        visualizing how the device might appear under an SEM, which is often used for
+        inspecting the surface and composition of materials at high magnification.
+
+        Parameters
+        ----------
+        model_name : str
+            The name of the model to use for correction.
+        model_tags : list[str]
+            A list of tags associated with the model. These tags can be used to specify
+            model versions or configurations.
+
+        Returns
+        -------
+        Device
+            A new instance of the Device class with its geometry transformed to simulate
+            an SEM image style.
+        """
+        return self._predict(
+            model_name=model_name,
+            model_tags=model_tags,
+            model_type="s",
         )
 
     def to_ndarray(self) -> np.ndarray:
