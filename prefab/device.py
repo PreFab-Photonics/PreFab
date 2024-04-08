@@ -212,7 +212,7 @@ class Device(BaseModel):
                 stacklevel=2,
             )
 
-        function_url = "https://prefab-photonics--predict-dev.modal.run"
+        function_url = "https://prefab-photonics--predict-v1.modal.run"
 
         predict_data = {
             "device_array": self._encode_array(self.device_array),
