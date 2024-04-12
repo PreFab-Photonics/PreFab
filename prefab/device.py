@@ -8,13 +8,11 @@ from typing import Optional
 
 import cv2
 import gdstk
-import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
 import toml
 from matplotlib.axes import Axes
-from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 from pydantic import BaseModel, Field, conint, root_validator, validator
 
@@ -132,6 +130,9 @@ class Device(BaseModel):
             device_array=device_array, buffer_spec=buffer_spec or BufferSpec()
         )
         self._initial_processing()
+
+    def __call__(self, *args, **kwargs):
+        return self.plot(*args, **kwargs)
 
     def _initial_processing(self):
         buffer_thickness = self.buffer_spec.thickness
@@ -461,10 +462,10 @@ class Device(BaseModel):
             gds_layer=gds_layer,
             contour_approx_mode=contour_approx_mode,
         )
+        print(f"Saving GDS to '{gds_path}'...")
         gdstk_library = gdstk.Library()
         gdstk_library.add(gdstk_cell)
         gdstk_library.write_gds(outfile=gds_path, max_points=8190)
-        print(f"Saved GDS to '{gds_path}'")
 
     def to_gdstk(
         self,
@@ -496,6 +497,7 @@ class Device(BaseModel):
         gdstk.Cell
             The GDSTK cell object representing the device geometry.
         """
+        print(f"Creating cell '{cell_name}'...")
         gdstk_cell = self._device_to_gdstk(
             cell_name=cell_name,
             gds_layer=gds_layer,
@@ -557,48 +559,99 @@ class Device(BaseModel):
         return cell
 
     def _plot_base(
-        self, show_buffer: bool = True, ax: Optional[Axes] = None, **kwargs
+        self,
+        plot_array: np.ndarray,
+        show_buffer: bool,
+        bounds: Optional[tuple[tuple[int, int], tuple[int, int]]],
+        ax: Optional[Axes],
+        **kwargs,
     ) -> Axes:
         if ax is None:
             _, ax = plt.subplots()
         ax.set_ylabel("y (nm)")
         ax.set_xlabel("x (nm)")
 
+        min_x, min_y = (0, 0) if bounds is None else bounds[0]
+        max_x, max_y = plot_array.shape[::-1] if bounds is None else bounds[1]
+        min_x = max(min_x, 0)
+        min_y = max(min_y, 0)
+        max_x = "end" if max_x == "end" else min(max_x, plot_array.shape[1])
+        max_y = "end" if max_y == "end" else min(max_y, plot_array.shape[0])
+        max_x = plot_array.shape[1] if max_x == "end" else max_x
+        max_y = plot_array.shape[0] if max_y == "end" else max_y
+        plot_array = plot_array[
+            plot_array.shape[0] - max_y : plot_array.shape[0] - min_y,
+            min_x:max_x,
+        ]
+        extent = [min_x, max_x, min_y, max_y]
+
+        max_size = (1000, 1000)
+        scale_x = min(1, max_size[0] / plot_array.shape[1])
+        scale_y = min(1, max_size[1] / plot_array.shape[0])
+        fx = min(scale_x, scale_y)
+        fy = fx
+        plot_array = cv2.resize(
+            plot_array,
+            dsize=(0, 0),
+            fx=fx,
+            fy=fy,
+            interpolation=cv2.INTER_AREA,
+        )
+
+        mappable = ax.imshow(
+            plot_array,
+            extent=extent,
+            **kwargs,
+        )
+
         if show_buffer:
             self._add_buffer_visualization(ax)
-        return ax
+
+        return mappable, ax
 
     def plot(
-        self, show_buffer: bool = True, ax: Optional[Axes] = None, **kwargs
+        self,
+        show_buffer: bool = True,
+        bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
+        ax: Optional[Axes] = None,
+        **kwargs,
     ) -> Axes:
         """
-        Visualizes the device along with its buffer zones.
+        Visualizes the device geometry, optionally including buffer zones.
 
-        This method plots the device geometry, allowing for the visualization of the
-        device along with its buffer zones if specified. The plot can be customized with
-        various matplotlib parameters and can be drawn on an existing matplotlib Axes
-        object or create a new one if none is provided.
+        This method allows for the visualization of the device geometry with an option
+        to include buffer zones. It supports zooming into a specific area of the device.
+        The visualization can be customized with various matplotlib parameters and can
+        be drawn on an existing matplotlib Axes object or create a new one if none is
+        provided.
 
         Parameters
         ----------
         show_buffer : bool, optional
-            If True, the buffer zones around the device will be visualized. This can
-            help in understanding the spatial context of the device within its buffer.
-            By default, it is set to True.
+            If True, visualizes the buffer zones around the device to provide spatial
+            context. Defaults to True.
+        bounds : Optional[tuple[tuple[int, int], tuple[int, int]]], optional
+            Specifies the bounds for zooming into the device geometry, formatted as
+            ((min_x, min_y), (max_x, max_y)). If 'max_x' or 'max_y' is set to "end", it
+            will be replaced with the corresponding dimension size of the device array.
+            If None, the entire device geometry is visualized.
         ax : Optional[Axes], optional
-            An existing matplotlib Axes object to draw the device geometry on. If None,
-            a new figure and axes will be created. Defaults to None.
+            An existing matplotlib Axes object to draw the device geometry on. If
+            None, a new figure and axes will be created. Defaults to None.
+        **kwargs
+            Additional matplotlib parameters for plot customization.
 
         Returns
         -------
         Axes
-            The matplotlib Axes object containing the plot. This can be used for further
-            customization or saving the plot after the method returns.
+            The matplotlib Axes object containing the plot. This object can be used for
+            further plot customization or saving the plot after the method returns.
         """
-        ax = self._plot_base(show_buffer=show_buffer, ax=ax, **kwargs)
-        _ = ax.imshow(
-            self.device_array,
-            extent=[0, self.device_array.shape[1], 0, self.device_array.shape[0]],
+        _, ax = self._plot_base(
+            plot_array=self.device_array,
+            show_buffer=show_buffer,
+            bounds=bounds,
+            ax=ax,
             **kwargs,
         )
         return ax
@@ -606,8 +659,9 @@ class Device(BaseModel):
     def plot_contour(
         self,
         linewidth: Optional[int] = None,
-        label: Optional[str] = "Device contour",
+        # label: Optional[str] = "Device contour",
         show_buffer: bool = True,
+        bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
         ax: Optional[Axes] = None,
         **kwargs,
     ):
@@ -624,14 +678,19 @@ class Device(BaseModel):
         linewidth : Optional[int], optional
             The width of the contour lines. If None, the linewidth is automatically
             determined based on the size of the device array. Defaults to None.
-        label : Optional[str], optional
-            The label for the contour in the plot legend. Defaults to "Device contour".
         show_buffer : bool, optional
             If True, the buffer zones around the device will be visualized. By default,
             it is set to True.
+        bounds : Optional[tuple[tuple[int, int], tuple[int, int]]], optional
+            Specifies the bounds for zooming into the device geometry, formatted as
+            ((min_x, min_y), (max_x, max_y)). If 'max_x' or 'max_y' is set to "end", it
+            will be replaced with the corresponding dimension size of the device array.
+            If None, the entire device geometry is visualized.
         ax : Optional[Axes], optional
             An existing matplotlib Axes object to draw the device contour on. If None, a
             new figure and axes will be created. Defaults to None.
+        **kwargs
+            Additional matplotlib parameters for plot customization.
 
         Returns
         -------
@@ -639,7 +698,6 @@ class Device(BaseModel):
             The matplotlib Axes object containing the contour plot. This can be used for
             further customization or saving the plot after the method returns.
         """
-        ax = self._plot_base(show_buffer=show_buffer, ax=ax, **kwargs)
         kwargs.setdefault("cmap", "spring")
         if linewidth is None:
             linewidth = self.device_array.shape[0] // 100
@@ -652,28 +710,33 @@ class Device(BaseModel):
         contour_array = np.zeros_like(self.device_array, dtype=np.uint8)
         cv2.drawContours(contour_array, contours, -1, (255,), linewidth)
         contour_array = np.ma.masked_equal(contour_array, 0)
-        _ = ax.imshow(
-            contour_array,
-            extent=[0, self.device_array.shape[1], 0, self.device_array.shape[0]],
+
+        _, ax = self._plot_base(
+            plot_array=contour_array,
+            show_buffer=show_buffer,
+            bounds=bounds,
+            ax=ax,
             **kwargs,
         )
-
-        cmap = cm.get_cmap(kwargs.get("cmap", "spring"))
-        legend_proxy = Line2D([0], [0], linestyle="-", color=cmap(1))
-        ax.legend([legend_proxy], [label], loc="upper right")
+        # cmap = cm.get_cmap(kwargs.get("cmap", "spring"))
+        # legend_proxy = Line2D([0], [0], linestyle="-", color=cmap(1))
+        # ax.legend([legend_proxy], [label], loc="upper right")
         return ax
 
     def plot_uncertainty(
-        self, show_buffer: bool = True, ax: Optional[Axes] = None, **kwargs
+        self,
+        show_buffer: bool = True,
+        bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
+        ax: Optional[Axes] = None,
+        **kwargs,
     ):
         """
         Visualizes the uncertainty in the edge positions of the predicted device.
 
-        This method plots the predicted device geometry with an overlay indicating the
-        uncertainty associated with the positions of the edges of the device. The
-        uncertainty is represented as a gradient, with areas of higher uncertainty
-        indicating a greater likelihood of variation in edge position from run to run
-        due to inconsistencies in the fabrication process. This visualization can help
+        This method plots the uncertainty associated with the positions of the edges of
+        the device. The uncertainty is represented as a gradient, with areas of higher
+        uncertainty indicating a greater likelihood of the edge position from run to run
+        (due to inconsistencies in the fabrication process). This visualization can help
         in identifying areas within the device geometry that may require design
         adjustments to improve fabrication consistency.
 
@@ -682,9 +745,16 @@ class Device(BaseModel):
         show_buffer : bool, optional
             If True, the buffer zones around the device will also be visualized. By
             default, it is set to True.
+        bounds : Optional[tuple[tuple[int, int], tuple[int, int]]], optional
+            Specifies the bounds for zooming into the device geometry, formatted as
+            ((min_x, min_y), (max_x, max_y)). If 'max_x' or 'max_y' is set to "end", it
+            will be replaced with the corresponding dimension size of the device array.
+            If None, the entire device geometry is visualized.
         ax : Optional[Axes], optional
             An existing matplotlib Axes object to draw the uncertainty visualization on.
             If None, a new figure and axes will be created. Defaults to None.
+        **kwargs
+            Additional matplotlib parameters for plot customization.
 
         Returns
         -------
@@ -693,29 +763,30 @@ class Device(BaseModel):
             can be used for further customization or saving the plot after the method
             returns.
         """
-        ax = self._plot_base(show_buffer=show_buffer, ax=ax, **kwargs)
-
         uncertainty_array = 1 - 2 * np.abs(0.5 - self.device_array)
 
-        _ = ax.imshow(
-            uncertainty_array,
-            extent=[0, self.device_array.shape[1], 0, self.device_array.shape[0]],
+        mappable, ax = self._plot_base(
+            plot_array=uncertainty_array,
+            show_buffer=show_buffer,
+            bounds=bounds,
+            ax=ax,
             **kwargs,
         )
-
-        cbar = plt.colorbar(_, ax=ax)
+        cbar = plt.colorbar(mappable, ax=ax)
         cbar.set_label("Uncertainty (a.u.)")
         return ax
 
-    def _add_buffer_visualization(self, ax):
+    def _add_buffer_visualization(self, ax: Axes):
+        plot_array = self.device_array
+
         buffer_thickness = self.buffer_spec.thickness
         buffer_fill = (0, 1, 0, 0.2)
         buffer_hatch = "/"
 
         mid_rect = Rectangle(
             (buffer_thickness, buffer_thickness),
-            self.device_array.shape[1] - 2 * buffer_thickness,
-            self.device_array.shape[0] - 2 * buffer_thickness,
+            plot_array.shape[1] - 2 * buffer_thickness,
+            plot_array.shape[0] - 2 * buffer_thickness,
             facecolor="none",
             edgecolor="black",
             linewidth=1,
@@ -724,7 +795,7 @@ class Device(BaseModel):
 
         top_rect = Rectangle(
             (0, 0),
-            self.device_array.shape[1],
+            plot_array.shape[1],
             buffer_thickness,
             facecolor=buffer_fill,
             hatch=buffer_hatch,
@@ -732,8 +803,8 @@ class Device(BaseModel):
         ax.add_patch(top_rect)
 
         bottom_rect = Rectangle(
-            (0, self.device_array.shape[0] - buffer_thickness),
-            self.device_array.shape[1],
+            (0, plot_array.shape[0] - buffer_thickness),
+            plot_array.shape[1],
             buffer_thickness,
             facecolor=buffer_fill,
             hatch=buffer_hatch,
@@ -743,7 +814,7 @@ class Device(BaseModel):
         left_rect = Rectangle(
             (0, buffer_thickness),
             buffer_thickness,
-            self.device_array.shape[0] - 2 * buffer_thickness,
+            plot_array.shape[0] - 2 * buffer_thickness,
             facecolor=buffer_fill,
             hatch=buffer_hatch,
         )
@@ -751,11 +822,11 @@ class Device(BaseModel):
 
         right_rect = Rectangle(
             (
-                self.device_array.shape[1] - buffer_thickness,
+                plot_array.shape[1] - buffer_thickness,
                 buffer_thickness,
             ),
             buffer_thickness,
-            self.device_array.shape[0] - 2 * buffer_thickness,
+            plot_array.shape[0] - 2 * buffer_thickness,
             facecolor=buffer_fill,
             hatch=buffer_hatch,
         )
