@@ -11,7 +11,7 @@ from .device import Device
 
 
 def from_ndarray(
-    ndarray: np.ndarray, ndarray_width_nm: int = None, binarize: bool = True, **kwargs
+    ndarray: np.ndarray, resolution: int = 1, binarize: bool = True, **kwargs
 ) -> Device:
     """
     Create a Device from an ndarray.
@@ -20,10 +20,10 @@ def from_ndarray(
     ----------
     ndarray : np.ndarray
         The input array representing the device layout.
-    ndarray_width_nm : int, optional
-        The desired width of the device in nanometers. If specified, the input array
-        will be resized to this width while maintaining aspect ratio. If None, no
-        resizing is performed.
+    resolution : int, optional
+        The resolution of the ndarray in nanometers per pixel, defaulting to 1 nm per
+        pixel. If specified, the input array will be resized based on this resolution to
+        match the desired physical size.
     binarize : bool, optional
         If True, the input array will be binarized (converted to binary values) before
         conversion to a Device object. This is useful for processing grayscale images
@@ -38,9 +38,7 @@ def from_ndarray(
         binarization.
     """
     device_array = ndarray
-    if ndarray_width_nm is not None:
-        scale = ndarray_width_nm / device_array.shape[1]
-        device_array = cv2.resize(device_array, dsize=(0, 0), fx=scale, fy=scale)
+    device_array = cv2.resize(device_array, dsize=(0, 0), fx=resolution, fy=resolution)
     if binarize:
         device_array = geometry.binarize_hard(device_array)
     return Device(device_array=device_array, **kwargs)
