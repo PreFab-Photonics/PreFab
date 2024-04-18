@@ -20,18 +20,15 @@
 
 `PreFab` accommodates unique _predictor_ and _corrector_ models for each photonic foundry, regularly updated based on recent fabrication data. Current models include (see full list on [`docs/models.md`](https://github.com/PreFab-Photonics/PreFab/blob/main/docs/models.md)):
 
-| Foundry   | Process                                                                            | Latest Version   | Latest Dataset   | Model Name    | Model Tag   | Status |
-| --------- | ---------------------------------------------------------------------------------- | ---------------- | ---------------- | ------------- | ----------- | ------ |
-| ANT       | [NanoSOI](https://www.appliednt.com/nanosoi-fabrication-service/)                  | v6 (Nov 24 2023) | d8 (Feb 6 2023)  | ANT_NanoSOI   | v6-d8       | Beta   |
-| ANT       | [SiN (Upper Edge)](https://www.appliednt.com/nanosoi/sys/resources/specs_nitride/) | v5 (Jun 3 2023)  | d0 (Jun 1 2023)  | ANT_SiN       | v5-d0-upper | Alpha  |
-| ANT       | [SiN (Lower Edge)](https://www.appliednt.com/nanosoi/sys/resources/specs_nitride/) | v5 (Jun 3 2023)  | d0 (Jun 1 2023)  | ANT_SiN       | v5-d0-lower | Alpha  |
-| SiEPICfab | [SOI](https://siepic.ca/fabrication/)                                              | v5 (Jun 3 2023)  | d0 (Jun 14 2023) | SiEPICfab_SOI | v5-d0       | Alpha  |
+| Foundry | Process                                                                            | Latest Version   | Latest Dataset  | Model Name  | Model Tag   | Status |
+| ------- | ---------------------------------------------------------------------------------- | ---------------- | --------------- | ----------- | ----------- | ------ |
+| ANT     | [NanoSOI](https://www.appliednt.com/nanosoi-fabrication-service/)                  | v6 (Nov 24 2023) | d8 (Feb 6 2023) | ANT_NanoSOI | v6-d8       | Beta   |
+| ANT     | [SiN (Upper Edge)](https://www.appliednt.com/nanosoi/sys/resources/specs_nitride/) | v5 (Jun 3 2023)  | d0 (Jun 1 2023) | ANT_SiN     | v5-d0-upper | Alpha  |
+| ANT     | [SiN (Lower Edge)](https://www.appliednt.com/nanosoi/sys/resources/specs_nitride/) | v5 (Jun 3 2023)  | d0 (Jun 1 2023) | ANT_SiN     | v5-d0-lower | Alpha  |
 
 > _New models and foundries are to be added. Usage may change. For additional foundry and process models, feel free to contact us or raise an issue._
 
 ## Installation
-
-### Local
 
 Install `PreFab` via pip:
 
@@ -46,12 +43,6 @@ git clone https://github.com/PreFab-Photonics/PreFab.git
 cd PreFab
 pip install -e .
 ```
-
-### Online
-
-Use `PreFab` online through GitHub Codespaces:
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?machine=basicLinux32gb&repo=608330448&ref=main&devcontainer_path=.devcontainer%2Fdevcontainer.json&location=EastUs)
 
 ## Getting Started
 
