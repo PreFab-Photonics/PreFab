@@ -1,0 +1,87 @@
+site_name: "Docs"
+
+site_url: https://example.com
+repo_url: https://github.com/PreFab-Photonics/PreFab
+repo_name: PreFab-Photonics/PreFab
+
+nav:
+  - Getting started: index.md
+  - Making a prediction: examples/1_prediction.ipynb
+  - Making a correction: examples/2_correction.ipynb
+  - Model library: models.md
+  - Reference:
+      - Compare: reference/compare.md
+      - Device: reference/device.md
+      - Geometry: reference/geometry.md
+      - Read: reference/read.md
+
+theme:
+  name: "material"
+  palette:
+    scheme: slate
+    primary: black
+    accent: green
+  font:
+    text: Roboto
+    code: Roboto Mono
+  language: en
+  logo: assets/logo_neue.svg
+  favicon: assets/favicon.ico
+  # icon:
+  #   repo: fontawesome/brands/github
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.footer
+    - content.code.copy
+
+extra:
+  homepage: https://prefabphotonics.com
+  # consent:
+  #   title: Cookie consent
+  #   description: >-
+  #     We use cookies to recognize your repeated visits and preferences, as well
+  #     as to measure the effectiveness of our documentation and whether users
+  #     find what they're searching for. With your consent, you're helping us to
+  #     make our documentation better.
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/PreFab-Photonics/PreFab
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/102847109/
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/prefab/
+
+copyright: Copyright &copy; 2024 PreFab Photonics
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - footnotes
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+  - md_in_html
+  - codehilite
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          rendering:
+            show_source: true
+  - mknotebooks
