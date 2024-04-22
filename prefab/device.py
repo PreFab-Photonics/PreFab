@@ -237,9 +237,10 @@ class Device(BaseModel):
         ) as response:
             response.raise_for_status()
             event_type = None
+            model_descriptions = {"p": "Prediction", "c": "Correction", "s": "SEMulate"}
             progress_bar = tqdm(
                 total=100,
-                desc="Processing",
+                desc=f"{model_descriptions[model_type]}",
                 unit="%",
                 colour="green",
                 bar_format="{l_bar}{bar:30}{r_bar}{bar:-10b}",
