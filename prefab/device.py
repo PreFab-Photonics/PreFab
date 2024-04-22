@@ -1,9 +1,9 @@
 """Provides the Device class for representing photonic devices."""
 
 import base64
+import io
+import json
 import os
-import struct
-import warnings
 from typing import Optional
 
 import cv2
@@ -14,7 +14,9 @@ import requests
 import toml
 from matplotlib.axes import Axes
 from matplotlib.patches import Rectangle
+from PIL import Image
 from pydantic import BaseModel, Field, conint, root_validator, validator
+from tqdm import tqdm
 
 from . import geometry
 
@@ -188,41 +190,24 @@ class Device(BaseModel):
         )
 
     def _encode_array(self, array):
-        array_shape = struct.pack(">II", len(array), len(array[0]))
-        serialized_array = array_shape + array.tobytes()
-        encoded_array = base64.b64encode(serialized_array).decode("utf-8")
-        return encoded_array
+        image = Image.fromarray(np.uint8(array * 255))
+        buffered = io.BytesIO()
+        image.save(buffered, format="PNG")
+        encoded_png = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        return encoded_png
 
-    def _decode_array(self, encoded_array):
-        serialized_array = base64.b64decode(encoded_array)
-        array = np.frombuffer(serialized_array, dtype=np.float32, offset=8)
-        array.shape = struct.unpack(">II", serialized_array[:8])
-        return array
+    def _decode_array(self, encoded_png):
+        binary_data = base64.b64decode(encoded_png)
+        image = Image.open(io.BytesIO(binary_data))
+        return np.array(image) / 255
 
-    def _predict(
+    def _predict_array(
         self,
         model_name: str,
         model_tags: list[str],
         model_type: str,
         binarize: bool = False,
     ) -> "Device":
-        if not self.is_binary():
-            warnings.warn(
-                "The device is not binary. Prediction accuracy will be affected.",
-                UserWarning,
-                stacklevel=2,
-            )
-
-        function_url = "https://prefab-photonics--predict-v1.modal.run"
-
-        predict_data = {
-            "device_array": self._encode_array(self.device_array),
-            "model_name": model_name,
-            "model_tags": model_tags,
-            "model_type": model_type,
-            "binary": binarize,
-        }
-
         with open(os.path.expanduser("~/.prefab.toml")) as file:
             content = file.readlines()
             for line in content:
@@ -236,29 +221,77 @@ class Device(BaseModel):
             "X-Refresh-Token": refresh_token,
         }
 
-        response = requests.post(url=function_url, json=predict_data, headers=headers)
+        predict_data = {
+            "device_array": self._encode_array(self.device_array),
+            "model_name": model_name,
+            "model_tags": model_tags,
+            "model_type": model_type,
+            "binary": binarize,
+        }
+        json_data = json.dumps(predict_data)
 
-        if response.status_code != 200:
-            raise ValueError(response.text)
-        else:
-            response_data = response.json()
-            if "error" in response_data:
-                raise ValueError(response_data["error"])
-            if "prediction_array" in response_data:
-                prediction_array = self._decode_array(response_data["prediction_array"])
-                if binarize:
-                    prediction_array = geometry.binarize_hard(prediction_array)
-            if "new_refresh_token" in response_data:
-                prefab_file_path = os.path.expanduser("~/.prefab.toml")
-                with open(prefab_file_path, "w", encoding="utf-8") as toml_file:
-                    toml.dump(
-                        {
-                            "access_token": response_data["new_access_token"],
-                            "refresh_token": response_data["new_refresh_token"],
-                        },
-                        toml_file,
-                    )
-        return self.model_copy(update={"device_array": prediction_array})
+        endpoint_url = "https://prefab-photonics--predict-v1.modal.run"
+
+        with requests.post(
+            endpoint_url, data=json_data, headers=headers, stream=True
+        ) as response:
+            response.raise_for_status()
+            event_type = None
+            progress_bar = tqdm(
+                total=100,
+                desc="Processing",
+                unit="%",
+                colour="green",
+                bar_format="{l_bar}{bar:30}{r_bar}{bar:-10b}",
+            )
+
+            for line in response.iter_lines():
+                if line:
+                    decoded_line = line.decode("utf-8").strip()
+                    if decoded_line.startswith("event:"):
+                        event_type = decoded_line.split(":")[1].strip()
+                    elif decoded_line.startswith("data:"):
+                        try:
+                            data_content = json.loads(decoded_line.split("data: ")[1])
+                            if event_type == "progress":
+                                progress = round(100 * data_content["progress"])
+                                progress_bar.update(progress - progress_bar.n)
+                            elif event_type == "result":
+                                final_result = data_content["result"]
+                                progress_bar.close()
+                                return self._decode_array(final_result)
+                            elif event_type == "end":
+                                print("Stream ended.")
+                                progress_bar.close()
+                                break
+                            elif event_type == "auth":
+                                if "new_refresh_token" in data_content["auth"]:
+                                    prefab_file_path = os.path.expanduser(
+                                        "~/.prefab.toml"
+                                    )
+                                    with open(
+                                        prefab_file_path, "w", encoding="utf-8"
+                                    ) as toml_file:
+                                        toml.dump(
+                                            {
+                                                "access_token": data_content["auth"][
+                                                    "new_access_token"
+                                                ],
+                                                "refresh_token": data_content["auth"][
+                                                    "new_refresh_token"
+                                                ],
+                                            },
+                                            toml_file,
+                                        )
+                            elif event_type == "error":
+                                print(f"Error: {data_content['error']}")
+                                progress_bar.close()
+                        except json.JSONDecodeError:
+                            print(
+                                "Failed to decode JSON:",
+                                decoded_line.split("data: ")[1],
+                            )
+        return final_result
 
     def predict(
         self,
@@ -296,12 +329,13 @@ class Device(BaseModel):
             If the prediction service returns an error or if the response from the
             service cannot be processed correctly.
         """
-        return self._predict(
+        prediction_array = self._predict_array(
             model_name=model_name,
             model_tags=model_tags,
             model_type="p",
             binarize=binarize,
         )
+        return self.model_copy(update={"device_array": prediction_array})
 
     def correct(
         self,
@@ -341,12 +375,13 @@ class Device(BaseModel):
             If the correction service returns an error or if the response from the
             service cannot be processed correctly.
         """
-        return self._predict(
+        correction_array = self._predict_array(
             model_name=model_name,
             model_tags=model_tags,
             model_type="c",
             binarize=binarize,
         )
+        return self.model_copy(update={"device_array": correction_array})
 
     def semulate(
         self,
@@ -376,11 +411,12 @@ class Device(BaseModel):
             A new instance of the Device class with its geometry transformed to simulate
             an SEM image style.
         """
-        return self._predict(
+        semulated_array = self._predict_array(
             model_name=model_name,
             model_tags=model_tags,
             model_type="s",
         )
+        return self.model_copy(update={"device_array": semulated_array})
 
     def to_ndarray(self) -> np.ndarray:
         """
@@ -776,6 +812,27 @@ class Device(BaseModel):
         cbar.set_label("Uncertainty (a.u.)")
         return ax
 
+    def plot_compare(
+        self,
+        ref_device: "Device",
+        show_buffer: bool = True,
+        bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
+        ax: Optional[Axes] = None,
+        **kwargs,
+    ) -> Axes:
+        plot_array = ref_device.device_array - self.device_array
+        mappable, ax = self._plot_base(
+            plot_array=plot_array,
+            show_buffer=show_buffer,
+            bounds=bounds,
+            ax=ax,
+            cmap="jet",
+            **kwargs,
+        )
+        cbar = plt.colorbar(mappable, ax=ax)
+        cbar.set_label("Dilation (a.u.)                        Erosion (a.u.)")
+        return ax
+
     def _add_buffer_visualization(self, ax: Axes):
         plot_array = self.device_array
 
@@ -1042,3 +1099,28 @@ class Device(BaseModel):
             device_array=self.device_array, kernel_size=kernel_size
         )
         return self.model_copy(update={"device_array": dilated_device_array})
+
+    def uncertainty(self) -> "Device":
+        uncertainty_array = 1 - 2 * np.abs(0.5 - self.device_array)
+        return self.model_copy(update={"device_array": uncertainty_array})
+
+    def align_to(self, device: "Device") -> "Device":
+        device_array = device.device_array
+
+        current_height, current_width = self.device_array.shape
+        target_height, target_width = device.device_array.shape
+        pad_height = max(0, target_height - current_height)
+        pad_width = max(0, target_width - current_width)
+
+        pad_top = pad_height // 2
+        pad_bottom = pad_height - pad_top
+        pad_left = pad_width // 2
+        pad_right = pad_width - pad_left
+
+        device_array = np.pad(
+            self.device_array,
+            pad_width=((pad_top, pad_bottom), (pad_left, pad_right)),
+            mode="constant",
+            constant_values=0,
+        )
+        return self.model_copy(update={"device_array": device_array})
