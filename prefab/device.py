@@ -48,16 +48,17 @@ class BufferSpec(BaseModel):
 
     Example
     -------
-    >>> import prefab as pf
-    >>> buffer_spec = pf.BufferSpec(
-    ...     mode={
-    ...         "top": "constant",
-    ...         "bottom": "edge",
-    ...         "left": "constant",
-    ...         "right": "edge"
-    ...     },
-    ...     thickness=150
-    ... )
+        import prefab as pf
+
+        buffer_spec = pf.BufferSpec(
+            mode={
+                "top": "constant",
+                "bottom": "edge",
+                "left": "constant",
+                "right": "edge",
+            },
+            thickness=150,
+        )
     """
 
     mode: dict[str, str] = Field(
