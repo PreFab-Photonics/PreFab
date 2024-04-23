@@ -206,7 +206,7 @@ class Device(BaseModel):
         model_name: str,
         model_tags: list[str],
         model_type: str,
-        binarize: bool = False,
+        binarize: bool,
     ) -> "Device":
         with open(os.path.expanduser("~/.prefab.toml")) as file:
             content = file.readlines()
@@ -258,9 +258,15 @@ class Device(BaseModel):
                                 progress = round(100 * data_content["progress"])
                                 progress_bar.update(progress - progress_bar.n)
                             elif event_type == "result":
-                                final_result = data_content["result"]
+                                prediction_array = self._decode_array(
+                                    data_content["result"]
+                                )
+                                if binarize:
+                                    prediction_array = geometry.binarize_hard(
+                                        prediction_array
+                                    )
                                 progress_bar.close()
-                                return self._decode_array(final_result)
+                                return prediction_array
                             elif event_type == "end":
                                 print("Stream ended.")
                                 progress_bar.close()
@@ -292,7 +298,6 @@ class Device(BaseModel):
                                 "Failed to decode JSON:",
                                 decoded_line.split("data: ")[1],
                             )
-        return final_result
 
     def predict(
         self,
