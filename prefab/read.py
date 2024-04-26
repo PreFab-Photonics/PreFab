@@ -257,7 +257,7 @@ def from_sem(
     return Device(device_array=device_array, **kwargs)
 
 
-def get_sem_resolution(sem_path: str, resolution_key: str) -> float:
+def get_sem_resolution(sem_path: str, sem_resolution_key: str) -> float:
     """
     Extracts the resolution of a Scanning Electron Microscope (SEM) image from its
     metadata.
@@ -266,7 +266,7 @@ def get_sem_resolution(sem_path: str, resolution_key: str) -> float:
     ----------
     sem_path : str
         The file path to the SEM image.
-    resolution_key : str
+    sem_resolution_key : str
         The key to look for in the SEM image metadata to extract the resolution.
 
     Returns
@@ -280,7 +280,7 @@ def get_sem_resolution(sem_path: str, resolution_key: str) -> float:
         If the resolution key is not found in the SEM image metadata.
     """
     with open(sem_path, "rb") as file:
-        resolution_key_bytes = resolution_key.encode("utf-8")
+        resolution_key_bytes = sem_resolution_key.encode("utf-8")
         for line in file:
             if resolution_key_bytes in line:
                 line_str = line.decode("utf-8")
@@ -290,4 +290,4 @@ def get_sem_resolution(sem_path: str, resolution_key: str) -> float:
                     if value > 100:
                         value /= 1000
                     return value
-    raise ValueError(f"Resolution key '{resolution_key}' not found in {sem_path}.")
+    raise ValueError(f"Resolution key '{sem_resolution_key}' not found in {sem_path}.")

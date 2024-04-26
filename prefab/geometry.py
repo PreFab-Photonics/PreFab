@@ -273,3 +273,25 @@ def dilate(device_array: np.ndarray, kernel_size: int) -> np.ndarray:
     """
     kernel = np.ones((kernel_size, kernel_size), dtype=np.uint8)
     return cv2.dilate(device_array, kernel=kernel)
+
+
+def pad_multiple(
+    device_array: np.ndarray, slice_length: int, pad_factor: int
+) -> np.ndarray:
+    pady = (
+        slice_length * np.ceil(device_array.shape[0] / slice_length)
+        - device_array.shape[0]
+    ) / 2 + slice_length * (pad_factor - 1) / 2
+    padx = (
+        slice_length * np.ceil(device_array.shape[1] / slice_length)
+        - device_array.shape[1]
+    ) / 2 + slice_length * (pad_factor - 1) / 2
+    device_array = np.pad(
+        device_array,
+        [
+            (int(np.ceil(pady)), int(np.floor(pady))),
+            (int(np.ceil(padx)), int(np.floor(padx))),
+        ],
+        mode="constant",
+    )
+    return device_array
