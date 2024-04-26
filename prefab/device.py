@@ -1107,6 +1107,17 @@ class Device(BaseModel):
         )
         return self.model_copy(update={"device_array": dilated_device_array})
 
+    def pad_multiple(self, slice_length: int = 1024, pad_factor: int = 1) -> "Device":
+        """
+        Pad the device geometry multiple times.
+        """
+        padded_device_array = geometry.pad_multiple(
+            device_array=self.device_array,
+            slice_length=slice_length,
+            pad_factor=pad_factor,
+        )
+        return self.model_copy(update={"device_array": padded_device_array})
+
     def uncertainty(self) -> "Device":
         uncertainty_array = 1 - 2 * np.abs(0.5 - self.device_array)
         return self.model_copy(update={"device_array": uncertainty_array})
