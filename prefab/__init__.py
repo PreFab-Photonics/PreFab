@@ -7,6 +7,7 @@ Usage:
 
 from . import compare, geometry, read
 from .device import BufferSpec, Device
+from .models import models
 
 __all__ = [
     "Device",
@@ -14,4 +15,5 @@ __all__ = [
     "geometry",
     "read",
     "compare",
+    "models",
 ]
