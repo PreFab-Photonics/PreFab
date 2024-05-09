@@ -68,7 +68,7 @@ class BufferSpec(BaseModel):
             "right": "constant",
         }
     )
-    thickness: conint(gt=0) = 128
+    thickness: conint(ge=0) = 128
 
     @validator("mode", pre=True)
     def check_mode(cls, v):
@@ -129,7 +129,7 @@ class Device(BaseModel):
             indicating an invalid device geometry.
         """
         super().__init__(
-            device_array=device_array, buffer_spec=buffer_spec or BufferSpec()
+            device_array=device_array, buffer_spec=buffer_spec or BufferSpec(thickness = 0)
         )
         self._initial_processing()
 
