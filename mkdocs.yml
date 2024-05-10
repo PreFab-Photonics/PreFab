@@ -13,6 +13,7 @@ nav:
       - Compare: reference/compare.md
       - Device: reference/device.md
       - Geometry: reference/geometry.md
+      - Models: reference/models.md
       - Read: reference/read.md
 
 theme:
@@ -84,4 +85,7 @@ plugins:
         python:
           rendering:
             show_source: true
+          options:
+            docstring_style: numpy
+            show_docstring_examples: true
   - mknotebooks
