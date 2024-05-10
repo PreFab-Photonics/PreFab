@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field, conint, root_validator, validator
 from tqdm import tqdm
 
 from . import geometry
+from .models import Model
 
 
 class BufferSpec(BaseModel):
@@ -162,7 +163,9 @@ class Device(BaseModel):
             mode=buffer_mode["right"],
         )
 
-        self.device_array = self.device_array.astype(np.float32)
+        self.device_array = np.expand_dims(
+            self.device_array.astype(np.float32), axis=-1
+        )
 
     @root_validator(pre=True)
     def check_device_array(cls, values):
@@ -204,28 +207,38 @@ class Device(BaseModel):
 
     def _predict_array(
         self,
-        model_name: str,
-        model_tags: list[str],
+        model: Model,
         model_type: str,
         binarize: bool,
     ) -> "Device":
-        with open(os.path.expanduser("~/.prefab.toml")) as file:
-            content = file.readlines()
-            for line in content:
-                if "access_token" in line:
-                    access_token = line.split("=")[1].strip().strip('"')
-                if "refresh_token" in line:
-                    refresh_token = line.split("=")[1].strip().strip('"')
-                    break
+        try:
+            with open(os.path.expanduser("~/.prefab.toml")) as file:
+                content = file.readlines()
+                access_token = None
+                refresh_token = None
+                for line in content:
+                    if "access_token" in line:
+                        access_token = line.split("=")[1].strip().strip('"')
+                    if "refresh_token" in line:
+                        refresh_token = line.split("=")[1].strip().strip('"')
+                        break
+                if not access_token or not refresh_token:
+                    raise ValueError("Token not found in the configuration file.")
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                "Could not validate user.\n"
+                "Please update prefab using: pip install --upgrade prefab.\n"
+                "Signup/login and generate a new token.\n"
+                "See https://www.prefabphotonics.com/docs/guides/quickstart."
+            ) from None
         headers = {
             "Authorization": f"Bearer {access_token}",
             "X-Refresh-Token": refresh_token,
         }
 
         predict_data = {
-            "device_array": self._encode_array(self.device_array),
-            "model_name": model_name,
-            "model_tags": model_tags,
+            "device_array": self._encode_array(self.device_array[:, :, 0]),
+            "model": model.to_json(),
             "model_type": model_type,
             "binary": binarize,
         }
@@ -259,15 +272,20 @@ class Device(BaseModel):
                                 progress = round(100 * data_content["progress"])
                                 progress_bar.update(progress - progress_bar.n)
                             elif event_type == "result":
-                                prediction_array = self._decode_array(
-                                    data_content["result"]
-                                )
-                                if binarize:
-                                    prediction_array = geometry.binarize_hard(
-                                        prediction_array
-                                    )
-                                progress_bar.close()
-                                return prediction_array
+                                results = []
+                                for key in sorted(data_content.keys()):
+                                    if key.startswith("result"):
+                                        decoded_image = self._decode_array(
+                                            data_content[key]
+                                        )
+                                        results.append(decoded_image)
+
+                                if results:
+                                    prediction = np.stack(results, axis=-1)
+                                    if binarize:
+                                        prediction = geometry.binarize_hard(prediction)
+                                    progress_bar.close()
+                                    return prediction
                             elif event_type == "end":
                                 print("Stream ended.")
                                 progress_bar.close()
@@ -302,8 +320,7 @@ class Device(BaseModel):
 
     def predict(
         self,
-        model_name: str,
-        model_tags: list[str],
+        model: Model,
         binarize: bool = False,
     ) -> "Device":
         """
@@ -315,11 +332,13 @@ class Device(BaseModel):
 
         Parameters
         ----------
-        model_name : str
-            The name of the model to use for prediction.
-        model_tags : list[str]
-            A list of tags associated with the model. These tags can be used to specify
-            model versions or configurations.
+        model : Model
+            The model to use for prediction, representing a specific fabrication process
+            and dataset. This model encapsulates details about the fabrication foundry,
+            process, material, technology, thickness, and sidewall presence, as defined
+            in `models.py`. Each model is associated with a version and dataset that
+            detail its creation and the data it was trained on, ensuring the prediction
+            is tailored to specific fabrication parameters.
         binarize : bool, optional
             If True, the predicted device geometry will be binarized using a threshold
             method. This is useful for converting probabilistic predictions into binary
@@ -337,8 +356,7 @@ class Device(BaseModel):
             service cannot be processed correctly.
         """
         prediction_array = self._predict_array(
-            model_name=model_name,
-            model_tags=model_tags,
+            model=model,
             model_type="p",
             binarize=binarize,
         )
@@ -346,8 +364,7 @@ class Device(BaseModel):
 
     def correct(
         self,
-        model_name: str,
-        model_tags: list[str],
+        model: Model,
         binarize: bool = True,
     ) -> "Device":
         """
@@ -361,11 +378,13 @@ class Device(BaseModel):
 
         Parameters
         ----------
-        model_name : str
-            The name of the model to use for correction.
-        model_tags : list[str]
-            A list of tags associated with the model. These tags can be used to specify
-            model versions or configurations.
+        model : Model
+            The model to use for correction, representing a specific fabrication process
+            and dataset. This model encapsulates details about the fabrication foundry,
+            process, material, technology, thickness, and sidewall presence, as defined
+            in `models.py`. Each model is associated with a version and dataset that
+            detail its creation and the data it was trained on, ensuring the correction
+            is tailored to specific fabrication parameters.
         binarize : bool, optional
             If True, the corrected device geometry will be binarized using a threshold
             method. This is useful for converting probabilistic corrections into binary
@@ -383,8 +402,7 @@ class Device(BaseModel):
             service cannot be processed correctly.
         """
         correction_array = self._predict_array(
-            model_name=model_name,
-            model_tags=model_tags,
+            model=model,
             model_type="c",
             binarize=binarize,
         )
@@ -392,12 +410,11 @@ class Device(BaseModel):
 
     def semulate(
         self,
-        model_name: str,
-        model_tags: list[str],
+        model: Model,
     ) -> "Device":
         """
-        Simulate the appearance of the device as if viewed under a Scanning Electron
-        Microscope (SEM).
+        Simulate the appearance of the device as if viewed under a scanning electron
+        microscope (SEM).
 
         This method applies a specified machine learning model to transform the device
         geometry into a style that resembles an SEM image. This can be useful for
@@ -406,11 +423,13 @@ class Device(BaseModel):
 
         Parameters
         ----------
-        model_name : str
-            The name of the model to use for correction.
-        model_tags : list[str]
-            A list of tags associated with the model. These tags can be used to specify
-            model versions or configurations.
+        model : Model
+            The model to use for SEMulation, representing a specific fabrication process
+            and dataset. This model encapsulates details about the fabrication foundry,
+            process, material, technology, thickness, and sidewall presence, as defined
+            in `models.py`. Each model is associated with a version and dataset that
+            detail its creation and the data it was trained on, ensuring the SEMulation
+            is tailored to specific fabrication parameters.
 
         Returns
         -------
@@ -419,25 +438,24 @@ class Device(BaseModel):
             an SEM image style.
         """
         semulated_array = self._predict_array(
-            model_name=model_name,
-            model_tags=model_tags,
+            model=model,
             model_type="s",
         )
         return self.model_copy(update={"device_array": semulated_array})
 
     def to_ndarray(self) -> np.ndarray:
         """
-        Converts the device geometry to a numpy ndarray.
+        Converts the device geometry to an ndarray.
 
         This method applies the buffer specifications to crop the device array if
         necessary, based on the buffer mode ('edge' or 'constant'). It then returns the
-        resulting numpy ndarray representing the device geometry.
+        resulting ndarray representing the device geometry.
 
         Returns
         -------
         np.ndarray
-            The numpy ndarray representation of the device geometry, with any applied
-            buffer cropping.
+            The ndarray representation of the device geometry, with any applied buffer
+            cropping.
         """
         device_array = np.copy(self.device_array)
         buffer_thickness = self.buffer_spec.thickness
@@ -452,13 +470,13 @@ class Device(BaseModel):
             crop_top : device_array.shape[0] - crop_bottom,
             crop_left : device_array.shape[1] - crop_right,
         ]
-        return ndarray
+        return np.squeeze(ndarray)
 
     def to_img(self, img_path: str = "prefab_device.png"):
         """
         Exports the device geometry as an image file.
 
-        This method converts the device geometry to a numpy ndarray using `to_ndarray`,
+        This method converts the device geometry to an ndarray using `to_ndarray`,
         scales the values to the range [0, 255] for image representation, and saves the
         result as an image file.
 
@@ -628,18 +646,20 @@ class Device(BaseModel):
         ]
         extent = [min_x, max_x, min_y, max_y]
 
-        max_size = (1000, 1000)
-        scale_x = min(1, max_size[0] / plot_array.shape[1])
-        scale_y = min(1, max_size[1] / plot_array.shape[0])
-        fx = min(scale_x, scale_y)
-        fy = fx
-        plot_array = cv2.resize(
-            plot_array,
-            dsize=(0, 0),
-            fx=fx,
-            fy=fy,
-            interpolation=cv2.INTER_AREA,
-        )
+        if not np.ma.is_masked(plot_array):
+            max_size = (1000, 1000)
+            scale_x = min(1, max_size[0] / plot_array.shape[1])
+            scale_y = min(1, max_size[1] / plot_array.shape[0])
+            fx = min(scale_x, scale_y)
+            fy = fx
+
+            plot_array = cv2.resize(
+                plot_array,
+                dsize=(0, 0),
+                fx=fx,
+                fy=fy,
+                interpolation=cv2.INTER_NEAREST,
+            )
 
         mappable = ax.imshow(
             plot_array,
@@ -656,28 +676,30 @@ class Device(BaseModel):
         self,
         show_buffer: bool = True,
         bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
+        level: int = None,
         ax: Optional[Axes] = None,
         **kwargs,
     ) -> Axes:
         """
-        Visualizes the device geometry, optionally including buffer zones.
+        Visualizes the device geometry.
 
-        This method allows for the visualization of the device geometry with an option
-        to include buffer zones. It supports zooming into a specific area of the device.
-        The visualization can be customized with various matplotlib parameters and can
-        be drawn on an existing matplotlib Axes object or create a new one if none is
+        This method allows for the visualization of the device geometry. The
+        visualization can be customized with various matplotlib parameters and can be
+        drawn on an existing matplotlib Axes object or create a new one if none is
         provided.
 
         Parameters
         ----------
         show_buffer : bool, optional
-            If True, visualizes the buffer zones around the device to provide spatial
-            context. Defaults to True.
+            If True, visualizes the buffer zones around the device. Defaults to True.
         bounds : Optional[tuple[tuple[int, int], tuple[int, int]]], optional
             Specifies the bounds for zooming into the device geometry, formatted as
             ((min_x, min_y), (max_x, max_y)). If 'max_x' or 'max_y' is set to "end", it
             will be replaced with the corresponding dimension size of the device array.
             If None, the entire device geometry is visualized.
+        level : int, optional
+            The vertical layer to plot. If None, the device geometry is flattened.
+            Defaults to None.
         ax : Optional[Axes], optional
             An existing matplotlib Axes object to draw the device geometry on. If
             None, a new figure and axes will be created. Defaults to None.
@@ -690,8 +712,12 @@ class Device(BaseModel):
             The matplotlib Axes object containing the plot. This object can be used for
             further plot customization or saving the plot after the method returns.
         """
+        if level is None:
+            plot_array = geometry.flatten(self.device_array)[:, :, 0]
+        else:
+            plot_array = self.device_array[:, :, level]
         _, ax = self._plot_base(
-            plot_array=self.device_array,
+            plot_array=plot_array,
             show_buffer=show_buffer,
             bounds=bounds,
             ax=ax,
@@ -705,11 +731,12 @@ class Device(BaseModel):
         # label: Optional[str] = "Device contour",
         show_buffer: bool = True,
         bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
+        level: int = None,
         ax: Optional[Axes] = None,
         **kwargs,
     ):
         """
-        Visualizes the contour of the device along with optional buffer zones.
+        Visualizes the contour of the device geometry.
 
         This method plots the contour of the device geometry, emphasizing the edges and
         boundaries of the device. The contour plot can be customized with various
@@ -729,6 +756,9 @@ class Device(BaseModel):
             ((min_x, min_y), (max_x, max_y)). If 'max_x' or 'max_y' is set to "end", it
             will be replaced with the corresponding dimension size of the device array.
             If None, the entire device geometry is visualized.
+        level : int, optional
+            The vertical layer to plot. If None, the device geometry is flattened.
+            Defaults to None.
         ax : Optional[Axes], optional
             An existing matplotlib Axes object to draw the device contour on. If None, a
             new figure and axes will be created. Defaults to None.
@@ -741,16 +771,21 @@ class Device(BaseModel):
             The matplotlib Axes object containing the contour plot. This can be used for
             further customization or saving the plot after the method returns.
         """
+        if level is None:
+            device_array = geometry.flatten(self.device_array)[:, :, 0]
+        else:
+            device_array = self.device_array[:, :, level]
+
         kwargs.setdefault("cmap", "spring")
         if linewidth is None:
-            linewidth = self.device_array.shape[0] // 100
+            linewidth = device_array.shape[0] // 100
 
         contours, _ = cv2.findContours(
-            geometry.binarize_hard(self.device_array).astype(np.uint8),
+            geometry.binarize_hard(device_array).astype(np.uint8),
             cv2.RETR_CCOMP,
             cv2.CHAIN_APPROX_SIMPLE,
         )
-        contour_array = np.zeros_like(self.device_array, dtype=np.uint8)
+        contour_array = np.zeros_like(device_array, dtype=np.uint8)
         cv2.drawContours(contour_array, contours, -1, (255,), linewidth)
         contour_array = np.ma.masked_equal(contour_array, 0)
 
@@ -770,6 +805,7 @@ class Device(BaseModel):
         self,
         show_buffer: bool = True,
         bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
+        level: int = None,
         ax: Optional[Axes] = None,
         **kwargs,
     ):
@@ -793,6 +829,9 @@ class Device(BaseModel):
             ((min_x, min_y), (max_x, max_y)). If 'max_x' or 'max_y' is set to "end", it
             will be replaced with the corresponding dimension size of the device array.
             If None, the entire device geometry is visualized.
+        level : int, optional
+            The vertical layer to plot. If None, the device geometry is flattened.
+            Defaults to None.
         ax : Optional[Axes], optional
             An existing matplotlib Axes object to draw the uncertainty visualization on.
             If None, a new figure and axes will be created. Defaults to None.
@@ -806,7 +845,12 @@ class Device(BaseModel):
             can be used for further customization or saving the plot after the method
             returns.
         """
-        uncertainty_array = 1 - 2 * np.abs(0.5 - self.device_array)
+        uncertainty_array = self.get_uncertainty()
+
+        if level is None:
+            uncertainty_array = geometry.flatten(uncertainty_array)[:, :, 0]
+        else:
+            uncertainty_array = uncertainty_array[:, :, level]
 
         mappable, ax = self._plot_base(
             plot_array=uncertainty_array,
@@ -824,10 +868,52 @@ class Device(BaseModel):
         ref_device: "Device",
         show_buffer: bool = True,
         bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
+        level: int = None,
         ax: Optional[Axes] = None,
         **kwargs,
     ) -> Axes:
+        """
+        Visualizes the comparison between the current device geometry and a reference
+        device geometry.
+
+        Positive values (dilation) and negative values (erosion) are visualized with a
+        color map to indicate areas where the current device has expanded or contracted
+        relative to the reference.
+
+        Parameters
+        ----------
+        ref_device : Device
+            The reference device to compare against.
+        show_buffer : bool, optional
+            If True, visualizes the buffer zones around the device. Defaults to True.
+        bounds : Optional[tuple[tuple[int, int], tuple[int, int]]], optional
+            Specifies the bounds for zooming into the device geometry, formatted as
+            ((min_x, min_y), (max_x, max_y)). If 'max_x' or 'max_y' is set to "end", it
+            will be replaced with the corresponding dimension size of the device array.
+            If None, the entire device geometry is visualized.
+        level : int, optional
+            The vertical layer to plot. If None, the device geometry is flattened.
+            Defaults to None.
+        ax : Optional[Axes], optional
+            An existing matplotlib Axes object to draw the comparison on. If None, a new
+            figure and axes will be created. Defaults to None.
+        **kwargs
+            Additional matplotlib parameters for plot customization.
+
+        Returns
+        -------
+        Axes
+            The matplotlib Axes object containing the comparison plot. This object can
+            be used for further plot customization or saving the plot after the method
+            returns.
+        """
         plot_array = ref_device.device_array - self.device_array
+
+        if level is None:
+            plot_array = geometry.flatten(plot_array)[:, :, 0]
+        else:
+            plot_array = plot_array[:, :, level]
+
         mappable, ax = self._plot_base(
             plot_array=plot_array,
             show_buffer=show_buffer,
@@ -837,7 +923,7 @@ class Device(BaseModel):
             **kwargs,
         )
         cbar = plt.colorbar(mappable, ax=ax)
-        cbar.set_label("Dilation (a.u.)                        Erosion (a.u.)")
+        cbar.set_label("Added (a.u.)                        Removed (a.u.)")
         return ax
 
     def _add_buffer_visualization(self, ax: Axes):
@@ -932,17 +1018,19 @@ class Device(BaseModel):
 
     def binarize_hard(self, eta: float = 0.5) -> "Device":
         """
-        Apply a hard threshold to binarize the device geometry.
+        Apply a hard threshold to binarize the device geometry. The `binarize` function
+        is generally preferred for most use cases, but it can create numerical artifacts
+        for large beta values.
 
-        Parameters
-        ----------
-        eta : float, optional
-            The threshold value for binarization. Defaults to 0.5.
+            Parameters
+            ----------
+            eta : float, optional
+                The threshold value for binarization. Defaults to 0.5.
 
-        Returns
-        -------
-        Device
-            A new instance of the Device with the threshold-binarized geometry.
+            Returns
+            -------
+            Device
+                A new instance of the Device with the threshold-binarized geometry.
         """
         binarized_device_array = geometry.binarize_hard(
             device_array=self.device_array, eta=eta
@@ -989,7 +1077,8 @@ class Device(BaseModel):
 
     def ternarize(self, eta1: float = 1 / 3, eta2: float = 2 / 3) -> "Device":
         """
-        Ternarize the device geometry based on two thresholds.
+        Ternarize the device geometry based on two thresholds. This function is useful
+        for flattened devices with angled sidewalls (i.e., three segments).
 
         Parameters
         ----------
@@ -1107,38 +1196,37 @@ class Device(BaseModel):
         )
         return self.model_copy(update={"device_array": dilated_device_array})
 
-    def pad_multiple(self, slice_length: int = 1024, pad_factor: int = 1) -> "Device":
+    def flatten(self) -> "Device":
         """
-        Pad the device geometry multiple times.
+        Flatten the device geometry by summing the vertical layers and normalizing the
+        result.
+
+        Parameters
+        ----------
+        device_array : np.ndarray
+            The input array to be flattened.
+
+        Returns
+        -------
+        np.ndarray
+            The flattened array with values scaled between 0 and 1.
         """
-        padded_device_array = geometry.pad_multiple(
-            device_array=self.device_array,
-            slice_length=slice_length,
-            pad_factor=pad_factor,
-        )
-        return self.model_copy(update={"device_array": padded_device_array})
+        flattened_device_array = geometry.flatten(device_array=self.device_array)
+        return self.model_copy(update={"device_array": flattened_device_array})
 
-    def uncertainty(self) -> "Device":
-        uncertainty_array = 1 - 2 * np.abs(0.5 - self.device_array)
-        return self.model_copy(update={"device_array": uncertainty_array})
+    def get_uncertainty(self) -> np.ndarray:
+        """
+        Calculate the uncertainty in the edge positions of the predicted device.
 
-    def align_to(self, device: "Device") -> "Device":
-        device_array = device.device_array
+        This method computes the uncertainty based on the deviation of the device's
+        geometry values from the midpoint (0.5). The uncertainty is defined as the
+        absolute difference from 0.5, scaled and inverted to provide a measure where
+        higher values indicate greater uncertainty.
 
-        current_height, current_width = self.device_array.shape
-        target_height, target_width = device.device_array.shape
-        pad_height = max(0, target_height - current_height)
-        pad_width = max(0, target_width - current_width)
-
-        pad_top = pad_height // 2
-        pad_bottom = pad_height - pad_top
-        pad_left = pad_width // 2
-        pad_right = pad_width - pad_left
-
-        device_array = np.pad(
-            self.device_array,
-            pad_width=((pad_top, pad_bottom), (pad_left, pad_right)),
-            mode="constant",
-            constant_values=0,
-        )
-        return self.model_copy(update={"device_array": device_array})
+        Returns
+        -------
+        np.ndarray
+            An array representing the uncertainty in the edge positions of the device,
+            with higher values indicating greater uncertainty.
+        """
+        return 1 - 2 * np.abs(0.5 - self.device_array)

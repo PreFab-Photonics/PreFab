@@ -13,6 +13,7 @@ nav:
       - Compare: reference/compare.md
       - Device: reference/device.md
       - Geometry: reference/geometry.md
+      - Models: reference/models.md
       - Read: reference/read.md
 
 theme:

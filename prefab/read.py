@@ -205,7 +205,7 @@ def from_sem(
     **kwargs,
 ) -> Device:
     """
-    Create a Device from a Scanning Electron Microscope (SEM) image file.
+    Create a Device from a scanning electron microscope (SEM) image file.
 
     Parameters
     ----------
@@ -219,7 +219,7 @@ def from_sem(
         Required if `sem_resolution` is not provided.
     binarize : bool, optional
         If True, the SEM image will be binarized (converted to binary values) before
-        conversion to a Device object. This is useful for processing grayscale images
+        conversion to a Device object. This is needed for processing grayscale images
         into binary masks. Defaults to True.
     bounds : tuple[tuple[int, int], tuple[int, int]], optional
         A tuple specifying the bounds for cropping the image before conversion,
@@ -259,7 +259,7 @@ def from_sem(
 
 def get_sem_resolution(sem_path: str, sem_resolution_key: str) -> float:
     """
-    Extracts the resolution of a Scanning Electron Microscope (SEM) image from its
+    Extracts the resolution of a scanning electron microscope (SEM) image from its
     metadata.
 
     Parameters

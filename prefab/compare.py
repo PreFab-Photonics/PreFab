@@ -1,4 +1,4 @@
-"""Provides comparison functions for devices."""
+"""Provides functions to measure the similarity between devices."""
 
 import numpy as np
 
@@ -19,8 +19,8 @@ def mean_squared_error(device_a: Device, device_b: Device) -> float:
     Returns
     -------
     float
-        The mean squared error between the two device. A lower value indicates more
-        similarity between the images.
+        The mean squared error between two devices. A lower value indicates more
+        similarity.
     """
     return np.mean((device_a.device_array - device_b.device_array) ** 2)
 
@@ -39,9 +39,8 @@ def intersection_over_union(device_a: Device, device_b: Device) -> float:
     Returns
     -------
     float
-        The Intersection over Union (IoU) between the two device images. A value closer
-        to 1 indicates a higher similarity (more overlap) between the images, while a
-        value closer to 0 indicates less similarity (less overlap).
+        The Intersection over Union between two devices. A value closer to 1 indicates
+        more similarity (more overlap).
     """
     return np.sum(
         np.logical_and(device_a.device_array, device_b.device_array)
@@ -62,8 +61,8 @@ def hamming_distance(device_a: Device, device_b: Device) -> int:
     Returns
     -------
     int
-        The Hamming distance between the two devices. A lower value indicates more
-        similarity between the devices, while a higher value indicates less similarity.
+        The Hamming distance between two devices. A lower value indicates more
+        similarity.
     """
     return np.sum(device_a.device_array != device_b.device_array)
 
@@ -82,9 +81,8 @@ def dice_coefficient(device_a: Device, device_b: Device) -> float:
     Returns
     -------
     float
-        The Dice coefficient between the two devices. A value closer to 1 indicates a
-        higher similarity (more overlap) between the images, while a value closer to 0
-        indicates less similarity (less overlap).
+        The Dice coefficient between two devices. A value closer to 1 indicates more
+        similarity.
     """
     intersection = 2.0 * np.sum(
         np.logical_and(device_a.device_array, device_b.device_array)
