@@ -55,6 +55,7 @@ class CallbackHandler(BaseHTTPRequestHandler):
 
 
 def main():
+    """Main function for the Prefab CLI."""
     parser = argparse.ArgumentParser(description="Prefab CLI")
     parser.add_argument("command", help="The command to run", choices=["setup"])
     parser.add_argument(
