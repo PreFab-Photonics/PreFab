@@ -129,7 +129,7 @@ class Device(BaseModel):
             indicating an invalid device geometry.
         """
         super().__init__(
-            device_array=device_array, buffer_spec=buffer_spec or BufferSpec(thickness = 0)
+            device_array=device_array, buffer_spec=buffer_spec or BufferSpec(thickness = 128)
         )
         self._initial_processing()
 
