@@ -1,5 +1,6 @@
 gdstk
 matplotlib
+mkdocs-material
 numpy
 opencv-python-headless
 pydantic

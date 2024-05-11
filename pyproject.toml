@@ -19,6 +19,7 @@ license = { file = "LICENSE" }
 dependencies = [
     "gdstk",
     "matplotlib",
+    "mkdocs-material",
     "numpy",
     "opencv-python-headless",
     "pydantic",
