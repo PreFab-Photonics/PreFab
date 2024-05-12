@@ -57,7 +57,7 @@ python3 -m prefab setup
 
 ### Guides
 
-Visit [`/docs/examples`](https://github.com/PreFab-Photonics/PreFab/tree/main/docs/examples) or our [Guides](https://www.prefabphotonics.com/docs/guides/predictions) to get started with your first predictions.
+Visit [`/docs/examples`](https://github.com/PreFab-Photonics/PreFab/tree/main/docs/examples) or our [docs](https://docs.prefabphotonics.com/) to get started with your first predictions.
 
 ## Performance and Usage
 
