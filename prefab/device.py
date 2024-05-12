@@ -440,6 +440,7 @@ class Device(BaseModel):
         semulated_array = self._predict_array(
             model=model,
             model_type="s",
+            binarize=False,
         )
         return self.model_copy(update={"device_array": semulated_array})
 
@@ -486,7 +487,7 @@ class Device(BaseModel):
             The path where the image file will be saved. If not specified, the image is
             saved as "prefab_device.png" in the current directory.
         """
-        cv2.imwrite(img_path, 255 * self.to_ndarray())
+        cv2.imwrite(img_path, 255 * self.flatten().to_ndarray())
         print(f"Saved Device to '{img_path}'")
 
     def to_gds(
@@ -518,7 +519,7 @@ class Device(BaseModel):
             which corresponds to `cv2.CHAIN_APPROX_SIMPLE`, a method that compresses
             horizontal, vertical, and diagonal segments and leaves only their endpoints.
         """
-        gdstk_cell = self._device_to_gdstk(
+        gdstk_cell = self.flatten()._device_to_gdstk(
             cell_name=cell_name,
             gds_layer=gds_layer,
             contour_approx_mode=contour_approx_mode,
@@ -559,7 +560,7 @@ class Device(BaseModel):
             The GDSTK cell object representing the device geometry.
         """
         print(f"Creating cell '{cell_name}'...")
-        gdstk_cell = self._device_to_gdstk(
+        gdstk_cell = self.flatten()._device_to_gdstk(
             cell_name=cell_name,
             gds_layer=gds_layer,
             contour_approx_mode=contour_approx_mode,
@@ -1093,7 +1094,7 @@ class Device(BaseModel):
             A new instance of the Device with the ternarized geometry.
         """
         ternarized_device_array = geometry.ternarize(
-            device_array=self.device_array, eta1=eta1, eta2=eta2
+            device_array=self.flatten().device_array, eta1=eta1, eta2=eta2
         )
         return self.model_copy(update={"device_array": ternarized_device_array})
 
