@@ -1,6 +1,8 @@
 gdstk
 matplotlib
 mkdocs-material
+mkdocstrings
+mknotebooks
 numpy
 opencv-python-headless
 pydantic
