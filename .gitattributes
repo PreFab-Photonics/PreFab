@@ -1,2 +1,4 @@
-models/** linguist-vendored
 *.ipynb linguist-vendored
+*.html linguist-vendored
+*.css linguist-vendored 
+*.js linguist-vendored
