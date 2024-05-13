@@ -2,6 +2,8 @@ gdstk
 matplotlib
 numpy
 opencv-python-headless
+Pillow
 pydantic
 requests
 toml
+tqdm

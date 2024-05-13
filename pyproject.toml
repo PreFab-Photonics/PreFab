@@ -21,9 +21,11 @@ dependencies = [
     "matplotlib",
     "numpy",
     "opencv-python-headless",
+    "Pillow",
     "pydantic",
     "requests",
     "toml",
+    "tqdm",
 ]
 
 [project.urls]
