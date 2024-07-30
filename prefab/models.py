@@ -88,6 +88,15 @@ ANT_SiN = Fab(
     has_sidewall=True,
 )
 
+generic_DUV_SOI = Fab(
+    foundry="generic",
+    process="DUV-SOI",
+    material="SOI",
+    technology="DUV",
+    thickness=220,
+    has_sidewall=True,
+)
+
 ANT_NanoSOI_ANF1_d9 = Model(
     fab=ANT_NanoSOI,
     version="ANF1",
@@ -106,9 +115,20 @@ ANT_SiN_ANF1_d1 = Model(
     tag="",
 )
 
+generic_DUV_SOI_ANF1_d0 = Model(
+    fab=generic_DUV_SOI,
+    version="ANF1",
+    version_date=date(2024, 5, 6),
+    dataset="d0",
+    dataset_date=date(2024, 6, 30),
+    tag="",
+)
+
 models = dict(
     ANT_NanoSOI=ANT_NanoSOI_ANF1_d9,
     ANT_NanoSOI_ANF1_d9=ANT_NanoSOI_ANF1_d9,
     ANT_SiN=ANT_SiN_ANF1_d1,
     ANT_SiN_ANF1_d1=ANT_SiN_ANF1_d1,
+    generic_DUV_SOI=generic_DUV_SOI_ANF1_d0,
+    generic_DUV_SOI_ANF1_d0=generic_DUV_SOI_ANF1_d0,
 )

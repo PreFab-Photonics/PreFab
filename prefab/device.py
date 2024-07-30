@@ -21,6 +21,8 @@ from tqdm import tqdm
 from . import geometry
 from .models import Model
 
+Image.MAX_IMAGE_PIXELS = None
+
 
 class BufferSpec(BaseModel):
     """
@@ -244,7 +246,7 @@ class Device(BaseModel):
         }
         json_data = json.dumps(predict_data)
 
-        endpoint_url = "https://prefab-photonics--predict-v1.modal.run"
+        endpoint_url = "https://prefab-photonics--predict-v2.modal.run"
 
         with requests.post(
             endpoint_url, data=json_data, headers=headers, stream=True
