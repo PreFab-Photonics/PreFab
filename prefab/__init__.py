@@ -5,7 +5,9 @@ Usage:
     import prefab as pf
 """
 
-from . import compare, geometry, read
+__version__ = "1.0.3"
+
+from . import compare, geometry, read, shapes
 from .device import BufferSpec, Device
 from .models import models
 
@@ -14,6 +16,8 @@ __all__ = [
     "BufferSpec",
     "geometry",
     "read",
+    "shapes",
     "compare",
     "models",
+    "__version__",
 ]
