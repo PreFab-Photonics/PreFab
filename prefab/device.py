@@ -40,14 +40,16 @@ class BufferSpec(BaseModel):
         ('top', 'bottom', 'left', 'right'), where 'constant' is used for isolated
         structures and 'edge' is utilized for preserving the edge, such as for waveguide
         connections.
-    thickness : conint(gt=0)
-        The thickness of the buffer zone around the device. Must be greater than 0.
+    thickness : dict[str, conint(gt=0)]
+        A dictionary that defines the thickness of the buffer zone for each side of the
+        device ('top', 'bottom', 'left', 'right'). Each value must be greater than 0.
 
     Raises
     ------
     ValueError
         If any of the modes specified in the 'mode' dictionary are not one of the
-        allowed values ('constant', 'edge'). Or if the thickness is not greater than 0.
+        allowed values ('constant', 'edge'). Or if any of the thickness values are not
+        greater than 0.
 
     Example
     -------
@@ -60,7 +62,12 @@ class BufferSpec(BaseModel):
                 "left": "constant",
                 "right": "edge",
             },
-            thickness=150,
+            thickness={
+                "top": 150,
+                "bottom": 100,
+                "left": 200,
+                "right": 250,
+            },
         )
     """
 
@@ -72,7 +79,14 @@ class BufferSpec(BaseModel):
             "right": "constant",
         }
     )
-    thickness: conint(gt=0) = 128
+    thickness: dict[str, conint(gt=0)] = Field(
+        default_factory=lambda: {
+            "top": 128,
+            "bottom": 128,
+            "left": 128,
+            "right": 128,
+        }
+    )
 
     @validator("mode", pre=True)
     def check_mode(cls, v):
@@ -146,28 +160,26 @@ class Device(BaseModel):
 
         self.device_array = np.pad(
             self.device_array,
-            pad_width=((buffer_thickness, 0), (0, 0)),
+            pad_width=((buffer_thickness["top"], 0), (0, 0)),
             mode=buffer_mode["top"],
         )
         self.device_array = np.pad(
             self.device_array,
-            pad_width=((0, buffer_thickness), (0, 0)),
+            pad_width=((0, buffer_thickness["bottom"]), (0, 0)),
             mode=buffer_mode["bottom"],
         )
         self.device_array = np.pad(
             self.device_array,
-            pad_width=((0, 0), (buffer_thickness, 0)),
+            pad_width=((0, 0), (buffer_thickness["left"], 0)),
             mode=buffer_mode["left"],
         )
         self.device_array = np.pad(
             self.device_array,
-            pad_width=((0, 0), (0, buffer_thickness)),
+            pad_width=((0, 0), (0, buffer_thickness["right"])),
             mode=buffer_mode["right"],
         )
 
-        self.device_array = np.expand_dims(
-            self.device_array.astype(np.float32), axis=-1
-        )
+        self.device_array = np.expand_dims(self.device_array, axis=-1)
 
     @root_validator(pre=True)
     def check_device_array(cls, values):
@@ -246,7 +258,7 @@ class Device(BaseModel):
         }
         json_data = json.dumps(predict_data)
 
-        endpoint_url = "https://prefab-photonics--predict-v2.modal.run"
+        endpoint_url = "https://prefab-photonics--predict-v1.modal.run"
 
         with requests.post(
             endpoint_url, data=json_data, headers=headers, stream=True
@@ -442,6 +454,7 @@ class Device(BaseModel):
         semulated_array = self._predict_array(
             model=model,
             model_type="s",
+            binarize=False,
         )
         return self.model_copy(update={"device_array": semulated_array})
 
@@ -463,10 +476,12 @@ class Device(BaseModel):
         buffer_thickness = self.buffer_spec.thickness
         buffer_mode = self.buffer_spec.mode
 
-        crop_top = buffer_thickness if buffer_mode["top"] == "edge" else 0
-        crop_bottom = buffer_thickness if buffer_mode["bottom"] == "edge" else 0
-        crop_left = buffer_thickness if buffer_mode["left"] == "edge" else 0
-        crop_right = buffer_thickness if buffer_mode["right"] == "edge" else 0
+        crop_top = buffer_thickness["top"] if buffer_mode["top"] == "edge" else 0
+        crop_bottom = (
+            buffer_thickness["bottom"] if buffer_mode["bottom"] == "edge" else 0
+        )
+        crop_left = buffer_thickness["left"] if buffer_mode["left"] == "edge" else 0
+        crop_right = buffer_thickness["right"] if buffer_mode["right"] == "edge" else 0
 
         ndarray = device_array[
             crop_top : device_array.shape[0] - crop_bottom,
@@ -628,7 +643,7 @@ class Device(BaseModel):
         bounds: Optional[tuple[tuple[int, int], tuple[int, int]]],
         ax: Optional[Axes],
         **kwargs,
-    ) -> Axes:
+    ) -> tuple[plt.cm.ScalarMappable, Axes]:
         if ax is None:
             _, ax = plt.subplots()
         ax.set_ylabel("y (nm)")
@@ -671,6 +686,13 @@ class Device(BaseModel):
 
         if show_buffer:
             self._add_buffer_visualization(ax)
+
+        # # Adjust colorbar font size if a colorbar is added
+        # if "cmap" in kwargs:
+        #     cbar = plt.colorbar(mappable, ax=ax)
+        #     cbar.ax.tick_params(labelsize=14)
+        #     if "label" in kwargs:
+        #         cbar.set_label(kwargs["label"], fontsize=16)
 
         return mappable, ax
 
@@ -936,9 +958,9 @@ class Device(BaseModel):
         buffer_hatch = "/"
 
         mid_rect = Rectangle(
-            (buffer_thickness, buffer_thickness),
-            plot_array.shape[1] - 2 * buffer_thickness,
-            plot_array.shape[0] - 2 * buffer_thickness,
+            (buffer_thickness["left"], buffer_thickness["top"]),
+            plot_array.shape[1] - buffer_thickness["left"] - buffer_thickness["right"],
+            plot_array.shape[0] - buffer_thickness["top"] - buffer_thickness["bottom"],
             facecolor="none",
             edgecolor="black",
             linewidth=1,
@@ -948,25 +970,25 @@ class Device(BaseModel):
         top_rect = Rectangle(
             (0, 0),
             plot_array.shape[1],
-            buffer_thickness,
+            buffer_thickness["top"],
             facecolor=buffer_fill,
             hatch=buffer_hatch,
         )
         ax.add_patch(top_rect)
 
         bottom_rect = Rectangle(
-            (0, plot_array.shape[0] - buffer_thickness),
+            (0, plot_array.shape[0] - buffer_thickness["bottom"]),
             plot_array.shape[1],
-            buffer_thickness,
+            buffer_thickness["bottom"],
             facecolor=buffer_fill,
             hatch=buffer_hatch,
         )
         ax.add_patch(bottom_rect)
 
         left_rect = Rectangle(
-            (0, buffer_thickness),
-            buffer_thickness,
-            plot_array.shape[0] - 2 * buffer_thickness,
+            (0, buffer_thickness["top"]),
+            buffer_thickness["left"],
+            plot_array.shape[0] - buffer_thickness["top"] - buffer_thickness["bottom"],
             facecolor=buffer_fill,
             hatch=buffer_hatch,
         )
@@ -974,11 +996,11 @@ class Device(BaseModel):
 
         right_rect = Rectangle(
             (
-                plot_array.shape[1] - buffer_thickness,
-                buffer_thickness,
+                plot_array.shape[1] - buffer_thickness["right"],
+                buffer_thickness["top"],
             ),
-            buffer_thickness,
-            plot_array.shape[0] - 2 * buffer_thickness,
+            buffer_thickness["right"],
+            plot_array.shape[0] - buffer_thickness["top"] - buffer_thickness["bottom"],
             facecolor=buffer_fill,
             hatch=buffer_hatch,
         )
@@ -1016,7 +1038,9 @@ class Device(BaseModel):
         binarized_device_array = geometry.binarize(
             device_array=self.device_array, eta=eta, beta=beta
         )
-        return self.model_copy(update={"device_array": binarized_device_array})
+        return self.model_copy(
+            update={"device_array": binarized_device_array.astype(np.uint8)}
+        )
 
     def binarize_hard(self, eta: float = 0.5) -> "Device":
         """
@@ -1037,12 +1061,14 @@ class Device(BaseModel):
         binarized_device_array = geometry.binarize_hard(
             device_array=self.device_array, eta=eta
         )
-        return self.model_copy(update={"device_array": binarized_device_array})
+        return self.model_copy(
+            update={"device_array": binarized_device_array.astype(np.uint8)}
+        )
 
     def binarize_monte_carlo(
         self,
         threshold_noise_std: float = 2.0,
-        threshold_blur_std: float = 9.0,
+        threshold_blur_std: float = 8.0,
     ) -> "Device":
         """
         Binarize the device geometry using a Monte Carlo approach with Gaussian
@@ -1105,9 +1131,10 @@ class Device(BaseModel):
 
         Parameters
         ----------
-        buffer_thickness : int, optional
-            The thickness of the buffer to leave around the empty space. Defaults to 0,
-            which means no buffer is added.
+        buffer_thickness : dict, optional
+            A dictionary specifying the thickness of the buffer to leave around the
+            non-zero elements of the array. Should contain keys 'top', 'bottom', 'left',
+            'right'. Defaults to None, which means no buffer is added.
 
         Returns
         -------
