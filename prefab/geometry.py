@@ -124,7 +124,7 @@ def binarize_monte_carlo(
         generated threshold.
     """
     device_array = np.squeeze(device_array)
-    base_threshold = np.clip(np.random.normal(loc=0.5, scale=0.5 / 2), 0.4, 0.6)
+    base_threshold = np.random.normal(loc=0.5, scale=0.1)
     threshold_noise = np.random.normal(
         loc=0, scale=threshold_noise_std, size=device_array.shape
     )
@@ -161,7 +161,7 @@ def ternarize(
     return np.where(device_array < eta1, 0.0, np.where(device_array >= eta2, 1.0, 0.5))
 
 
-def trim(device_array: np.ndarray, buffer_thickness: int = 0) -> np.ndarray:
+def trim(device_array: np.ndarray, buffer_thickness: dict = None) -> np.ndarray:
     """
     Trim the input ndarray by removing rows and columns that are completely zero.
 
@@ -169,24 +169,28 @@ def trim(device_array: np.ndarray, buffer_thickness: int = 0) -> np.ndarray:
     ----------
     device_array : np.ndarray
         The input array to be trimmed.
-    buffer_thickness : int, optional
-        The thickness of the buffer to leave around the non-zero elements of the array.
-        Defaults to 0, which means no buffer is added.
+    buffer_thickness : dict, optional
+        A dictionary specifying the thickness of the buffer to leave around the non-zero
+        elements of the array. Should contain keys 'top', 'bottom', 'left', 'right'.
+        Defaults to None, which means no buffer is added.
 
     Returns
     -------
     np.ndarray
         The trimmed array, potentially with a buffer around the non-zero elements.
     """
-    nonzero_rows, nonzero_cols = np.nonzero(device_array)
-    row_min = max(nonzero_rows.min() - buffer_thickness, 0)
+    if buffer_thickness is None:
+        buffer_thickness = {"top": 0, "bottom": 0, "left": 0, "right": 0}
+
+    nonzero_rows, nonzero_cols = np.nonzero(np.squeeze(device_array))
+    row_min = max(nonzero_rows.min() - buffer_thickness.get("top", 0), 0)
     row_max = min(
-        nonzero_rows.max() + buffer_thickness + 1,
+        nonzero_rows.max() + buffer_thickness.get("bottom", 0) + 1,
         device_array.shape[0],
     )
-    col_min = max(nonzero_cols.min() - buffer_thickness, 0)
+    col_min = max(nonzero_cols.min() - buffer_thickness.get("left", 0), 0)
     col_max = min(
-        nonzero_cols.max() + buffer_thickness + 1,
+        nonzero_cols.max() + buffer_thickness.get("right", 0) + 1,
         device_array.shape[1],
     )
     return device_array[
@@ -212,7 +216,9 @@ def blur(device_array: np.ndarray, sigma: float = 1.0) -> np.ndarray:
     np.ndarray
         The blurred and normalized array with values scaled between 0 and 1.
     """
-    return normalize(cv2.GaussianBlur(device_array, ksize=(0, 0), sigmaX=sigma))
+    return np.expand_dims(
+        normalize(cv2.GaussianBlur(device_array, ksize=(0, 0), sigmaX=sigma)), axis=-1
+    )
 
 
 def rotate(device_array: np.ndarray, angle: float) -> np.ndarray:
@@ -234,10 +240,13 @@ def rotate(device_array: np.ndarray, angle: float) -> np.ndarray:
     """
     center = (device_array.shape[1] / 2, device_array.shape[0] / 2)
     rotation_matrix = cv2.getRotationMatrix2D(center=center, angle=angle, scale=1)
-    return cv2.warpAffine(
-        device_array,
-        M=rotation_matrix,
-        dsize=(device_array.shape[1], device_array.shape[0]),
+    return np.expand_dims(
+        cv2.warpAffine(
+            device_array,
+            M=rotation_matrix,
+            dsize=(device_array.shape[1], device_array.shape[0]),
+        ),
+        axis=-1,
     )
 
 
@@ -258,7 +267,7 @@ def erode(device_array: np.ndarray, kernel_size: int) -> np.ndarray:
         The eroded array.
     """
     kernel = np.ones((kernel_size, kernel_size), dtype=np.uint8)
-    return cv2.erode(device_array, kernel=kernel)
+    return np.expand_dims(cv2.erode(device_array, kernel=kernel), axis=-1)
 
 
 def dilate(device_array: np.ndarray, kernel_size: int) -> np.ndarray:
@@ -278,7 +287,7 @@ def dilate(device_array: np.ndarray, kernel_size: int) -> np.ndarray:
         The dilated array.
     """
     kernel = np.ones((kernel_size, kernel_size), dtype=np.uint8)
-    return cv2.dilate(device_array, kernel=kernel)
+    return np.expand_dims(cv2.dilate(device_array, kernel=kernel), axis=-1)
 
 
 def flatten(device_array: np.ndarray) -> np.ndarray:
