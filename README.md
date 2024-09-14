@@ -20,10 +20,11 @@ PreFab automates corrections to device designs, ensuring the fabricated outcome 
 
 PreFab accommodates unique _predictor_ and _corrector_ models for each photonic foundry, regularly updated based on recent fabrication data. Current models include (see full list on [`docs/models.md`](https://github.com/PreFab-Photonics/PreFab/blob/main/docs/models.md)):
 
-| Foundry | Process | Latest Version    | Latest Dataset   | Model Name  | Model Tag |
-| ------- | ------- | ----------------- | ---------------- | ----------- | --------- |
-| ANT     | NanoSOI | ANF1 (May 6 2023) | d9 (Feb 6 2024)  | ANT_NanoSOI | ANF1-d9   |
-| ANT     | SiN     | ANF1 (May 6 2023) | d1 (Jan 31 2024) | ANT_SiN     | ANF1-d1   |
+| Foundry | Process | Latest Version    | Latest Dataset   | Model Name  |
+| ------- | ------- | ----------------- | ---------------- | ----------- |
+| ANT     | NanoSOI | ANF1 (May 6 2024) | d10 (Jun 8 2024) | ANT_NanoSOI_ANF1_d10 |
+| ANT     | SiN     | ANF1 (May 6 2024) | d1 (Jan 31 2024) | ANT_SiN_ANF1_d1 |
+| Generic | DUV-SOI | ANF1 (May 6 2024) | d0 (Jul 30 2024) | generic_DUV_SOI_ANF1_d0 |
 
 > _New models and foundries are to be regularly added. Usage may change. For additional foundry and process models, feel free to contact us._
 

@@ -97,12 +97,39 @@ generic_DUV_SOI = Fab(
     has_sidewall=True,
 )
 
+ANT_NanoSOI_ANF0_d8 = Model(
+    fab=ANT_NanoSOI,
+    version="ANF0",
+    version_date=date(2024, 1, 1),
+    dataset="d8",
+    dataset_date=date(2024, 1, 1),
+    tag="",
+)
+
+ANT_NanoSOI_ANF1_d8 = Model(
+    fab=ANT_NanoSOI,
+    version="ANF1",
+    version_date=date(2024, 5, 6),
+    dataset="d8",
+    dataset_date=date(2024, 1, 1),
+    tag="",
+)
+
 ANT_NanoSOI_ANF1_d9 = Model(
     fab=ANT_NanoSOI,
     version="ANF1",
     version_date=date(2024, 5, 6),
     dataset="d9",
     dataset_date=date(2024, 2, 6),
+    tag="",
+)
+
+ANT_NanoSOI_ANF1_d10 = Model(
+    fab=ANT_NanoSOI,
+    version="ANF1",
+    version_date=date(2024, 5, 6),
+    dataset="d10",
+    dataset_date=date(2024, 6, 8),
     tag="",
 )
 
@@ -125,8 +152,11 @@ generic_DUV_SOI_ANF1_d0 = Model(
 )
 
 models = dict(
-    ANT_NanoSOI=ANT_NanoSOI_ANF1_d9,
+    ANT_NanoSOI=ANT_NanoSOI_ANF1_d10,
+    ANT_NanoSOI_ANF0_d8=ANT_NanoSOI_ANF0_d8,
+    ANT_NanoSOI_ANF1_d8=ANT_NanoSOI_ANF1_d8,
     ANT_NanoSOI_ANF1_d9=ANT_NanoSOI_ANF1_d9,
+    ANT_NanoSOI_ANF1_d10=ANT_NanoSOI_ANF1_d10,
     ANT_SiN=ANT_SiN_ANF1_d1,
     ANT_SiN_ANF1_d1=ANT_SiN_ANF1_d1,
     generic_DUV_SOI=generic_DUV_SOI_ANF1_d0,

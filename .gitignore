@@ -1,12 +1,6 @@
-# OS files
 .DS_Store
-
-# Python artifacts
 __pycache__/
 .ipynb_checkpoints
-
-# Build artifacts
 dist/
-
-# Personal directories
 tests/
+publish.md
