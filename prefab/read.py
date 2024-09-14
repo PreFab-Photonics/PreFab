@@ -1,4 +1,4 @@
-"""Provides functions to create Devices from various data sources."""
+"""Provides functions to create a Device from various data sources."""
 
 import re
 
@@ -11,7 +11,7 @@ from .device import Device
 
 
 def from_ndarray(
-    ndarray: np.ndarray, resolution: int = 1, binarize: bool = True, **kwargs
+    ndarray: np.ndarray, resolution: float = 1.0, binarize: bool = True, **kwargs
 ) -> Device:
     """
     Create a Device from an ndarray.
@@ -20,13 +20,13 @@ def from_ndarray(
     ----------
     ndarray : np.ndarray
         The input array representing the device layout.
-    resolution : int, optional
-        The resolution of the ndarray in nanometers per pixel, defaulting to 1 nm per
+    resolution : float, optional
+        The resolution of the ndarray in nanometers per pixel, defaulting to 1.0 nm per
         pixel. If specified, the input array will be resized based on this resolution to
         match the desired physical size.
     binarize : bool, optional
         If True, the input array will be binarized (converted to binary values) before
-        conversion to a Device object. This is useful for processing grayscale images
+        conversion to a Device object. This is useful for processing grayscale arrays
         into binary masks. Defaults to True.
     **kwargs
         Additional keyword arguments to be passed to the Device constructor.
@@ -38,7 +38,10 @@ def from_ndarray(
         binarization.
     """
     device_array = ndarray
-    device_array = cv2.resize(device_array, dsize=(0, 0), fx=resolution, fy=resolution)
+    if resolution != 1.0:
+        device_array = cv2.resize(
+            device_array, dsize=(0, 0), fx=resolution, fy=resolution
+        )
     if binarize:
         device_array = geometry.binarize_hard(device_array)
     return Device(device_array=device_array, **kwargs)
@@ -55,12 +58,11 @@ def from_img(
     img_path : str
         The path to the image file to be converted into a Device object.
     img_width_nm : int, optional
-        The desired width of the device in nanometers. If specified, the image will be
-        resized to this width while maintaining aspect ratio. If None, no resizing is
-        performed.
+        The width of the image in nanometers. If specified, the Device will be resized
+        to this width while maintaining aspect ratio. If None, no resizing is performed.
     binarize : bool, optional
         If True, the image will be binarized (converted to binary values) before
-        conversion to a Device object. This is useful for converting grayscale images
+        conversion to a Device object. This is useful for processing grayscale images
         into binary masks. Defaults to True.
     **kwargs
         Additional keyword arguments to be passed to the Device constructor.
@@ -73,8 +75,10 @@ def from_img(
     """
     device_array = cv2.imread(img_path, flags=cv2.IMREAD_GRAYSCALE) / 255
     if img_width_nm is not None:
-        scale = img_width_nm / device_array.shape[1]
-        device_array = cv2.resize(device_array, dsize=(0, 0), fx=scale, fy=scale)
+        resolution = img_width_nm / device_array.shape[1]
+        device_array = cv2.resize(
+            device_array, dsize=(0, 0), fx=resolution, fy=resolution
+        )
     if binarize:
         device_array = geometry.binarize_hard(device_array)
     return Device(device_array=device_array, **kwargs)
@@ -134,7 +138,8 @@ def from_gdstk(
     gdstk_cell : gdstk.Cell
         The gdstk.Cell object to be converted into a Device object.
     gds_layer : tuple[int, int], optional
-        A tuple specifying the layer and datatype to be used. Defaults to (1, 0).
+        A tuple specifying the layer and datatype to be used from the cell. Defaults to
+        (1, 0).
     bounds : tuple[tuple[int, int], tuple[int, int]], optional
         A tuple specifying the bounds for cropping the cell before conversion, formatted
         as ((min_x, min_y), (max_x, max_y)), in units of the GDS file. If None, the
@@ -159,6 +164,24 @@ def _gdstk_to_device_array(
     gds_layer: tuple[int, int] = (1, 0),
     bounds: tuple[tuple[int, int], tuple[int, int]] = None,
 ) -> np.ndarray:
+    """
+    Convert a gdstk.Cell to a device array.
+
+    Parameters
+    ----------
+    gdstk_cell : gdstk.Cell
+        The gdstk.Cell object to be converted.
+    gds_layer : tuple[int, int], optional
+        The layer and datatype to be used from the cell. Defaults to (1, 0).
+    bounds : tuple[tuple[int, int], tuple[int, int]], optional
+        Bounds for cropping the cell, formatted as ((min_x, min_y), (max_x, max_y)).
+        If None, the entire cell is used.
+
+    Returns
+    -------
+    np.ndarray
+        The resulting device array.
+    """
     polygons = gdstk_cell.get_polygons(layer=gds_layer[0], datatype=gds_layer[1])
     if bounds:
         polygons = gdstk.slice(
@@ -184,12 +207,12 @@ def _gdstk_to_device_array(
                 ]
                 for vertex in polygon.points
             ],
-            dtype=np.int32,
         )
         for polygon in polygons
     ]
     device_array = np.zeros(
-        (int(bounds[1][1] - bounds[0][1]), int(bounds[1][0] - bounds[0][0]))
+        (int(bounds[1][1] - bounds[0][1]), int(bounds[1][0] - bounds[0][0])),
+        dtype=np.uint8,
     )
     cv2.fillPoly(img=device_array, pts=contours, color=(1, 1, 1))
     device_array = np.flipud(device_array)
@@ -200,7 +223,7 @@ def from_sem(
     sem_path: str,
     sem_resolution: float = None,
     sem_resolution_key: str = None,
-    binarize: bool = True,
+    binarize: bool = False,
     bounds: tuple[tuple[int, int], tuple[int, int]] = None,
     **kwargs,
 ) -> Device:
@@ -220,7 +243,7 @@ def from_sem(
     binarize : bool, optional
         If True, the SEM image will be binarized (converted to binary values) before
         conversion to a Device object. This is needed for processing grayscale images
-        into binary masks. Defaults to True.
+        into binary masks. Defaults to False.
     bounds : tuple[tuple[int, int], tuple[int, int]], optional
         A tuple specifying the bounds for cropping the image before conversion,
         formatted as ((min_x, min_y), (max_x, max_y)). If None, the entire image is
@@ -244,13 +267,13 @@ def from_sem(
         raise ValueError("Either sem_resolution or resolution_key must be provided.")
 
     device_array = cv2.imread(sem_path, flags=cv2.IMREAD_GRAYSCALE)
-    if sem_resolution is not None:
-        device_array = cv2.resize(
-            device_array, dsize=(0, 0), fx=sem_resolution, fy=sem_resolution
-        )
+    device_array = cv2.resize(
+        device_array, dsize=(0, 0), fx=sem_resolution, fy=sem_resolution
+    )
     if bounds is not None:
         device_array = device_array[
-            -bounds[1][1] : -bounds[0][1], bounds[0][0] : bounds[1][0]
+            device_array.shape[0] - bounds[1][1] : device_array.shape[0] - bounds[0][1],
+            bounds[0][0] : bounds[1][0],
         ]
     if binarize:
         device_array = geometry.binarize_sem(device_array)
