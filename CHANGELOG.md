@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.4 - 2024-09-19
+
+### Added
+
+- Option to specify GPU or CPU in `predict`, `correct`, and `semulate` functions. GPU option has more overhead and will take longer for small devices, but will be faster for larger devices.
+
+### Changed
+
+- Improve clarity of messaging for authentication errors.
+
 ## 1.0.3 - 2024-09-14
 
 ### Added
