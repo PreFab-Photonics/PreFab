@@ -224,6 +224,7 @@ class Device(BaseModel):
         model: Model,
         model_type: str,
         binarize: bool,
+        gpu: bool = False,
     ) -> "Device":
         try:
             with open(os.path.expanduser("~/.prefab.toml")) as file:
@@ -245,6 +246,7 @@ class Device(BaseModel):
                 "Signup/login and generate a new token.\n"
                 "See https://www.prefabphotonics.com/docs/guides/quickstart."
             ) from None
+
         headers = {
             "Authorization": f"Bearer {access_token}",
             "X-Refresh-Token": refresh_token,
@@ -258,84 +260,99 @@ class Device(BaseModel):
         }
         json_data = json.dumps(predict_data)
 
-        endpoint_url = "https://prefab-photonics--predict-v1.modal.run"
+        endpoint_url = (
+            "https://prefab-photonics--predict-gpu-v1.modal.run"
+            if gpu
+            else "https://prefab-photonics--predict-v1.modal.run"
+        )
 
-        with requests.post(
-            endpoint_url, data=json_data, headers=headers, stream=True
-        ) as response:
-            response.raise_for_status()
-            event_type = None
-            model_descriptions = {"p": "Prediction", "c": "Correction", "s": "SEMulate"}
-            progress_bar = tqdm(
-                total=100,
-                desc=f"{model_descriptions[model_type]}",
-                unit="%",
-                colour="green",
-                bar_format="{l_bar}{bar:30}{r_bar}{bar:-10b}",
-            )
+        try:
+            with requests.post(
+                endpoint_url, data=json_data, headers=headers, stream=True
+            ) as response:
+                response.raise_for_status()
+                event_type = None
+                model_descriptions = {
+                    "p": "Prediction",
+                    "c": "Correction",
+                    "s": "SEMulate",
+                }
+                progress_bar = tqdm(
+                    total=100,
+                    desc=f"{model_descriptions[model_type]}",
+                    unit="%",
+                    colour="green",
+                    bar_format="{l_bar}{bar:30}{r_bar}{bar:-10b}",
+                )
 
-            for line in response.iter_lines():
-                if line:
-                    decoded_line = line.decode("utf-8").strip()
-                    if decoded_line.startswith("event:"):
-                        event_type = decoded_line.split(":")[1].strip()
-                    elif decoded_line.startswith("data:"):
-                        try:
-                            data_content = json.loads(decoded_line.split("data: ")[1])
-                            if event_type == "progress":
-                                progress = round(100 * data_content["progress"])
-                                progress_bar.update(progress - progress_bar.n)
-                            elif event_type == "result":
-                                results = []
-                                for key in sorted(data_content.keys()):
-                                    if key.startswith("result"):
-                                        decoded_image = self._decode_array(
-                                            data_content[key]
-                                        )
-                                        results.append(decoded_image)
+                for line in response.iter_lines():
+                    if line:
+                        decoded_line = line.decode("utf-8").strip()
+                        if decoded_line.startswith("event:"):
+                            event_type = decoded_line.split(":")[1].strip()
+                        elif decoded_line.startswith("data:"):
+                            try:
+                                data_content = json.loads(
+                                    decoded_line.split("data: ")[1]
+                                )
+                                if event_type == "progress":
+                                    progress = round(100 * data_content["progress"])
+                                    progress_bar.update(progress - progress_bar.n)
+                                elif event_type == "result":
+                                    results = []
+                                    for key in sorted(data_content.keys()):
+                                        if key.startswith("result"):
+                                            decoded_image = self._decode_array(
+                                                data_content[key]
+                                            )
+                                            results.append(decoded_image)
 
-                                if results:
-                                    prediction = np.stack(results, axis=-1)
-                                    if binarize:
-                                        prediction = geometry.binarize_hard(prediction)
+                                    if results:
+                                        prediction = np.stack(results, axis=-1)
+                                        if binarize:
+                                            prediction = geometry.binarize_hard(
+                                                prediction
+                                            )
+                                        progress_bar.close()
+                                        return prediction
+                                elif event_type == "end":
+                                    print("Stream ended.")
                                     progress_bar.close()
-                                    return prediction
-                            elif event_type == "end":
-                                print("Stream ended.")
-                                progress_bar.close()
-                                break
-                            elif event_type == "auth":
-                                if "new_refresh_token" in data_content["auth"]:
-                                    prefab_file_path = os.path.expanduser(
-                                        "~/.prefab.toml"
-                                    )
-                                    with open(
-                                        prefab_file_path, "w", encoding="utf-8"
-                                    ) as toml_file:
-                                        toml.dump(
-                                            {
-                                                "access_token": data_content["auth"][
-                                                    "new_access_token"
-                                                ],
-                                                "refresh_token": data_content["auth"][
-                                                    "new_refresh_token"
-                                                ],
-                                            },
-                                            toml_file,
+                                    break
+                                elif event_type == "auth":
+                                    if "new_refresh_token" in data_content["auth"]:
+                                        prefab_file_path = os.path.expanduser(
+                                            "~/.prefab.toml"
                                         )
-                            elif event_type == "error":
-                                print(f"Error: {data_content['error']}")
-                                progress_bar.close()
-                        except json.JSONDecodeError:
-                            print(
-                                "Failed to decode JSON:",
-                                decoded_line.split("data: ")[1],
-                            )
+                                        with open(
+                                            prefab_file_path, "w", encoding="utf-8"
+                                        ) as toml_file:
+                                            toml.dump(
+                                                {
+                                                    "access_token": data_content[
+                                                        "auth"
+                                                    ]["new_access_token"],
+                                                    "refresh_token": data_content[
+                                                        "auth"
+                                                    ]["new_refresh_token"],
+                                                },
+                                                toml_file,
+                                            )
+                                elif event_type == "error":
+                                    raise ValueError(f"{data_content['error']}")
+                            except json.JSONDecodeError:
+                                raise ValueError(
+                                    "Failed to decode JSON:",
+                                    decoded_line.split("data: ")[1],
+                                ) from None
+        except requests.RequestException as e:
+            raise RuntimeError(f"Request failed: {e}") from e
 
     def predict(
         self,
         model: Model,
         binarize: bool = False,
+        gpu: bool = False,
     ) -> "Device":
         """
         Predict the nanofabrication outcome of the device using a specified model.
@@ -357,6 +374,10 @@ class Device(BaseModel):
             If True, the predicted device geometry will be binarized using a threshold
             method. This is useful for converting probabilistic predictions into binary
             geometries. Defaults to False.
+        gpu : bool, optional
+            If True, the prediction will be performed on a GPU. Defaults to False.
+            Note: The GPU option has more overhead and will take longer for small
+            devices, but will be faster for larger devices.
 
         Returns
         -------
@@ -373,6 +394,7 @@ class Device(BaseModel):
             model=model,
             model_type="p",
             binarize=binarize,
+            gpu=gpu,
         )
         return self.model_copy(update={"device_array": prediction_array})
 
@@ -380,6 +402,7 @@ class Device(BaseModel):
         self,
         model: Model,
         binarize: bool = True,
+        gpu: bool = False,
     ) -> "Device":
         """
         Correct the nanofabrication outcome of the device using a specified model.
@@ -403,6 +426,10 @@ class Device(BaseModel):
             If True, the corrected device geometry will be binarized using a threshold
             method. This is useful for converting probabilistic corrections into binary
             geometries. Defaults to True.
+        gpu : bool, optional
+            If True, the prediction will be performed on a GPU. Defaults to False.
+            Note: The GPU option has more overhead and will take longer for small
+            devices, but will be faster for larger devices.
 
         Returns
         -------
@@ -419,12 +446,14 @@ class Device(BaseModel):
             model=model,
             model_type="c",
             binarize=binarize,
+            gpu=gpu,
         )
         return self.model_copy(update={"device_array": correction_array})
 
     def semulate(
         self,
         model: Model,
+        gpu: bool = False,
     ) -> "Device":
         """
         Simulate the appearance of the device as if viewed under a scanning electron
@@ -444,6 +473,10 @@ class Device(BaseModel):
             in `models.py`. Each model is associated with a version and dataset that
             detail its creation and the data it was trained on, ensuring the SEMulation
             is tailored to specific fabrication parameters.
+        gpu : bool, optional
+            If True, the prediction will be performed on a GPU. Defaults to False.
+            Note: The GPU option has more overhead and will take longer for small
+            devices, but will be faster for larger devices.
 
         Returns
         -------
@@ -455,6 +488,7 @@ class Device(BaseModel):
             model=model,
             model_type="s",
             binarize=False,
+            gpu=gpu,
         )
         return self.model_copy(update={"device_array": semulated_array})
 
@@ -1258,4 +1292,6 @@ class Device(BaseModel):
             An array representing the uncertainty in the edge positions of the device,
             with higher values indicating greater uncertainty.
         """
+        return 1 - 2 * np.abs(0.5 - self.device_array)
+
         return 1 - 2 * np.abs(0.5 - self.device_array)
