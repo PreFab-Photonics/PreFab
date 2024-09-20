@@ -8,6 +8,7 @@ nav:
   - Getting started: index.md
   - Making a prediction: examples/1_prediction.ipynb
   - Making a correction: examples/2_correction.ipynb
+  - Working with sidewall angles: examples/3_sidewall_angle.ipynb
   - Model library: models.md
   - Reference:
       - Compare: reference/compare.md
