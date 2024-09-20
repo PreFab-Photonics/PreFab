@@ -27,7 +27,7 @@ theme:
     text: Roboto
     code: Roboto Mono
   language: en
-  logo: assets/logo_neue.svg
+  logo: assets/prefab_logo_white.svg
   favicon: assets/favicon.ico
   # icon:
   #   repo: fontawesome/brands/github
