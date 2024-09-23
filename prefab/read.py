@@ -219,6 +219,73 @@ def _gdstk_to_device_array(
     return device_array
 
 
+def from_gdsfactory(
+    component: "gf.Component",  # noqa: F821
+    **kwargs,
+) -> Device:
+    """
+    Create a Device from a gdsfactory component.
+
+    Parameters
+    ----------
+    component : gf.Component
+        The gdsfactory component to be converted into a Device object.
+    **kwargs
+        Additional keyword arguments to be passed to the Device constructor.
+
+    Returns
+    -------
+    Device
+        A Device object representing the gdsfactory component.
+
+    Raises
+    ------
+    ImportError
+        If the gdsfactory package is not installed.
+    """
+    try:
+        import gdsfactory as gf
+    except ImportError:
+        raise ImportError(
+            "The gdsfactory package is required to use this function; "
+            "try `pip install gdsfactory`."
+        ) from None
+
+    bounds = (
+        (component.xmin * 1000, component.ymin * 1000),
+        (component.xmax * 1000, component.ymax * 1000),
+    )
+
+    polygons = [
+        polygon
+        for polygons_list in component.get_polygons_points().values()
+        for polygon in polygons_list
+    ]
+
+    contours = [
+        np.array(
+            [
+                [
+                    [
+                        int(1000 * vertex[0] - bounds[0][0]),
+                        int(1000 * vertex[1] - bounds[0][1]),
+                    ]
+                ]
+                for vertex in polygon
+            ]
+        )
+        for polygon in polygons
+    ]
+
+    device_array = np.zeros(
+        (int(bounds[1][1] - bounds[0][1]), int(bounds[1][0] - bounds[0][0])),
+        dtype=np.uint8,
+    )
+    cv2.fillPoly(img=device_array, pts=contours, color=(1, 1, 1))
+    device_array = np.flipud(device_array)
+    return Device(device_array=device_array, **kwargs)
+
+
 def from_sem(
     sem_path: str,
     sem_resolution: float = None,
@@ -314,3 +381,73 @@ def get_sem_resolution(sem_path: str, sem_resolution_key: str) -> float:
                         value /= 1000
                     return value
     raise ValueError(f"Resolution key '{sem_resolution_key}' not found in {sem_path}.")
+
+
+def from_tidy3d(
+    tidy3d_sim: "tidy3d.Simulation",  # noqa: F821
+    eps_threshold: float,
+    z: float,
+    **kwargs,
+) -> Device:
+    """
+    Create a Device from a Tidy3D simulation.
+
+    Parameters
+    ----------
+    tidy3d_sim : tidy3d.Simulation
+        The Tidy3D simulation object.
+    eps_threshold : float
+        The threshold value for the permittivity to binarize the device array.
+    z : float
+        The z-coordinate at which to extract the permittivity.
+    **kwargs
+        Additional keyword arguments to be passed to the Device constructor.
+
+    Returns
+    -------
+    Device
+        A Device object representing the permittivity cross-section at the specified
+        z-coordinate for the Tidy3D simulation.
+
+    Raises
+    ------
+    ValueError
+        If the z-coordinate is outside the bounds of the simulation size in the
+        z-direction.
+    ImportError
+        If the tidy3d package is not installed.
+    """
+    try:
+        from tidy3d import Coords, Grid
+    except ImportError:
+        raise ImportError(
+            "The tidy3d package is required to use this function; "
+            "try `pip install tidy3d`."
+        ) from None
+
+    if not (
+        tidy3d_sim.center[2] - tidy3d_sim.size[2] / 2
+        <= z
+        <= tidy3d_sim.center[2] + tidy3d_sim.size[2] / 2
+    ):
+        raise ValueError(
+            f"z={z} is outside the bounds of the simulation size in the z-direction."
+        )
+
+    x = np.arange(
+        tidy3d_sim.center[0] - tidy3d_sim.size[0] / 2,
+        tidy3d_sim.center[0] + tidy3d_sim.size[0] / 2,
+        0.001,
+    )
+    y = np.arange(
+        tidy3d_sim.center[1] - tidy3d_sim.size[1] / 2,
+        tidy3d_sim.center[1] + tidy3d_sim.size[1] / 2,
+        0.001,
+    )
+    z = np.array([z])
+
+    grid = Grid(boundaries=Coords(x=x, y=y, z=z))
+    eps = np.real(tidy3d_sim.epsilon_on_grid(grid=grid, coord_key="boundaries").values)
+    device_array = geometry.binarize_hard(device_array=eps, eta=eps_threshold)[:, :, 0]
+    device_array = np.fliplr(np.rot90(device_array, k=-1))
+    return Device(device_array=device_array, **kwargs)
