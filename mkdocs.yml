@@ -10,6 +10,8 @@ nav:
   - Making a correction: examples/2_correction.ipynb
   - Working with sidewall angles: examples/3_sidewall_angle.ipynb
   - Model library: models.md
+  - Blog:
+      - PreFab v1.0.0: blog/PreFab-v1.0.0.ipynb
   - Reference:
       - Compare: reference/compare.md
       - Device: reference/device.md
