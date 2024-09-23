@@ -16,9 +16,12 @@ from matplotlib.axes import Axes
 from matplotlib.patches import Rectangle
 from PIL import Image
 from pydantic import BaseModel, Field, conint, root_validator, validator
+from scipy.ndimage import distance_transform_edt
+from skimage import measure
+from skimage.morphology import closing, disk, opening, square
 from tqdm import tqdm
 
-from . import geometry
+from . import compare, geometry
 from .models import Model
 
 Image.MAX_IMAGE_PIXELS = None
@@ -670,6 +673,149 @@ class Device(BaseModel):
 
         return cell
 
+    def to_gdsfactory(self) -> "gf.Component":  # noqa: F821
+        """
+        Convert the device geometry to a gdsfactory Component.
+
+        Returns
+        -------
+        gf.Component
+            A gdsfactory Component object representing the device geometry.
+
+        Raises
+        ------
+        ImportError
+            If the gdsfactory package is not installed.
+        """
+        try:
+            import gdsfactory as gf
+        except ImportError:
+            raise ImportError(
+                "The gdsfactory package is required to use this function; "
+                "try `pip install gdsfactory`."
+            ) from None
+
+        device_array = np.rot90(self.device_array, k=-1)
+        return gf.read.from_np(device_array[:, :, 0], nm_per_pixel=1)
+
+    def to_tidy3d(
+        self,
+        eps0: float,
+        thickness: float,
+    ) -> "td.Structure":  # noqa: F821
+        """
+        Convert the device geometry to a Tidy3D Structure.
+
+        Parameters
+        ----------
+        eps0 : float
+            The permittivity value to assign to the device array.
+        thickness : float
+            The thickness of the device in the z-direction.
+
+        Returns
+        -------
+        td.Structure
+            A Tidy3D Structure object representing the device geometry.
+
+        Raises
+        ------
+        ImportError
+            If the tidy3d package is not installed.
+        """
+        try:
+            from tidy3d import Box, CustomMedium, SpatialDataArray, Structure, inf
+        except ImportError:
+            raise ImportError(
+                "The tidy3d package is required to use this function; "
+                "try `pip install tidy3d`."
+            ) from None
+
+        X = np.linspace(-self.shape[1] / 2000, self.shape[1] / 2000, self.shape[1])
+        Y = np.linspace(-self.shape[0] / 2000, self.shape[0] / 2000, self.shape[0])
+        Z = np.array([0])
+
+        device_array = np.rot90(np.fliplr(self.device_array), k=1)
+        eps_array = np.where(device_array >= 1.0, eps0, device_array)
+        eps_array = np.where(eps_array < 1.0, 1.0, eps_array)
+        eps_dataset = SpatialDataArray(eps_array, coords=dict(x=X, y=Y, z=Z))
+        medium = CustomMedium.from_eps_raw(eps_dataset)
+        return Structure(
+            geometry=Box(center=(0, 0, 0), size=(inf, inf, thickness)), medium=medium
+        )
+
+    def to_3d(self, thickness_nm: int) -> np.ndarray:
+        """
+        Convert the 2D device geometry into a 3D representation.
+
+        This method creates a 3D array by interpolating between the bottom and top
+        layers of the device geometry. The interpolation is linear.
+
+        Parameters
+        ----------
+        thickness_nm : int
+            The thickness of the 3D representation in nanometers.
+
+        Returns
+        -------
+        np.ndarray
+            A 3D narray representing the device geometry with the specified thickness.
+        """
+        bottom_layer = self.device_array[:, :, 0]
+        top_layer = self.device_array[:, :, -1]
+        dt_bottom = distance_transform_edt(bottom_layer) - distance_transform_edt(
+            1 - bottom_layer
+        )
+        dt_top = distance_transform_edt(top_layer) - distance_transform_edt(
+            1 - top_layer
+        )
+        weights = np.linspace(0, 1, thickness_nm)
+        layered_array = np.zeros(
+            (bottom_layer.shape[0], bottom_layer.shape[1], thickness_nm)
+        )
+        for i, w in enumerate(weights):
+            dt_interp = (1 - w) * dt_bottom + w * dt_top
+            layered_array[:, :, i] = dt_interp >= 0
+        return layered_array
+
+    def to_stl(self, thickness_nm: int, filename: str = "prefab_device.stl"):
+        """
+        Export the device geometry as an STL file.
+
+        Parameters
+        ----------
+        thickness_nm : int
+            The thickness of the 3D representation in nanometers.
+        filename : str, optional
+            The name of the STL file to save. Defaults to "prefab_device.stl".
+
+        Raises
+        ------
+        ValueError
+            If the thickness is not a positive integer.
+        ImportError
+            If the numpy-stl package is not installed.
+        """
+        try:
+            from stl import mesh
+        except ImportError:
+            raise ImportError(
+                "The stl package is required to use this function; "
+                "try `pip install numpy-stl`."
+            ) from None
+
+        if thickness_nm <= 0:
+            raise ValueError("Thickness must be a positive integer.")
+
+        layered_array = self.to_3d(thickness_nm)
+        verts, faces, _, _ = measure.marching_cubes(layered_array, level=0.5)
+        cube = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
+        for i, f in enumerate(faces):
+            for j in range(3):
+                cube.vectors[i][j] = verts[f[j], :]
+        cube.save(filename)
+        print(f"Saved Device to '{filename}'")
+
     def _plot_base(
         self,
         plot_array: np.ndarray,
@@ -1294,4 +1440,90 @@ class Device(BaseModel):
         """
         return 1 - 2 * np.abs(0.5 - self.device_array)
 
-        return 1 - 2 * np.abs(0.5 - self.device_array)
+    def enforce_feature_size(
+        self, min_feature_size: int, strel: str = "disk"
+    ) -> "Device":
+        """
+        Enforce a minimum feature size on the device geometry.
+
+        This method applies morphological operations to ensure that all features in the
+        device geometry are at least the specified minimum size. It uses either a disk
+        or square structuring element for the operations.
+
+        Parameters
+        ----------
+        min_feature_size : int
+            The minimum feature size to enforce, in nanometers.
+        strel : str, optional
+            The type of structuring element to use. Can be either "disk" or "square".
+            Defaults to "disk".
+
+        Returns
+        -------
+        Device
+            A new instance of the Device with the modified geometry.
+
+        Raises
+        ------
+        ValueError
+            If an invalid structuring element type is specified.
+        """
+        if strel == "disk":
+            structuring_element = disk(radius=min_feature_size / 2)
+        elif strel == "square":
+            structuring_element = square(width=min_feature_size)
+        else:
+            raise ValueError(f"Invalid structuring element: {strel}")
+
+        modified_geometry = closing(self.device_array[:, :, 0], structuring_element)
+        modified_geometry = opening(modified_geometry, structuring_element)
+        modified_geometry = np.expand_dims(modified_geometry, axis=-1)
+        return self.model_copy(update={"device_array": modified_geometry})
+
+    def check_feature_size(self, min_feature_size: int, strel: str = "disk"):
+        """
+        Check and visualize the effect of enforcing a minimum feature size on the device
+        geometry.
+
+        This method enforces a minimum feature size on the device geometry using the
+        specified structuring element, compares the modified geometry with the original,
+        and plots the differences. It also calculates and prints the Hamming distance
+        between the original and modified geometries, providing a measure of the changes
+        introduced by the feature size enforcement.
+
+        Parameters
+        ----------
+        min_feature_size : int
+            The minimum feature size to enforce, in nanometers.
+        strel : str, optional
+            The type of structuring element to use. Can be either "disk" or "square".
+            Defaults to "disk".
+
+        Raises
+        ------
+        ValueError
+            If an invalid structuring element type is specified or if min_feature_size
+            is not a positive integer.
+        """
+        if min_feature_size <= 0:
+            raise ValueError("min_feature_size must be a positive integer.")
+
+        enforced_device = self.enforce_feature_size(min_feature_size, strel)
+
+        difference = np.abs(
+            enforced_device.device_array[:, :, 0] - self.device_array[:, :, 0]
+        )
+        _, ax = self._plot_base(
+            plot_array=difference,
+            show_buffer=False,
+            ax=None,
+            bounds=None,
+            cmap="jet",
+        )
+
+        hamming_distance = compare.hamming_distance(self, enforced_device)
+        print(
+            f"Feature size check with minimum size {min_feature_size} "
+            f"using '{strel}' structuring element resulted in a Hamming "
+            f"distance of: {hamming_distance}"
+        )
