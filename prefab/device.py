@@ -493,6 +493,7 @@ class Device(BaseModel):
             binarize=False,
             gpu=gpu,
         )
+        semulated_array += np.random.normal(0, 0.03, semulated_array.shape)
         return self.model_copy(update={"device_array": semulated_array})
 
     def to_ndarray(self) -> np.ndarray:
@@ -695,8 +696,8 @@ class Device(BaseModel):
                 "try `pip install gdsfactory`."
             ) from None
 
-        device_array = np.rot90(self.device_array, k=-1)
-        return gf.read.from_np(device_array[:, :, 0], nm_per_pixel=1)
+        device_array = np.rot90(self.to_ndarray(), k=-1)
+        return gf.read.from_np(device_array, nm_per_pixel=1)
 
     def to_tidy3d(
         self,
@@ -808,6 +809,9 @@ class Device(BaseModel):
             raise ValueError("Thickness must be a positive integer.")
 
         layered_array = self.to_3d(thickness_nm)
+        layered_array = np.pad(
+            layered_array, ((0, 0), (0, 0), (10, 10)), mode="constant"
+        )
         verts, faces, _, _ = measure.marching_cubes(layered_array, level=0.5)
         cube = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
         for i, f in enumerate(faces):

@@ -1,6 +1,15 @@
 # Changelog
 
-## 1.1.0 - 2024-09-23
+## 1.1.1 - 2024-09-24
+
+### Changed
+
+- Manually adding small random noise to the semulated images to better match the real data. This is ideally included in the model training, but for now this is a quick fix.
+- Added z-padding to the device array before exporting to STL with `Device.to_stl` to ensure that the exported device is closed.
+
+### Fixed
+
+- Removed buffer from `Device.device_array` before exporting to with `Device.to_gdsfactory`.
 
 ### Added
 
