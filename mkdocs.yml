@@ -1,6 +1,6 @@
 site_name: "Docs"
 
-site_url: https://example.com
+site_url: https://docs.prefabphotonics.com/
 repo_url: https://github.com/PreFab-Photonics/PreFab
 repo_name: PreFab-Photonics/PreFab
 
@@ -87,6 +87,7 @@ markdown_extensions:
 
 plugins:
   - search
+  - social
   - mkdocstrings:
       handlers:
         python:
