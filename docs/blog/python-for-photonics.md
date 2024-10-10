@@ -1,7 +1,7 @@
 ---
-title: Python for Photonics Development
-description: Our guide to using Python for photonics design and development.
-og:image: ../assets/blog_cards/python-for-photonics.png
+og:title: Python for Photonics Development
+og:description: Our guide to using Python for photonics design and development.
+og:image: https://docs.prefabphotonics.com/assets/blog-cards/python-for-photonics.png
 ---
 
 # Python for Photonics Development
