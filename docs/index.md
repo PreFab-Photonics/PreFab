@@ -30,7 +30,8 @@ For those who wish to make changes to the source code for their own development 
 
 ```sh
 git clone https://github.com/PreFab-Photonics/PreFab.git
-pip install -e prefab
+cd PreFab
+pip install -e .
 ```
 
 ## Authenticate PreFab token
@@ -47,6 +48,8 @@ See the following guides to get started with making your first predictions and c
 
 1. [Making a prediction](examples/1_prediction.ipynb)
 2. [Making a correction](examples/2_correction.ipynb)
+
+If you are new to Python, we recommend starting with the [Python for Photonics](blog/python-for-photonics.md) blog post.
 
 !!! tip "Performance and usage"
 

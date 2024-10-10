@@ -13,7 +13,8 @@ nav:
     - Working with sidewall angles: examples/3_sidewall_angle.ipynb
     - SEM generation: examples/4_SEM_generation.ipynb
   - Blog:
-      - PreFab v1.1.0: blog/PreFab-v1.1.0.ipynb
+    - Python for Photonics: blog/python-for-photonics.md
+    - PreFab v1.1.0: blog/PreFab-v1.1.0.ipynb
   - Reference:
       - Compare: reference/compare.md
       - Device: reference/device.md
