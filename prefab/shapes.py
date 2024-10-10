@@ -6,7 +6,7 @@ from skimage.draw import polygon
 from .device import Device
 
 
-def rectangle(width: int = 200, height: int = 100, **kwargs) -> Device:
+def rectangle(width: int = 200, height: int = None, **kwargs) -> Device:
     """
     Create a Device object with a rectangular shape.
 
@@ -15,7 +15,7 @@ def rectangle(width: int = 200, height: int = 100, **kwargs) -> Device:
     width : int, optional
         The width of the rectangle. Defaults to 200.
     height : int, optional
-        The height of the rectangle. Defaults to 100.
+        The height of the rectangle. Defaults to the value of width.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
 
@@ -24,96 +24,25 @@ def rectangle(width: int = 200, height: int = 100, **kwargs) -> Device:
     Device
         A Device object containing the rectangular shape.
     """
+    if height is None:
+        height = width
     rectangle = np.zeros((height, width))
     rectangle[:, :] = 1
     return Device(device_array=rectangle, **kwargs)
 
 
-def box(width: int = 200, **kwargs) -> Device:
-    """
-    Create a Device object with a square box shape.
-
-    Parameters
-    ----------
-    width : int, optional
-        The width and height of the square box. Defaults to 200.
-    **kwargs : dict
-        Additional keyword arguments to be passed to the Device constructor.
-
-    Returns
-    -------
-    Device
-        A Device object containing the square box shape.
-    """
-    box = np.zeros((width, width))
-    box[:, :] = 1
-    return Device(device_array=box, **kwargs)
-
-
-def cross(width: int = 200, arm_width: int = 60, **kwargs) -> Device:
-    """
-    Create a Device object with a cross shape.
-
-    Parameters
-    ----------
-    width : int, optional
-        The overall width and height of the cross. Defaults to 200.
-    arm_width : int, optional
-        The width of the cross arms. Defaults to 60.
-    **kwargs : dict
-        Additional keyword arguments to be passed to the Device constructor.
-
-    Returns
-    -------
-    Device
-        A Device object containing the cross shape.
-    """
-    cross = np.zeros((width, width))
-    center = width // 2
-    half_arm_width = arm_width // 2
-    cross[center - half_arm_width : center + half_arm_width + 1, :] = 1
-    cross[:, center - half_arm_width : center + half_arm_width + 1] = 1
-    return Device(device_array=cross, **kwargs)
-
-
-def target(width: int = 200, arm_width: int = 60, **kwargs) -> Device:
-    """
-    Create a Device object with a target shape (cross with center removed).
-
-    Parameters
-    ----------
-    width : int, optional
-        The overall width and height of the target. Defaults to 200.
-    arm_width : int, optional
-        The width of the target arms. Defaults to 60.
-    **kwargs : dict
-        Additional keyword arguments to be passed to the Device constructor.
-
-    Returns
-    -------
-    Device
-        A Device object containing the target shape.
-    """
-    target = np.zeros((width, width))
-    center = width // 2
-    half_arm_width = arm_width // 2
-    target[center - half_arm_width : center + half_arm_width + 1, :] = 1
-    target[:, center - half_arm_width : center + half_arm_width + 1] = 1
-    target[
-        center - half_arm_width : center + half_arm_width + 1,
-        center - half_arm_width : center + half_arm_width + 1,
-    ] = 0
-    return Device(device_array=target, **kwargs)
-
-
-def window(width: int = 200, border_width: int = 60, **kwargs) -> Device:
+def window(
+    width: int = 200, height: int = None, border_width: int = 60, **kwargs
+) -> Device:
     """
     Create a Device object with a window shape (hollow square).
 
     Parameters
     ----------
     width : int, optional
-        The overall width and height of the window. Defaults to 200.
+        The overall width of the window. Defaults to 200.
+    height : int, optional
+        The overall height of the window. Defaults to the value of width.
     border_width : int, optional
         The width of the window border. Defaults to 60.
     **kwargs : dict
@@ -124,7 +53,9 @@ def window(width: int = 200, border_width: int = 60, **kwargs) -> Device:
     Device
         A Device object containing the window shape.
     """
-    window = np.zeros((width, width))
+    if height is None:
+        height = width
+    window = np.zeros((height, width))
     window[:border_width, :] = 1
     window[-border_width:, :] = 1
     window[:, :border_width] = 1
@@ -132,7 +63,77 @@ def window(width: int = 200, border_width: int = 60, **kwargs) -> Device:
     return Device(device_array=window, **kwargs)
 
 
-def ellipse(width: int = 200, height: int = 100, **kwargs) -> Device:
+def cross(
+    width: int = 200, height: int = None, arm_width: int = 60, **kwargs
+) -> Device:
+    """
+    Create a Device object with a cross shape.
+
+    Parameters
+    ----------
+    width : int, optional
+        The overall width of the cross. Defaults to 200.
+    height : int, optional
+        The overall height of the cross. Defaults to the value of width.
+    arm_width : int, optional
+        The width of the cross arms. Defaults to 60.
+    **kwargs : dict
+        Additional keyword arguments to be passed to the Device constructor.
+
+    Returns
+    -------
+    Device
+        A Device object containing the cross shape.
+    """
+    if height is None:
+        height = width
+    cross = np.zeros((height, width))
+    center_x = width // 2
+    center_y = height // 2
+    half_arm_width = arm_width // 2
+    cross[center_y - half_arm_width : center_y + half_arm_width + 1, :] = 1
+    cross[:, center_x - half_arm_width : center_x + half_arm_width + 1] = 1
+    return Device(device_array=cross, **kwargs)
+
+
+def target(
+    width: int = 200, height: int = None, arm_width: int = 60, **kwargs
+) -> Device:
+    """
+    Create a Device object with a target shape (cross with center removed).
+
+    Parameters
+    ----------
+    width : int, optional
+        The overall width of the target. Defaults to 200.
+    height : int, optional
+        The overall height of the target. Defaults to the value of width.
+    arm_width : int, optional
+        The width of the target arms. Defaults to 60.
+    **kwargs : dict
+        Additional keyword arguments to be passed to the Device constructor.
+
+    Returns
+    -------
+    Device
+        A Device object containing the target shape.
+    """
+    if height is None:
+        height = width
+    target = np.zeros((height, width))
+    center_x = width // 2
+    center_y = height // 2
+    half_arm_width = arm_width // 2
+    target[center_y - half_arm_width : center_y + half_arm_width + 1, :] = 1
+    target[:, center_x - half_arm_width : center_x + half_arm_width + 1] = 1
+    target[
+        center_y - half_arm_width : center_y + half_arm_width + 1,
+        center_x - half_arm_width : center_x + half_arm_width + 1,
+    ] = 0
+    return Device(device_array=target, **kwargs)
+
+
+def disk(width: int = 200, height: int = None, **kwargs) -> Device:
     """
     Create a Device object with an elliptical shape.
 
@@ -141,7 +142,7 @@ def ellipse(width: int = 200, height: int = 100, **kwargs) -> Device:
     width : int, optional
         The width of the ellipse. Defaults to 200.
     height : int, optional
-        The height of the ellipse. Defaults to 100.
+        The height of the ellipse. Defaults to the value of width.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
 
@@ -150,38 +151,54 @@ def ellipse(width: int = 200, height: int = 100, **kwargs) -> Device:
     Device
         A Device object containing the elliptical shape.
     """
-    y, x = np.ogrid[-height // 2 : height // 2, -width // 2 : width // 2]
-    mask = (x**2 / (width // 2) ** 2) + (y**2 / (height // 2) ** 2) <= 1
+    if height is None:
+        height = width
+    radius_x = width // 2
+    radius_y = height // 2
+    y, x = np.ogrid[-radius_y:radius_y, -radius_x:radius_x]
+    mask = (x**2 / radius_x**2) + (y**2 / radius_y**2) <= 1
     ellipse = np.zeros((height, width))
     ellipse[mask] = 1
     return Device(device_array=ellipse, **kwargs)
 
 
-def circle(width: int = 200, **kwargs) -> Device:
+def ring(
+    width: int = 200, height: int = None, border_width: int = 60, **kwargs
+) -> Device:
     """
-    Create a Device object with a circular shape.
+    Create a Device object with a ring shape.
 
     Parameters
     ----------
     width : int, optional
-        The width and height of the circle. Defaults to 200.
+        The overall width of the ring. Defaults to 200.
+    height : int, optional
+        The overall height of the ring. Defaults to the value of width.
+    border_width : int, optional
+        The width of the ring border. Defaults to 60.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
 
     Returns
     -------
     Device
-        A Device object containing the circular shape.
+        A Device object containing the ring shape.
     """
-    radius = width // 2
-    y, x = np.ogrid[-radius:radius, -radius:radius]
-    mask = x**2 + y**2 <= radius**2
-    circle = np.zeros((width, width))
-    circle[mask] = 1
-    return Device(device_array=circle, **kwargs)
+    if height is None:
+        height = width
+    radius_x = width // 2
+    radius_y = height // 2
+    inner_radius_x = radius_x - border_width
+    inner_radius_y = radius_y - border_width
+    y, x = np.ogrid[-radius_y:radius_y, -radius_x:radius_x]
+    outer_mask = x**2 / radius_x**2 + y**2 / radius_y**2 <= 1
+    inner_mask = x**2 / inner_radius_x**2 + y**2 / inner_radius_y**2 <= 1
+    ring = np.zeros((height, width))
+    ring[outer_mask & ~inner_mask] = 1
+    return Device(device_array=ring, **kwargs)
 
 
-def circle_wavy(
+def disk_wavy(
     width: int = 200, wave_amplitude: float = 10, wave_frequency: float = 10, **kwargs
 ) -> Device:
     """
@@ -215,14 +232,18 @@ def circle_wavy(
     return Device(device_array=circle_wavy, **kwargs)
 
 
-def pie(width: int = 200, arc_angle: float = 270, **kwargs) -> Device:
+def pie(
+    width: int = 200, height: int = None, arc_angle: float = 270, **kwargs
+) -> Device:
     """
     Create a Device object with a pie shape.
 
     Parameters
     ----------
     width : int, optional
-        The width and height of the pie. Defaults to 200.
+        The width of the pie. Defaults to 200.
+    height : int, optional
+        The height of the pie. Defaults to the value of width.
     arc_angle : float, optional
         The angle of the pie slice in degrees. Defaults to 270.
     **kwargs : dict
@@ -233,12 +254,15 @@ def pie(width: int = 200, arc_angle: float = 270, **kwargs) -> Device:
     Device
         A Device object containing the pie shape.
     """
-    radius = width // 2
-    y, x = np.ogrid[-radius:radius, -radius:radius]
+    if height is None:
+        height = width
+    radius_x = width // 2
+    radius_y = height // 2
+    y, x = np.ogrid[-radius_y:radius_y, -radius_x:radius_x]
     angle = np.arctan2(y, x) * 180 / np.pi
     angle = (angle + 360) % 360
-    mask = (x**2 + y**2 <= radius**2) & (angle <= arc_angle)
-    pie = np.zeros((width, width))
+    mask = (x**2 / radius_x**2 + y**2 / radius_y**2 <= 1) & (angle <= arc_angle)
+    pie = np.zeros((height, width))
     pie[mask] = 1
     return Device(device_array=pie, **kwargs)
 
@@ -350,36 +374,6 @@ def poly(width: int = 200, num_points: int = 5, **kwargs) -> Device:
     return Device(device_array=poly, **kwargs)
 
 
-def ring(width: int = 200, border_width: int = 60, **kwargs) -> Device:
-    """
-    Create a Device object with a ring shape.
-
-    Parameters
-    ----------
-    width : int, optional
-        The overall width and height of the ring. Defaults to 200.
-    border_width : int, optional
-        The width of the ring border. Defaults to 60.
-    **kwargs : dict
-        Additional keyword arguments to be passed to the Device constructor.
-
-    Returns
-    -------
-    Device
-        A Device object containing the ring shape.
-    """
-    radius_outer = width // 2
-    radius_inner = radius_outer - border_width
-    y, x = np.ogrid[-radius_outer:radius_outer, -radius_outer:radius_outer]
-    distance_from_center = np.sqrt(x**2 + y**2)
-    mask = (distance_from_center <= radius_outer) & (
-        distance_from_center >= radius_inner
-    )
-    ring = np.zeros((width, width))
-    ring[mask] = 1
-    return Device(device_array=ring, **kwargs)
-
-
 def radial_grating(
     width: int = 200, grating_skew: int = 0, num_gratings: int = 6, **kwargs
 ) -> Device:
@@ -465,7 +459,8 @@ def offset_grating(
 
 
 def L_grating(
-    height: int = 200,
+    width: int = 200,
+    height: int = None,
     pitch: int = 100,
     duty_cycle: float = 0.5,
     **kwargs,
@@ -475,8 +470,10 @@ def L_grating(
 
     Parameters
     ----------
+    width : int, optional
+        The width of the L-grating. Defaults to 200.
     height : int, optional
-        The height and width of the L-grating. Defaults to 200.
+        The height of the L-grating. Defaults to the value of width.
     pitch : int, optional
         The pitch (period) of the L-shapes. Defaults to 100.
     duty_cycle : float, optional
@@ -489,8 +486,10 @@ def L_grating(
     Device
         A Device object containing the L-shaped grating pattern.
     """
-    L_grating = np.zeros((height, height))
-    num_L_shapes = height // pitch
+    if height is None:
+        height = width
+    L_grating = np.zeros((height, width))
+    num_L_shapes = min(height, width) // pitch
     L_width = int(pitch * duty_cycle)
     for i in range(num_L_shapes):
         start = i * pitch
@@ -499,11 +498,11 @@ def L_grating(
     return Device(device_array=L_grating, **kwargs)
 
 
-def circles(
-    rows: int = 5, cols: int = 5, radius: int = 30, spacing: int = 60, **kwargs
+def disks(
+    rows: int = 5, cols: int = 5, disk_radius: int = 30, spacing: int = 60, **kwargs
 ) -> Device:
     """
-    Create a Device object with a grid of uniform circles.
+    Create a Device object with a grid of uniform disks.
 
     Parameters
     ----------
@@ -511,39 +510,39 @@ def circles(
         The number of rows in the grid. Defaults to 5.
     cols : int, optional
         The number of columns in the grid. Defaults to 5.
-    radius : int, optional
-        The radius of each circle. Defaults to 30.
+    disk_radius : int, optional
+        The radius of each disk. Defaults to 30.
     spacing : int, optional
-        The spacing between circle centers. Defaults to 60.
+        The spacing between disk centers. Defaults to 60.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
 
     Returns
     -------
     Device
-        A Device object containing a grid of circles.
+        A Device object containing a grid of disks.
     """
-    grid_height = rows * (2 * radius + spacing) - spacing
-    grid_width = cols * (2 * radius + spacing) - spacing
-    circles = np.zeros((grid_height, grid_width))
-    y, x = np.ogrid[-radius:radius, -radius:radius]
-    mask = x**2 + y**2 <= radius**2
+    grid_height = rows * (2 * disk_radius + spacing) - spacing
+    grid_width = cols * (2 * disk_radius + spacing) - spacing
+    disks = np.zeros((grid_height, grid_width))
+    y, x = np.ogrid[-disk_radius:disk_radius, -disk_radius:disk_radius]
+    mask = x**2 + y**2 <= disk_radius**2
     for row in range(rows):
         for col in range(cols):
-            center_y = row * (2 * radius + spacing) + radius
-            center_x = col * (2 * radius + spacing) + radius
-            circles[
-                center_y - radius : center_y + radius,
-                center_x - radius : center_x + radius,
+            center_y = row * (2 * disk_radius + spacing) + disk_radius
+            center_x = col * (2 * disk_radius + spacing) + disk_radius
+            disks[
+                center_y - disk_radius : center_y + disk_radius,
+                center_x - disk_radius : center_x + disk_radius,
             ][mask] = 1
-    return Device(device_array=circles, **kwargs)
+    return Device(device_array=disks, **kwargs)
 
 
-def circles_offset(
-    rows: int = 5, cols: int = 5, radius: int = 30, spacing: int = 30, **kwargs
+def disks_offset(
+    rows: int = 5, cols: int = 5, disk_radius: int = 30, spacing: int = 30, **kwargs
 ) -> Device:
     """
-    Create a Device object with an offset grid of circles.
+    Create a Device object with an offset grid of disks.
 
     Parameters
     ----------
@@ -551,48 +550,50 @@ def circles_offset(
         The number of rows in the grid. Defaults to 5.
     cols : int, optional
         The number of columns in the grid. Defaults to 5.
-    radius : int, optional
-        The radius of each circle. Defaults to 30.
+    disk_radius : int, optional
+        The radius of each disk. Defaults to 30.
     spacing : int, optional
-        The spacing between circle centers. Defaults to 30.
+        The spacing between disk centers. Defaults to 30.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
 
     Returns
     -------
     Device
-        A Device object containing an offset grid of circles.
+        A Device object containing an offset grid of disks.
     """
-    grid_height = rows * (2 * radius + spacing) - spacing
-    grid_width = cols * (2 * radius + spacing) - spacing + (radius + spacing // 2)
-    circles_offset = np.zeros((grid_height, grid_width))
-    y, x = np.ogrid[-radius:radius, -radius:radius]
-    mask = x**2 + y**2 <= radius**2
+    grid_height = rows * (2 * disk_radius + spacing) - spacing
+    grid_width = (
+        cols * (2 * disk_radius + spacing) - spacing + (disk_radius + spacing // 2)
+    )
+    disks_offset = np.zeros((grid_height, grid_width))
+    y, x = np.ogrid[-disk_radius:disk_radius, -disk_radius:disk_radius]
+    mask = x**2 + y**2 <= disk_radius**2
     for row in range(rows):
         for col in range(cols):
-            center_y = row * (2 * radius + spacing) + radius
+            center_y = row * (2 * disk_radius + spacing) + disk_radius
             center_x = (
-                col * (2 * radius + spacing)
-                + radius
-                + (radius + spacing // 2 if row % 2 == 1 else 0)
+                col * (2 * disk_radius + spacing)
+                + disk_radius
+                + (disk_radius + spacing // 2 if row % 2 == 1 else 0)
             )
-            circles_offset[
-                center_y - radius : center_y + radius,
-                center_x - radius : center_x + radius,
+            disks_offset[
+                center_y - disk_radius : center_y + disk_radius,
+                center_x - disk_radius : center_x + disk_radius,
             ][mask] = 1
-    return Device(device_array=circles_offset, **kwargs)
+    return Device(device_array=disks_offset, **kwargs)
 
 
-def circles_varying(
+def disks_varying(
     rows: int = 5,
     cols: int = 5,
-    min_radius: int = 10,
-    max_radius: int = 30,
+    min_disk_radius: int = 10,
+    max_disk_radius: int = 30,
     spacing: int = 30,
     **kwargs,
 ) -> Device:
     """
-    Create a Device object with a grid of circles with varying radii.
+    Create a Device object with a grid of disks with varying radii.
 
     Parameters
     ----------
@@ -600,40 +601,42 @@ def circles_varying(
         The number of rows in the grid. Defaults to 5.
     cols : int, optional
         The number of columns in the grid. Defaults to 5.
-    min_radius : int, optional
-        The minimum radius of the circles. Defaults to 10.
-    max_radius : int, optional
-        The maximum radius of the circles. Defaults to 30.
+    min_disk_radius : int, optional
+        The minimum radius of the disks. Defaults to 10.
+    max_disk_radius : int, optional
+        The maximum radius of the disks. Defaults to 30.
     spacing : int, optional
-        The spacing between circle centers. Defaults to 30.
+        The spacing between disk centers. Defaults to 30.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
 
     Returns
     -------
     Device
-        A Device object containing a grid of circles with varying radii.
+        A Device object containing a grid of disks with varying radii.
     """
-    grid_height = rows * (2 * max_radius + spacing) - spacing
-    grid_width = cols * (2 * max_radius + spacing) - spacing
-    circles_varying = np.zeros((grid_height, grid_width))
-    radius_range = np.linspace(min_radius, max_radius, rows * cols).reshape(rows, cols)
+    grid_height = rows * (2 * max_disk_radius + spacing) - spacing
+    grid_width = cols * (2 * max_disk_radius + spacing) - spacing
+    disks_varying = np.zeros((grid_height, grid_width))
+    radius_range = np.linspace(min_disk_radius, max_disk_radius, rows * cols).reshape(
+        rows, cols
+    )
     for row in range(rows):
         for col in range(cols):
-            radius = int(radius_range[row, col])
-            y, x = np.ogrid[-radius:radius, -radius:radius]
-            mask = x**2 + y**2 <= radius**2
-            center_y = row * (2 * max_radius + spacing) + max_radius
-            center_x = col * (2 * max_radius + spacing) + max_radius
-            circles_varying[
-                center_y - radius : center_y + radius,
-                center_x - radius : center_x + radius,
+            disk_radius = int(radius_range[row, col])
+            y, x = np.ogrid[-disk_radius:disk_radius, -disk_radius:disk_radius]
+            mask = x**2 + y**2 <= disk_radius**2
+            center_y = row * (2 * max_disk_radius + spacing) + max_disk_radius
+            center_x = col * (2 * max_disk_radius + spacing) + max_disk_radius
+            disks_varying[
+                center_y - disk_radius : center_y + disk_radius,
+                center_x - disk_radius : center_x + disk_radius,
             ][mask] = 1
-    return Device(device_array=circles_varying, **kwargs)
+    return Device(device_array=disks_varying, **kwargs)
 
 
 def holes(
-    rows: int = 5, cols: int = 5, radius: int = 30, spacing: int = 30, **kwargs
+    rows: int = 5, cols: int = 5, hole_radius: int = 30, spacing: int = 30, **kwargs
 ) -> Device:
     """
     Create a Device object with a grid of uniform circular holes.
@@ -644,7 +647,7 @@ def holes(
         The number of rows in the grid. Defaults to 5.
     cols : int, optional
         The number of columns in the grid. Defaults to 5.
-    radius : int, optional
+    hole_radius : int, optional
         The radius of each hole. Defaults to 30.
     spacing : int, optional
         The spacing between hole centers. Defaults to 30.
@@ -656,24 +659,24 @@ def holes(
     Device
         A Device object containing a grid of circular holes.
     """
-    grid_height = rows * (2 * radius + spacing) - spacing
-    grid_width = cols * (2 * radius + spacing) - spacing
+    grid_height = rows * (2 * hole_radius + spacing) - spacing
+    grid_width = cols * (2 * hole_radius + spacing) - spacing
     holes = np.ones((grid_height, grid_width))
-    y, x = np.ogrid[-radius:radius, -radius:radius]
-    mask = x**2 + y**2 <= radius**2
+    y, x = np.ogrid[-hole_radius:hole_radius, -hole_radius:hole_radius]
+    mask = x**2 + y**2 <= hole_radius**2
     for row in range(rows):
         for col in range(cols):
-            center_y = row * (2 * radius + spacing) + radius
-            center_x = col * (2 * radius + spacing) + radius
+            center_y = row * (2 * hole_radius + spacing) + hole_radius
+            center_x = col * (2 * hole_radius + spacing) + hole_radius
             holes[
-                center_y - radius : center_y + radius,
-                center_x - radius : center_x + radius,
+                center_y - hole_radius : center_y + hole_radius,
+                center_x - hole_radius : center_x + hole_radius,
             ][mask] = 0
     return Device(device_array=holes, **kwargs)
 
 
 def holes_offset(
-    rows: int = 5, cols: int = 5, radius: int = 30, spacing: int = 30, **kwargs
+    rows: int = 5, cols: int = 5, hole_radius: int = 30, spacing: int = 30, **kwargs
 ) -> Device:
     """
     Create a Device object with an offset grid of circular holes.
@@ -684,7 +687,7 @@ def holes_offset(
         The number of rows in the grid. Defaults to 5.
     cols : int, optional
         The number of columns in the grid. Defaults to 5.
-    radius : int, optional
+    hole_radius : int, optional
         The radius of each hole. Defaults to 30.
     spacing : int, optional
         The spacing between hole centers. Defaults to 30.
@@ -696,22 +699,24 @@ def holes_offset(
     Device
         A Device object containing an offset grid of circular holes.
     """
-    grid_height = rows * (2 * radius + spacing) - spacing
-    grid_width = cols * (2 * radius + spacing) - spacing + (radius + spacing // 2)
+    grid_height = rows * (2 * hole_radius + spacing) - spacing
+    grid_width = (
+        cols * (2 * hole_radius + spacing) - spacing + (hole_radius + spacing // 2)
+    )
     holes_offset = np.ones((grid_height, grid_width))
-    y, x = np.ogrid[-radius:radius, -radius:radius]
-    mask = x**2 + y**2 <= radius**2
+    y, x = np.ogrid[-hole_radius:hole_radius, -hole_radius:hole_radius]
+    mask = x**2 + y**2 <= hole_radius**2
     for row in range(rows):
         for col in range(cols):
-            center_y = row * (2 * radius + spacing) + radius
+            center_y = row * (2 * hole_radius + spacing) + hole_radius
             center_x = (
-                col * (2 * radius + spacing)
-                + radius
-                + (radius + spacing // 2 if row % 2 == 1 else 0)
+                col * (2 * hole_radius + spacing)
+                + hole_radius
+                + (hole_radius + spacing // 2 if row % 2 == 1 else 0)
             )
             holes_offset[
-                center_y - radius : center_y + radius,
-                center_x - radius : center_x + radius,
+                center_y - hole_radius : center_y + hole_radius,
+                center_x - hole_radius : center_x + hole_radius,
             ][mask] = 0
     return Device(device_array=holes_offset, **kwargs)
 
@@ -719,8 +724,8 @@ def holes_offset(
 def holes_varying(
     rows: int = 5,
     cols: int = 5,
-    min_radius: int = 10,
-    max_radius: int = 30,
+    min_hole_radius: int = 10,
+    max_hole_radius: int = 30,
     spacing: int = 30,
     **kwargs,
 ) -> Device:
@@ -733,9 +738,9 @@ def holes_varying(
         The number of rows in the grid. Defaults to 5.
     cols : int, optional
         The number of columns in the grid. Defaults to 5.
-    min_radius : int, optional
+    min_hole_radius : int, optional
         The minimum radius of the holes. Defaults to 10.
-    max_radius : int, optional
+    max_hole_radius : int, optional
         The maximum radius of the holes. Defaults to 30.
     spacing : int, optional
         The spacing between hole centers. Defaults to 30.
@@ -747,19 +752,21 @@ def holes_varying(
     Device
         A Device object containing a grid of circular holes with varying radii.
     """
-    grid_height = rows * (2 * max_radius + spacing) - spacing
-    grid_width = cols * (2 * max_radius + spacing) - spacing
+    grid_height = rows * (2 * max_hole_radius + spacing) - spacing
+    grid_width = cols * (2 * max_hole_radius + spacing) - spacing
     holes_varying = np.ones((grid_height, grid_width))
-    radius_range = np.linspace(min_radius, max_radius, rows * cols).reshape(rows, cols)
+    radius_range = np.linspace(min_hole_radius, max_hole_radius, rows * cols).reshape(
+        rows, cols
+    )
     for row in range(rows):
         for col in range(cols):
-            radius = int(radius_range[row, col])
-            y, x = np.ogrid[-radius:radius, -radius:radius]
-            mask = x**2 + y**2 <= radius**2
-            center_y = row * (2 * max_radius + spacing) + max_radius
-            center_x = col * (2 * max_radius + spacing) + max_radius
+            hole_radius = int(radius_range[row, col])
+            y, x = np.ogrid[-hole_radius:hole_radius, -hole_radius:hole_radius]
+            mask = x**2 + y**2 <= hole_radius**2
+            center_y = row * (2 * max_hole_radius + spacing) + max_hole_radius
+            center_x = col * (2 * max_hole_radius + spacing) + max_hole_radius
             holes_varying[
-                center_y - radius : center_y + radius,
-                center_x - radius : center_x + radius,
+                center_y - hole_radius : center_y + hole_radius,
+                center_x - hole_radius : center_x + hole_radius,
             ][mask] = 0
     return Device(device_array=holes_varying, **kwargs)
