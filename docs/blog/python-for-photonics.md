@@ -1,9 +1,3 @@
----
-og:title: Python for Photonics Development
-og:description: Our guide to using Python for photonics design and development.
-og:image: https://docs.prefabphotonics.com/assets/blog-cards/python-for-photonics.png
----
-
 # Python for Photonics Development
 
 [Python](https://www.python.org/) has become an indispensable tool in many technical fields, including ours. It gives researchers and engineers a versatile platform for simulating, modeling, and analyzing photonic systems, effectively streamlining the **entire development workflow.** With its extensive ecosystem of libraries and tools, Python enables efficient and innovative solutions in photonics that we think are worth exploring.
