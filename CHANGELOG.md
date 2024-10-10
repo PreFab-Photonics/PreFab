@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.2 -
+
+### Added
+
+- User warning if `compare.intersection_over_union`, `compare.hamming_distance`, or `compare.dice_coefficient` are called with non-binarized devices.
+
+### Changed
+
+- Updates to the `README.md` to keep current.
+- `Device.is_binary` is now a property.
+
 ## 1.1.1 - 2024-09-24
 
 ### Changed

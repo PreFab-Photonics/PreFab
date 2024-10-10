@@ -1,5 +1,7 @@
 """Provides functions to measure the similarity between devices."""
 
+import warnings
+
 import numpy as np
 
 from .device import Device
@@ -42,6 +44,11 @@ def intersection_over_union(device_a: Device, device_b: Device) -> float:
     float
         The Intersection over Union between two devices.
     """
+    if not device_a.is_binary or not device_b.is_binary:
+        warnings.warn(
+            "One or both devices are not binarized.", UserWarning, stacklevel=2
+        )
+
     return np.sum(
         np.logical_and(device_a.device_array, device_b.device_array)
     ) / np.sum(np.logical_or(device_a.device_array, device_b.device_array))
@@ -65,6 +72,11 @@ def hamming_distance(device_a: Device, device_b: Device) -> int:
     int
         The Hamming distance between two devices.
     """
+    if not device_a.is_binary or not device_b.is_binary:
+        warnings.warn(
+            "One or both devices are not binarized.", UserWarning, stacklevel=2
+        )
+
     return np.sum(device_a.device_array != device_b.device_array)
 
 
@@ -86,6 +98,11 @@ def dice_coefficient(device_a: Device, device_b: Device) -> float:
     float
         The Dice coefficient between two devices.
     """
+    if not device_a.is_binary or not device_b.is_binary:
+        warnings.warn(
+            "One or both devices are not binarized.", UserWarning, stacklevel=2
+        )
+
     intersection = 2.0 * np.sum(
         np.logical_and(device_a.device_array, device_b.device_array)
     )

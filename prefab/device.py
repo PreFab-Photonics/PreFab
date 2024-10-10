@@ -193,6 +193,7 @@ class Device(BaseModel):
             raise ValueError("device_array must be a 2D array.")
         return values
 
+    @property
     def is_binary(self) -> bool:
         """
         Check if the device geometry is binary.
