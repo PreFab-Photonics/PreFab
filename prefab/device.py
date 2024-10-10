@@ -18,7 +18,6 @@ from PIL import Image
 from pydantic import BaseModel, Field, conint, root_validator, validator
 from scipy.ndimage import distance_transform_edt
 from skimage import measure
-from skimage.morphology import closing, disk, opening, square
 from tqdm import tqdm
 
 from . import compare, geometry
@@ -1473,16 +1472,11 @@ class Device(BaseModel):
         ValueError
             If an invalid structuring element type is specified.
         """
-        if strel == "disk":
-            structuring_element = disk(radius=min_feature_size / 2)
-        elif strel == "square":
-            structuring_element = square(width=min_feature_size)
-        else:
-            raise ValueError(f"Invalid structuring element: {strel}")
-
-        modified_geometry = closing(self.device_array[:, :, 0], structuring_element)
-        modified_geometry = opening(modified_geometry, structuring_element)
-        modified_geometry = np.expand_dims(modified_geometry, axis=-1)
+        modified_geometry = geometry.enforce_feature_size(
+            device_array=self.device_array,
+            min_feature_size=min_feature_size,
+            strel=strel,
+        )
         return self.model_copy(update={"device_array": modified_geometry})
 
     def check_feature_size(self, min_feature_size: int, strel: str = "disk"):

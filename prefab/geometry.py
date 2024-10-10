@@ -2,6 +2,7 @@
 
 import cv2
 import numpy as np
+from skimage.morphology import closing, disk, opening, square
 
 
 def normalize(device_array: np.ndarray) -> np.ndarray:
@@ -248,7 +249,6 @@ def rotate(device_array: np.ndarray, angle: float) -> np.ndarray:
         ),
         axis=-1,
     )
-    return np.expand_dims(rotated_device_array, axis=-1)
 
 
 def erode(device_array: np.ndarray, kernel_size: int) -> np.ndarray:
@@ -306,3 +306,45 @@ def flatten(device_array: np.ndarray) -> np.ndarray:
         The flattened array with values scaled between 0 and 1.
     """
     return normalize(np.sum(device_array, axis=-1, keepdims=True))
+
+
+def enforce_feature_size(
+    device_array: np.ndarray, min_feature_size: int, strel: str = "disk"
+) -> np.ndarray:
+    """
+    Enforce a minimum feature size on the device geometry.
+
+    This function applies morphological operations to ensure that all features in the
+    device geometry are at least the specified minimum size. It uses either a disk
+    or square structuring element for the operations.
+
+    Parameters
+    ----------
+    device_array : np.ndarray
+        The input array representing the device geometry.
+    min_feature_size : int
+        The minimum feature size to enforce, in nanometers.
+    strel : str, optional
+        The type of structuring element to use. Can be either "disk" or "square".
+        Defaults to "disk".
+
+    Returns
+    -------
+    np.ndarray
+        The modified device array with enforced feature size.
+
+    Raises
+    ------
+    ValueError
+        If an invalid structuring element type is specified.
+    """
+    if strel == "disk":
+        structuring_element = disk(radius=min_feature_size / 2)
+    elif strel == "square":
+        structuring_element = square(width=min_feature_size)
+    else:
+        raise ValueError(f"Invalid structuring element: {strel}")
+
+    modified_geometry = closing(device_array[:, :, 0], structuring_element)
+    modified_geometry = opening(modified_geometry, structuring_element)
+    return np.expand_dims(modified_geometry, axis=-1)
