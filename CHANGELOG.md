@@ -1,15 +1,22 @@
 # Changelog
 
-## 1.1.2 -
+## 1.1.2 - 2024-10-10
 
 ### Added
 
 - User warning if `compare.intersection_over_union`, `compare.hamming_distance`, or `compare.dice_coefficient` are called with non-binarized devices.
+- Added `height` parameter to many shape constructors in `prefab.shapes` to give more flexibility.
 
 ### Changed
 
 - Updates to the `README.md` to keep current.
 - `Device.is_binary` is now a property.
+- Moved `Device.enforce_feature_size` logic to `prefab.geometry` module.
+
+### Fixed
+
+- Added required version of `gdstk` to `pyproject.toml`.
+- Removed leftover return statement in `geometry.rotate`.
 
 ## 1.1.1 - 2024-09-24
 
