@@ -244,7 +244,7 @@ def from_gdsfactory(
         If the gdsfactory package is not installed.
     """
     try:
-        import gdsfactory as gf
+        import gdsfactory as gf  # noqa: F401
     except ImportError:
         raise ImportError(
             "The gdsfactory package is required to use this function; "
@@ -351,6 +351,10 @@ def get_sem_resolution(sem_path: str, sem_resolution_key: str) -> float:
     """
     Extracts the resolution of a scanning electron microscope (SEM) image from its
     metadata.
+
+    Note:
+    -----
+    This function is used internally and may not be useful for most users.
 
     Parameters
     ----------
