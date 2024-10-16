@@ -35,7 +35,7 @@ class BufferSpec(BaseModel):
     providing extra space for device fabrication processes or for ensuring that the
     device is isolated from surrounding structures.
 
-    Parameters
+    Attributes
     ----------
     mode : dict[str, str]
         A dictionary that defines the buffer mode for each side of the device
@@ -1313,13 +1313,6 @@ class Device(BaseModel):
         """
         Trim the device geometry by removing empty space around it.
 
-        Parameters
-        ----------
-        buffer_thickness : dict, optional
-            A dictionary specifying the thickness of the buffer to leave around the
-            non-zero elements of the array. Should contain keys 'top', 'bottom', 'left',
-            'right'. Defaults to None, which means no buffer is added.
-
         Returns
         -------
         Device
@@ -1413,11 +1406,6 @@ class Device(BaseModel):
         """
         Flatten the device geometry by summing the vertical layers and normalizing the
         result.
-
-        Parameters
-        ----------
-        device_array : np.ndarray
-            The input array to be flattened.
 
         Returns
         -------

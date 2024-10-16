@@ -10,7 +10,7 @@ class Fab(BaseModel):
     """
     Represents a fabrication process in the PreFab model library.
 
-    Parameters
+    Attributes
     ----------
     foundry : str
         The name of the foundry where the fabrication process takes place.
