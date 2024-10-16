@@ -1,8 +1,15 @@
+---
+date: 2024-10-10
+authors: [dusan]
+---
+
 # Python for Photonics Development
 
 [Python](https://www.python.org/) has become an indispensable tool in many technical fields, including ours. It gives researchers and engineers a versatile platform for simulating, modeling, and analyzing photonic systems, effectively streamlining the **entire development workflow.** With its extensive ecosystem of libraries and tools, Python enables efficient and innovative solutions in photonics that we think are worth exploring.
 
 In this guide, we'll walk you through setting up your Python development environment, introduce essential libraries, explore cloud and remote tools to leverage computational resources, share valuable settings for an enhanced coding experience, and provide additional tips to elevate your photonics projects using Python.
+
+<!-- more -->
 
 !!! note "Note"
 
@@ -323,4 +330,4 @@ To further advance your photonics development journey with Python:
 
 3. **Develop Your Own Tools!**: We can't wait to see what you build.
 
-And of course, you can run our [notebook examples](../examples/1_prediction.ipynb) on using virtual nanofabrication models to add fabrication-awareness to your photonics simulations and designs.
+And of course, you can run our [notebook examples](../../examples/1_prediction.ipynb) on using virtual nanofabrication models to add fabrication-awareness to your photonics simulations and designs.
