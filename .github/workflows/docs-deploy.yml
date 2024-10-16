@@ -18,17 +18,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
-      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+      - id: get_cache_id
+        run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_OUTPUT
       - uses: actions/cache@v4
         with:
-          key: mkdocs-material-${{ env.cache_id }}
+          key: mkdocs-material-${{ steps.get_cache_id.outputs.cache_id }}
           path: .cache
           restore-keys: |
             mkdocs-material-
       - run: pip install mkdocs
-      - run: pip install mkdocs-material[imaging]
+      - run: pip install mkdocs-material
       - run: pip install mkdocstrings[python]
-      - run: pip install mknotebooks
+      - run: pip install mkdocs-jupyter
       - name: Create CNAME file
         run: echo "docs.prefabphotonics.com" > docs/CNAME
       - run: mkdocs gh-deploy --force
