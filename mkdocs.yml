@@ -1,44 +1,49 @@
-site_name: "Docs"
+site_name: "PreFab Docs"
 
 site_url: https://docs.prefabphotonics.com/
 repo_url: https://github.com/PreFab-Photonics/PreFab
 repo_name: PreFab-Photonics/PreFab
 
 nav:
-  - Getting started: index.md
-  - Model library: models.md
+  - Home:
+    - Getting started: index.md
+    - Model library: models.md
+    - Changelog: CHANGELOG.md
   - Examples:
     - Making a prediction: examples/1_prediction.ipynb
     - Making a correction: examples/2_correction.ipynb
     - Working with sidewall angles: examples/3_sidewall_angle.ipynb
     - SEM generation: examples/4_SEM_generation.ipynb
   - Blog:
-    - Python for Photonics: blog/python-for-photonics.md
-    - PreFab v1.1.0: blog/PreFab-v1.1.0.ipynb
+    - blog/index.md
   - Reference:
-      - Compare: reference/compare.md
-      - Device: reference/device.md
-      - Geometry: reference/geometry.md
-      - Models: reference/models.md
-      - Read: reference/read.md
-      - Shapes: reference/shapes.md
+    - Compare: reference/compare.md
+    - Device: reference/device.md
+    - Geometry: reference/geometry.md
+    - Models: reference/models.md
+    - Read: reference/read.md
+    - Shapes: reference/shapes.md
 
 theme:
   name: "material"
+  custom_dir: docs/overrides
   palette:
     scheme: slate
     primary: black
-    accent: green
+    accent: yellow
   font:
     text: Roboto
     code: Roboto Mono
   language: en
-  logo: assets/prefab_logo_white.svg
+  logo: assets/logo-white.png
   favicon: assets/favicon.ico
   # icon:
   #   repo: fontawesome/brands/github
   features:
+    - announce.dismiss
     - navigation.instant
+    - navigation.instant.progress
+    - navigation.tabs
     - navigation.sections
     - navigation.footer
     - content.code.copy
@@ -87,6 +92,8 @@ markdown_extensions:
 
 plugins:
   - search
+  - blog:
+      authors: true
   - mkdocstrings:
       handlers:
         python:
@@ -95,4 +102,6 @@ plugins:
           options:
             docstring_style: numpy
             show_docstring_examples: true
-  - mknotebooks
+  - mkdocs-jupyter:
+      include_source: true
+      theme: dark
