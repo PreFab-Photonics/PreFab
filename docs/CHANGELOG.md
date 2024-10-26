@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.1.3) - 2024-10-26
+
+- Moved prediction logic to `prefab.predict` module.
+- First version of `predict.predict_array_with_grad`, which returns both the predicted array and its gradient. This is useful to fabrication-aware inverse design (FAID). More to come.
+- Added `origin` parameter to GDS-related export methods.
+- Small docstring fixes.
+
 ## [1.1.2](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.1.2) - 2024-10-10
 
 - User warning if `compare.intersection_over_union`, `compare.hamming_distance`, or `compare.dice_coefficient` are called with non-binarized devices.
