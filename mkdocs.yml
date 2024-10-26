@@ -21,6 +21,7 @@ nav:
     - Device: reference/device.md
     - Geometry: reference/geometry.md
     - Models: reference/models.md
+    - Predict: reference/predict.md
     - Read: reference/read.md
     - Shapes: reference/shapes.md
 
