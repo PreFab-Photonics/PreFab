@@ -1,3 +1,5 @@
+"""Provides prediction functions for ndarrays of device geometries."""
+
 import base64
 import io
 import json
@@ -6,6 +8,8 @@ import os
 import numpy as np
 import requests
 import toml
+from autograd import primitive
+from autograd.extend import defvjp
 from PIL import Image
 from tqdm import tqdm
 
@@ -23,24 +27,34 @@ def predict_array(
     gpu: bool = False,
 ) -> np.ndarray:
     """
-    Predicts the output array for a given device array using a specified model.
+    Predict the nanofabrication outcome of a device array using a specified model.
 
-    This function sends the device array to a prediction service, which uses a machine
-    learning model to predict the outcome of the nanofabrication process. The prediction
-    can be performed on a GPU if specified.
+    This function sends the device array to a serverless prediction service, which uses
+    a specified machine learning model to predict the outcome of the nanofabrication
+    process. The prediction can be performed on a GPU if specified.
 
     Parameters
     ----------
     device_array : np.ndarray
-        The input device array to be predicted.
+        A 2D array representing the planar geometry of the device. This array undergoes
+        various transformations to predict the nanofabrication process.
     model : Model
-        The model to use for prediction.
+        The model to use for prediction, representing a specific fabrication process and
+        dataset. This model encapsulates details about the fabrication foundry, process,
+        material, technology, thickness, and sidewall presence, as defined in
+        `models.py`. Each model is associated with a version and dataset that detail its
+        creation and the data it was trained on, ensuring the prediction is tailored to
+        specific fabrication parameters.
     model_type : str
         The type of model to use (e.g., 'p', 'c', 's').
     binarize : bool
-        Whether to binarize the output.
+        If True, the predicted device geometry will be binarized using a threshold
+        method. This is useful for converting probabilistic predictions into binary
+        geometries.
     gpu : bool, optional
-        Whether to use GPU for prediction. Defaults to False.
+        If True, the prediction will be performed on a GPU. Defaults to False. Note: The
+        GPU option has more overhead and will take longer for small devices, but will be
+        faster for larger devices.
 
     Returns
     -------
@@ -69,38 +83,11 @@ def predict_array(
         raise RuntimeError(f"Request failed: {e}") from e
 
 
-def predict_array_with_grad(
-    device_array: np.ndarray, model: Model, model_type: str
+def _predict_array_with_grad(
+    device_array: np.ndarray, model: Model
 ) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Predicts the output array and its gradient for a given device array using a
-    specified model.
-
-    This function sends the device array to a prediction service, which uses a machine
-    learning model to predict both the outcome and the gradient of the nanofabrication
-    process.
-
-    Parameters
-    ----------
-    device_array : np.ndarray
-        The input device array to be predicted.
-    model : Model
-        The model to use for prediction.
-    model_type : str
-        The type of model to use (e.g., 'p', 'c', 's').
-
-    Returns
-    -------
-    tuple[np.ndarray, np.ndarray]
-        A tuple containing the predicted output array and its gradient.
-
-    Raises
-    ------
-    RuntimeError
-        If the request to the prediction service fails.
-    """
     headers = _prepare_headers()
-    predict_data = _prepare_predict_data(device_array, model, model_type, False)
+    predict_data = _prepare_predict_data(device_array, model, "p", False)
     endpoint_url = f"{BASE_URL}-with-grad-v1.modal.run"
 
     response = requests.post(
@@ -116,8 +103,68 @@ def predict_array_with_grad(
     return (prediction_array, gradient_array)
 
 
+@primitive
+def predict_array_with_grad(device_array: np.ndarray, model: Model) -> np.ndarray:
+    """
+    Predict the nanofabrication outcome of a device array and compute its gradient.
+
+    This function predicts the outcome of the nanofabrication process for a given
+    device array using a specified model. It also computes the gradient of the
+    prediction with respect to the input device array.
+
+    Parameters
+    ----------
+    device_array : np.ndarray
+        A 2D array representing the planar geometry of the device.
+    model : Model
+        The model to use for prediction, representing a specific fabrication process.
+
+    Returns
+    -------
+    np.ndarray
+        The predicted output array.
+    """
+    prediction_array, gradient_array = _predict_array_with_grad(
+        device_array=device_array, model=model
+    )
+    predict_array_with_grad.gradient_array = gradient_array
+    return prediction_array
+
+
+def predict_array_with_grad_vjp(ans: np.ndarray, x: np.ndarray, model: Model):
+    """
+    Define the vector-Jacobian product (VJP) for the prediction function.
+
+    This function provides the VJP for the `predict_array_with_grad` function,
+    which is used in reverse-mode automatic differentiation to compute gradients.
+
+    Parameters
+    ----------
+    ans : np.ndarray
+        The output of the `predict_array_with_grad` function.
+    x : np.ndarray
+        The input device array for which the gradient is computed.
+    model : Model
+        The model used for prediction.
+
+    Returns
+    -------
+    function
+        A function that computes the VJP given an upstream gradient `g`.
+    """
+    grad_x = predict_array_with_grad.gradient_array
+
+    def vjp(g: np.ndarray) -> np.ndarray:
+        return g * grad_x
+
+    return vjp
+
+
+defvjp(predict_array_with_grad, predict_array_with_grad_vjp)
+
+
 def _encode_array(array):
-    """Encode a numpy array as a PNG image and return the base64 encoded string."""
+    """Encode an ndarray as a base64 encoded image for transmission."""
     image = Image.fromarray(np.uint8(array * 255))
     buffered = io.BytesIO()
     image.save(buffered, format="PNG")
@@ -126,7 +173,7 @@ def _encode_array(array):
 
 
 def _decode_array(encoded_png):
-    """Decode a base64 encoded PNG image and return a numpy array."""
+    """Decode a base64 encoded image and return an ndarray."""
     binary_data = base64.b64decode(encoded_png)
     image = Image.open(io.BytesIO(binary_data))
     return np.array(image) / 255
