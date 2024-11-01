@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.4](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.1.4) - 2024-11-01
+
+- Added custom vector-Jacobian product (VJP) for the `predict.predict_array_with_grad` function.
+- Changed some of the docstrings in `prefab.predict` to be more consistent and clear.
+
 ## [1.1.3](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.1.3) - 2024-10-26
 
 - Moved prediction logic to `prefab.predict` module.
@@ -19,7 +24,7 @@
 
 ## [1.1.1](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.1.1) - 2024-09-24
 
-- Manually adding small random noise to the semulated images to better match the real data. This is ideally included in the model training, but for now this is a quick fix.
+- Manually adding small random noise to the "SEMulated" images to better match the real data. This is ideally included in the model training, but for now this is a quick fix.
 - Added z-padding to the device array before exporting to STL with `Device.to_stl` to ensure that the exported device is closed.
 - Removed buffer from `Device.device_array` before exporting to with `Device.to_gdsfactory`.
 - The additions from `1.0.3` and `1.0.4` releases, which should be considered part of this release. Release planning a work in progress.
