@@ -1,6 +1,6 @@
 """Provides the Device class for representing photonic devices."""
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import cv2
 import gdstk
@@ -9,13 +9,17 @@ import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.patches import Rectangle
 from PIL import Image
-from pydantic import BaseModel, Field, conint, root_validator, validator
+from pydantic import BaseModel, Field, root_validator, validator
 from scipy.ndimage import distance_transform_edt
 from skimage import measure
 
 from . import compare, geometry
 from .models import Model
 from .predict import predict_array
+
+if TYPE_CHECKING:
+    import gdsfactory as gf
+    import tidy3d as td
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -36,7 +40,7 @@ class BufferSpec(BaseModel):
         ('top', 'bottom', 'left', 'right'), where 'constant' is used for isolated
         structures and 'edge' is utilized for preserving the edge, such as for waveguide
         connections.
-    thickness : dict[str, conint(gt=0)]
+    thickness : dict[str, int]
         A dictionary that defines the thickness of the buffer zone for each side of the
         device ('top', 'bottom', 'left', 'right'). Each value must be greater than 0.
 
@@ -75,7 +79,7 @@ class BufferSpec(BaseModel):
             "right": "constant",
         }
     )
-    thickness: dict[str, conint(gt=0)] = Field(
+    thickness: dict[str, int] = Field(
         default_factory=lambda: {
             "top": 128,
             "bottom": 128,
@@ -91,6 +95,12 @@ class BufferSpec(BaseModel):
             raise ValueError(f"Buffer mode must be one of {allowed_modes}, got '{v}'")
         return v
 
+    @validator("thickness")
+    def check_thickness(cls, v):
+        if not all(t > 0 for t in v.values()):
+            raise ValueError("All thickness values must be greater than 0")
+        return v
+
 
 class Device(BaseModel):
     device_array: np.ndarray = Field(...)
@@ -100,8 +110,8 @@ class Device(BaseModel):
         arbitrary_types_allowed = True
 
     @property
-    def shape(self) -> tuple[int, int]:
-        return self.device_array.shape
+    def shape(self) -> tuple[int, ...]:
+        return tuple(self.device_array.shape)
 
     def __init__(
         self, device_array: np.ndarray, buffer_spec: Optional[BufferSpec] = None
@@ -370,12 +380,14 @@ class Device(BaseModel):
         buffer_thickness = self.buffer_spec.thickness
         buffer_mode = self.buffer_spec.mode
 
-        crop_top = buffer_thickness["top"] if buffer_mode["top"] == "edge" else 0
+        crop_top = buffer_thickness["top"] if buffer_mode["top"] == "constant" else 0
         crop_bottom = (
-            buffer_thickness["bottom"] if buffer_mode["bottom"] == "edge" else 0
+            buffer_thickness["bottom"] if buffer_mode["bottom"] == "constant" else 0
         )
-        crop_left = buffer_thickness["left"] if buffer_mode["left"] == "edge" else 0
-        crop_right = buffer_thickness["right"] if buffer_mode["right"] == "edge" else 0
+        crop_left = buffer_thickness["left"] if buffer_mode["left"] == "constant" else 0
+        crop_right = (
+            buffer_thickness["right"] if buffer_mode["right"] == "constant" else 0
+        )
 
         ndarray = device_array[
             crop_top : device_array.shape[0] - crop_bottom,
@@ -529,8 +541,18 @@ class Device(BaseModel):
             polygons_to_process = hierarchy_polygons[level]
 
             if polygons_to_process:
-                center_x_nm = self.device_array.shape[1] / 2
-                center_y_nm = self.device_array.shape[0] / 2
+                buffer_thickness = self.buffer_spec.thickness
+
+                center_x_nm = (
+                    self.device_array.shape[1]
+                    - buffer_thickness["left"]
+                    - buffer_thickness["right"]
+                ) / 2
+                center_y_nm = (
+                    self.device_array.shape[0]
+                    - buffer_thickness["top"]
+                    - buffer_thickness["bottom"]
+                ) / 2
 
                 center_x_um = center_x_nm / 1000
                 center_y_um = center_y_nm / 1000
@@ -583,7 +605,7 @@ class Device(BaseModel):
         self,
         eps0: float,
         thickness: float,
-    ) -> "td.Structure":  # noqa: F821
+    ) -> "td.Structure":
         """
         Convert the device geometry to a Tidy3D Structure.
 
@@ -622,7 +644,10 @@ class Device(BaseModel):
         eps_dataset = SpatialDataArray(eps_array, coords=dict(x=X, y=Y, z=Z))
         medium = CustomMedium.from_eps_raw(eps_dataset)
         return Structure(
-            geometry=Box(center=(0, 0, 0), size=(inf, inf, thickness)), medium=medium
+            geometry=Box(center=(0, 0, 0), size=(inf, inf, thickness), attrs={}),
+            medium=medium,
+            name="device",
+            attrs={},
         )
 
     def to_3d(self, thickness_nm: int) -> np.ndarray:
@@ -678,7 +703,7 @@ class Device(BaseModel):
             If the numpy-stl package is not installed.
         """
         try:
-            from stl import mesh
+            from stl import mesh  # type: ignore
         except ImportError:
             raise ImportError(
                 "The stl package is required to use this function; "
@@ -764,7 +789,7 @@ class Device(BaseModel):
         self,
         show_buffer: bool = True,
         bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
-        level: int = None,
+        level: Optional[int] = None,
         ax: Optional[Axes] = None,
         **kwargs,
     ) -> Axes:
@@ -819,7 +844,7 @@ class Device(BaseModel):
         # label: Optional[str] = "Device contour",
         show_buffer: bool = True,
         bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
-        level: int = None,
+        level: Optional[int] = None,
         ax: Optional[Axes] = None,
         **kwargs,
     ):
@@ -893,7 +918,7 @@ class Device(BaseModel):
         self,
         show_buffer: bool = True,
         bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
-        level: int = None,
+        level: Optional[int] = None,
         ax: Optional[Axes] = None,
         **kwargs,
     ):
@@ -956,7 +981,7 @@ class Device(BaseModel):
         ref_device: "Device",
         show_buffer: bool = True,
         bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
-        level: int = None,
+        level: Optional[int] = None,
         ax: Optional[Axes] = None,
         **kwargs,
     ) -> Axes:
