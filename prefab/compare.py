@@ -80,6 +80,29 @@ def hamming_distance(device_a: Device, device_b: Device) -> int:
     return int(np.sum(device_a.device_array != device_b.device_array))
 
 
+def cosine_similarity(device_a: Device, device_b: Device) -> float:
+    """
+    Calculates the cosine similarity between two non-binarized devices. A value closer
+    to 1 indicates more similarity.
+
+    Parameters
+    ----------
+    device_a : Device
+        The first device (non-binarized).
+    device_b : Device
+        The second device (non-binarized).
+
+    Returns
+    -------
+    float
+        The cosine similarity between two devices.
+    """
+    dot_product = np.dot(device_a.device_array.flatten(), device_b.device_array.flatten())
+    norm_a = np.linalg.norm(device_a.device_array)
+    norm_b = np.linalg.norm(device_b.device_array)
+    return dot_product / (norm_a * norm_b)
+
+
 def dice_coefficient(device_a: Device, device_b: Device) -> float:
     """
     Calculates the Dice coefficient between two binary devices. A value closer to 1
