@@ -103,6 +103,34 @@ def cosine_similarity(device_a: Device, device_b: Device) -> float:
     return dot_product / (norm_a * norm_b)
 
 
+def jaccard_index(device_a: Device, device_b: Device) -> float:
+    """
+    Calculates the Jaccard Index between two binary devices. A value closer to 1
+    indicates more similarity. The Jaccard Index is calculated as the size of the
+    intersection divided by the size of the union of the sample sets.
+
+    Parameters
+    ----------
+    device_a : Device
+        The first device (binarized).
+    device_b : Device
+        The second device (binarized).
+
+    Returns
+    -------
+    float
+        The Jaccard Index between two devices.
+    """
+    if not device_a.is_binary or not device_b.is_binary:
+        warnings.warn(
+            "One or both devices are not binarized.", UserWarning, stacklevel=2
+        )
+
+    intersection = np.sum(np.logical_and(device_a.device_array, device_b.device_array))
+    union = np.sum(np.logical_or(device_a.device_array, device_b.device_array))
+    return intersection / union
+
+
 def dice_coefficient(device_a: Device, device_b: Device) -> float:
     """
     Calculates the Dice coefficient between two binary devices. A value closer to 1
