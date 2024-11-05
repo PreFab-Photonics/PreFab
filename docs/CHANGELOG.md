@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.5](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.1.5) - 2024-11-05
+
+- Fix alignment issue in `Device._device_to_gdstk` method, which is used in `Device.to_gdstk` and `Device.to_gds`.
+- Minor linting fixes.
+
 ## [1.1.4](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.1.4) - 2024-11-01
 
 - Added custom vector-Jacobian product (VJP) for the `predict.predict_array_with_grad` function.

@@ -5,7 +5,7 @@ Usage:
     import prefab as pf
 """
 
-__version__ = "1.1.4"
+__version__ = "1.1.5"
 
 from . import compare, geometry, predict, read, shapes
 from .device import BufferSpec, Device
