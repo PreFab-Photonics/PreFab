@@ -24,7 +24,7 @@ def mean_squared_error(device_a: Device, device_b: Device) -> float:
     float
         The mean squared error between two devices.
     """
-    return np.mean((device_a.device_array - device_b.device_array) ** 2)
+    return float(np.mean((device_a.device_array - device_b.device_array) ** 2))
 
 
 def intersection_over_union(device_a: Device, device_b: Device) -> float:
@@ -77,7 +77,7 @@ def hamming_distance(device_a: Device, device_b: Device) -> int:
             "One or both devices are not binarized.", UserWarning, stacklevel=2
         )
 
-    return np.sum(device_a.device_array != device_b.device_array)
+    return int(np.sum(device_a.device_array != device_b.device_array))
 
 
 def dice_coefficient(device_a: Device, device_b: Device) -> float:
