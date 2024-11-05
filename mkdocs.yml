@@ -6,24 +6,25 @@ repo_name: PreFab-Photonics/PreFab
 
 nav:
   - Home:
-    - Getting started: index.md
-    - Model library: models.md
-    - Changelog: CHANGELOG.md
+      - Getting started: index.md
+      - Model library: models.md
+      - Changelog: CHANGELOG.md
   - Examples:
-    - Making a prediction: examples/1_prediction.ipynb
-    - Making a correction: examples/2_correction.ipynb
-    - Working with sidewall angles: examples/3_sidewall_angle.ipynb
-    - SEM generation: examples/4_SEM_generation.ipynb
+      - Making a prediction: examples/1_prediction.ipynb
+      - Making a correction: examples/2_correction.ipynb
+      - Working with sidewall angles: examples/3_sidewall_angle.ipynb
+      - SEM generation: examples/4_SEM_generation.ipynb
+      - Simulating a predicted device: examples/5_prediction_simulation.ipynb
   - Blog:
-    - blog/index.md
+      - blog/index.md
   - Reference:
-    - Compare: reference/compare.md
-    - Device: reference/device.md
-    - Geometry: reference/geometry.md
-    - Models: reference/models.md
-    - Predict: reference/predict.md
-    - Read: reference/read.md
-    - Shapes: reference/shapes.md
+      - Compare: reference/compare.md
+      - Device: reference/device.md
+      - Geometry: reference/geometry.md
+      - Models: reference/models.md
+      - Predict: reference/predict.md
+      - Read: reference/read.md
+      - Shapes: reference/shapes.md
 
 theme:
   name: "material"
