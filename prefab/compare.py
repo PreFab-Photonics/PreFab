@@ -1,4 +1,4 @@
-"""Provides functions to measure the similarity between devices."""
+"""Functions to measure the structural similarity between devices."""
 
 import warnings
 
@@ -43,6 +43,11 @@ def intersection_over_union(device_a: Device, device_b: Device) -> float:
     -------
     float
         The Intersection over Union between two devices.
+
+    Warnings
+    --------
+    UserWarning
+        If one or both devices are not binarized.
     """
     if not device_a.is_binary or not device_b.is_binary:
         warnings.warn(
@@ -71,6 +76,11 @@ def hamming_distance(device_a: Device, device_b: Device) -> int:
     -------
     int
         The Hamming distance between two devices.
+
+    Warnings
+    --------
+    UserWarning
+        If one or both devices are not binarized.
     """
     if not device_a.is_binary or not device_b.is_binary:
         warnings.warn(
@@ -97,6 +107,11 @@ def dice_coefficient(device_a: Device, device_b: Device) -> float:
     -------
     float
         The Dice coefficient between two devices.
+
+    Warnings
+    --------
+    UserWarning
+        If one or both devices are not binarized.
     """
     if not device_a.is_binary or not device_b.is_binary:
         warnings.warn(
