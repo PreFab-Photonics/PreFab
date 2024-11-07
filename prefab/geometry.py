@@ -1,5 +1,7 @@
 """Provides functions for manipulating ndarrays of device geometries."""
 
+from typing import Optional
+
 import cv2
 import numpy as np
 from skimage.morphology import closing, disk, opening, square
@@ -34,9 +36,9 @@ def binarize(
     ----------
     device_array : np.ndarray
         The input array to be binarized.
-    eta : float, optional
+    eta : float
         The threshold value for binarization. Defaults to 0.5.
-    beta : float, optional
+    beta : float
         The scaling factor for the binarization process. A higher value makes the
         transition sharper. Defaults to np.inf, which results in a hard threshold.
 
@@ -60,7 +62,7 @@ def binarize_hard(device_array: np.ndarray, eta: float = 0.5) -> np.ndarray:
     ----------
     device_array : np.ndarray
         The input array to be binarized.
-    eta : float, optional
+    eta : float
         The threshold value for binarization. Defaults to 0.5.
 
     Returns
@@ -95,11 +97,12 @@ def binarize_sem(sem_array: np.ndarray) -> np.ndarray:
 
 def binarize_monte_carlo(
     device_array: np.ndarray,
-    threshold_noise_std: float,
-    threshold_blur_std: float,
+    noise_magnitude: float,
+    blur_radius: float,
 ) -> np.ndarray:
     """
-    Binarize the input ndarray using a Monte Carlo approach with Gaussian blurring.
+    Binarize the input ndarray using a dynamic thresholding approach to simulate surface
+    roughness.
 
     This function applies a dynamic thresholding technique where the threshold value is
     determined by a base value perturbed by Gaussian-distributed random noise. The
@@ -107,14 +110,19 @@ def binarize_monte_carlo(
     simulating a potentially more realistic scenario where the threshold is not uniform
     across the device.
 
+    Notes
+    -----
+    This is a temporary solution, where the defaults are chosen based on what looks
+    good. A better, data-driven approach is needed.
+
     Parameters
     ----------
     device_array : np.ndarray
         The input array to be binarized.
-    threshold_noise_std : float
+    noise_magnitude : float
         The standard deviation of the Gaussian distribution used to generate noise for
         the threshold values. This controls the amount of randomness in the threshold.
-    threshold_blur_std : float
+    blur_radius : float
         The standard deviation for the Gaussian kernel used in blurring the threshold
         map. This controls the spatial variation of the threshold across the array.
 
@@ -127,10 +135,10 @@ def binarize_monte_carlo(
     device_array = np.squeeze(device_array)
     base_threshold = np.random.normal(loc=0.5, scale=0.1)
     threshold_noise = np.random.normal(
-        loc=0, scale=threshold_noise_std, size=device_array.shape
+        loc=0, scale=noise_magnitude, size=device_array.shape
     )
     spatial_threshold = cv2.GaussianBlur(
-        threshold_noise, ksize=(0, 0), sigmaX=threshold_blur_std
+        threshold_noise, ksize=(0, 0), sigmaX=blur_radius
     )
     dynamic_threshold = base_threshold + spatial_threshold
     binarized_array = np.where(device_array < dynamic_threshold, 0.0, 1.0)
@@ -149,9 +157,9 @@ def ternarize(
     ----------
     device_array : np.ndarray
         The input array to be ternarized.
-    eta1 : float, optional
+    eta1 : float
         The first threshold value for ternarization. Defaults to 1/3.
-    eta2 : float, optional
+    eta2 : float
         The second threshold value for ternarization. Defaults to 2/3.
 
     Returns
@@ -162,7 +170,9 @@ def ternarize(
     return np.where(device_array < eta1, 0.0, np.where(device_array >= eta2, 1.0, 0.5))
 
 
-def trim(device_array: np.ndarray, buffer_thickness: dict = None) -> np.ndarray:
+def trim(
+    device_array: np.ndarray, buffer_thickness: Optional[dict[str, int]] = None
+) -> np.ndarray:
     """
     Trim the input ndarray by removing rows and columns that are completely zero.
 
@@ -170,7 +180,7 @@ def trim(device_array: np.ndarray, buffer_thickness: dict = None) -> np.ndarray:
     ----------
     device_array : np.ndarray
         The input array to be trimmed.
-    buffer_thickness : dict, optional
+    buffer_thickness : Optional[dict[str, int]]
         A dictionary specifying the thickness of the buffer to leave around the non-zero
         elements of the array. Should contain keys 'top', 'bottom', 'left', 'right'.
         Defaults to None, which means no buffer is added.
@@ -200,6 +210,30 @@ def trim(device_array: np.ndarray, buffer_thickness: dict = None) -> np.ndarray:
     ]
 
 
+def pad(device_array: np.ndarray, pad_width: int) -> np.ndarray:
+    """
+    Pad the input ndarray uniformly with a specified width on all sides.
+
+    Parameters
+    ----------
+    device_array : np.ndarray
+        The input array to be padded.
+    pad_width : int
+        The number of pixels to pad on each side.
+
+    Returns
+    -------
+    np.ndarray
+        The padded array.
+    """
+    return np.pad(
+        device_array,
+        pad_width=((pad_width, pad_width), (pad_width, pad_width), (0, 0)),
+        mode="constant",
+        constant_values=0,
+    )
+
+
 def blur(device_array: np.ndarray, sigma: float = 1.0) -> np.ndarray:
     """
     Apply Gaussian blur to the input ndarray and normalize the result.
@@ -208,7 +242,7 @@ def blur(device_array: np.ndarray, sigma: float = 1.0) -> np.ndarray:
     ----------
     device_array : np.ndarray
         The input array to be blurred.
-    sigma : float, optional
+    sigma : float
         The standard deviation for the Gaussian kernel. This controls the amount of
         blurring. Defaults to 1.0.
 
@@ -318,13 +352,18 @@ def enforce_feature_size(
     device geometry are at least the specified minimum size. It uses either a disk
     or square structuring element for the operations.
 
+    Notes
+    -----
+    This function does not guarantee that the minimum feature size is enforced in all
+    cases. A better process is needed.
+
     Parameters
     ----------
     device_array : np.ndarray
         The input array representing the device geometry.
     min_feature_size : int
         The minimum feature size to enforce, in nanometers.
-    strel : str, optional
+    strel : str
         The type of structuring element to use. Can be either "disk" or "square".
         Defaults to "disk".
 
