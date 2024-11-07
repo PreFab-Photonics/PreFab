@@ -1,4 +1,4 @@
-"""Provides prediction functions for ndarrays of device geometries."""
+"""Prediction functions for ndarrays of device geometries."""
 
 import base64
 import io
@@ -16,7 +16,8 @@ from tqdm import tqdm
 from .geometry import binarize_hard
 from .models import Model
 
-BASE_URL = "https://prefab-photonics--predict"
+BASE_ENDPOINT_URL = "https://prefab-photonics--predict"
+ENDPOINT_VERSION = 1
 
 
 def predict_array(
@@ -46,15 +47,16 @@ def predict_array(
         creation and the data it was trained on, ensuring the prediction is tailored to
         specific fabrication parameters.
     model_type : str
-        The type of model to use (e.g., 'p', 'c', 's').
+        The type of model to use (e.g., 'p' for prediction, 'c' for correction, or 's'
+        for SEMulate).
     binarize : bool
         If True, the predicted device geometry will be binarized using a threshold
         method. This is useful for converting probabilistic predictions into binary
         geometries.
-    gpu : bool, optional
+    gpu : bool
         If True, the prediction will be performed on a GPU. Defaults to False. Note: The
-        GPU option has more overhead and will take longer for small devices, but will be
-        faster for larger devices.
+        GPU option has more startup overhead and will take longer for small devices, but
+        will be faster for larger devices.
 
     Returns
     -------
@@ -68,7 +70,11 @@ def predict_array(
     """
     headers = _prepare_headers()
     predict_data = _prepare_predict_data(device_array, model, model_type, binarize)
-    endpoint_url = f"{BASE_URL}-gpu-v1.modal.run" if gpu else f"{BASE_URL}-v1.modal.run"
+    endpoint_url = (
+        f"{BASE_ENDPOINT_URL}-gpu-v{ENDPOINT_VERSION}.modal.run"
+        if gpu
+        else f"{BASE_ENDPOINT_URL}-v{ENDPOINT_VERSION}.modal.run"
+    )
 
     try:
         with requests.post(
@@ -78,7 +84,10 @@ def predict_array(
             stream=True,
         ) as response:
             response.raise_for_status()
-            return _process_response(response, model_type, binarize)
+            result = _process_response(response, model_type, binarize)
+            if result is None:
+                raise RuntimeError("No prediction result received.")
+            return result
     except requests.RequestException as e:
         raise RuntimeError(f"Request failed: {e}") from e
 
@@ -86,9 +95,33 @@ def predict_array(
 def _predict_array_with_grad(
     device_array: np.ndarray, model: Model
 ) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Predict the nanofabrication outcome of a device array and compute its gradient.
+
+    This function predicts the outcome of the nanofabrication process for a given
+    device array using a specified model. It also computes the gradient of the
+    prediction with respect to the input device array.
+
+    Notes
+    -----
+    This function is currently not used in the main `predict_array` function as
+    the main `predict_array` function (e.g., GPU support and progress bar) for now.
+
+    Parameters
+    ----------
+    device_array : np.ndarray
+        A 2D array representing the planar geometry of the device.
+    model : Model
+        The model to use for prediction, representing a specific fabrication process.
+
+    Returns
+    -------
+    tuple[np.ndarray, np.ndarray]
+        The predicted output array and gradient array.
+    """
     headers = _prepare_headers()
     predict_data = _prepare_predict_data(device_array, model, "p", False)
-    endpoint_url = f"{BASE_URL}-with-grad-v1.modal.run"
+    endpoint_url = f"{BASE_ENDPOINT_URL}-with-grad-v{ENDPOINT_VERSION}.modal.run"
 
     response = requests.post(
         endpoint_url, data=json.dumps(predict_data), headers=headers
@@ -99,7 +132,6 @@ def _predict_array_with_grad(
     gradient_max = response.json()["gradient_max"]
     gradient_range = gradient_max - gradient_min
     gradient_array = gradient_array * gradient_range + gradient_min
-
     return (prediction_array, gradient_array)
 
 
@@ -110,7 +142,8 @@ def predict_array_with_grad(device_array: np.ndarray, model: Model) -> np.ndarra
 
     This function predicts the outcome of the nanofabrication process for a given
     device array using a specified model. It also computes the gradient of the
-    prediction with respect to the input device array.
+    prediction with respect to the input device array, making it suitable for use in
+    automatic differentiation applications (e.g., autograd).
 
     Parameters
     ----------
@@ -127,11 +160,11 @@ def predict_array_with_grad(device_array: np.ndarray, model: Model) -> np.ndarra
     prediction_array, gradient_array = _predict_array_with_grad(
         device_array=device_array, model=model
     )
-    predict_array_with_grad.gradient_array = gradient_array
+    predict_array_with_grad.gradient_array = gradient_array  # type: ignore
     return prediction_array
 
 
-def predict_array_with_grad_vjp(ans: np.ndarray, x: np.ndarray, model: Model):
+def predict_array_with_grad_vjp(ans: np.ndarray, x: np.ndarray):
     """
     Define the vector-Jacobian product (VJP) for the prediction function.
 
@@ -144,15 +177,13 @@ def predict_array_with_grad_vjp(ans: np.ndarray, x: np.ndarray, model: Model):
         The output of the `predict_array_with_grad` function.
     x : np.ndarray
         The input device array for which the gradient is computed.
-    model : Model
-        The model used for prediction.
 
     Returns
     -------
     function
         A function that computes the VJP given an upstream gradient `g`.
     """
-    grad_x = predict_array_with_grad.gradient_array
+    grad_x = predict_array_with_grad.gradient_array  # type: ignore
 
     def vjp(g: np.ndarray) -> np.ndarray:
         return g * grad_x
@@ -195,7 +226,7 @@ def _read_tokens():
             "Could not validate user.\n"
             "Please update prefab using: pip install --upgrade prefab.\n"
             "Signup/login and generate a new token.\n"
-            "See https://www.prefabphotonics.com/docs/guides/quickstart."
+            "See https://docs.prefabphotonics.com/."
         ) from None
 
 
