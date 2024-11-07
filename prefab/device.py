@@ -1,6 +1,6 @@
 """Provides the Device class for representing photonic devices."""
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 import cv2
 import gdstk
@@ -71,7 +71,7 @@ class BufferSpec(BaseModel):
         )
     """
 
-    mode: dict[str, str] = Field(
+    mode: dict[str, Literal["constant", "edge"]] = Field(
         default_factory=lambda: {
             "top": "constant",
             "bottom": "constant",
@@ -92,13 +92,13 @@ class BufferSpec(BaseModel):
     def check_mode(cls, v):
         allowed_modes = ["constant", "edge"]
         if not all(mode in allowed_modes for mode in v.values()):
-            raise ValueError(f"Buffer mode must be one of {allowed_modes}, got '{v}'")
+            raise ValueError(f"Buffer mode must be one of {allowed_modes}, got '{v}'.")
         return v
 
     @validator("thickness")
     def check_thickness(cls, v):
         if not all(t > 0 for t in v.values()):
-            raise ValueError("All thickness values must be greater than 0")
+            raise ValueError("All thickness values must be greater than 0.")
         return v
 
 
@@ -122,11 +122,11 @@ class Device(BaseModel):
 
         This class is designed to encapsulate the geometric representation of a photonic
         device, facilitating operations such as padding, normalization, binarization,
-        ternarization, trimming, and blurring. These operations are useful for preparing
-        the device design for prediction or correction. Additionally, the class provides
-        methods for exporting the device representation to various formats, including
-        ndarray, image files, and GDSII files, supporting a range of analysis and
-        fabrication workflows.
+        erosion/dilation, trimming, and blurring. These operations are useful for
+        preparingthe device design for prediction or correction. Additionally, the class
+        providesmethods for exporting the device representation to various formats,
+        includingndarray, image files, and GDSII files, supporting a range of analysis
+        and fabrication workflows.
 
         Parameters
         ----------
@@ -134,7 +134,7 @@ class Device(BaseModel):
             A 2D array representing the planar geometry of the device. This array
             undergoes various transformations to predict or correct the nanofabrication
             process.
-        buffer_spec : BufferSpec, optional
+        buffer_spec : Optional[BufferSpec]
             Defines the parameters for adding a buffer zone around the device geometry.
             This buffer zone is needed for providing surrounding context for prediction
             or correction and for ensuring seamless integration with the surrounding
@@ -236,11 +236,11 @@ class Device(BaseModel):
             in `models.py`. Each model is associated with a version and dataset that
             detail its creation and the data it was trained on, ensuring the prediction
             is tailored to specific fabrication parameters.
-        binarize : bool, optional
+        binarize : bool
             If True, the predicted device geometry will be binarized using a threshold
             method. This is useful for converting probabilistic predictions into binary
             geometries. Defaults to False.
-        gpu : bool, optional
+        gpu : bool
             If True, the prediction will be performed on a GPU. Defaults to False.
             Note: The GPU option has more overhead and will take longer for small
             devices, but will be faster for larger devices.
@@ -252,7 +252,7 @@ class Device(BaseModel):
 
         Raises
         ------
-        ValueError
+        RuntimeError
             If the prediction service returns an error or if the response from the
             service cannot be processed correctly.
         """
@@ -289,11 +289,11 @@ class Device(BaseModel):
             in `models.py`. Each model is associated with a version and dataset that
             detail its creation and the data it was trained on, ensuring the correction
             is tailored to specific fabrication parameters.
-        binarize : bool, optional
+        binarize : bool
             If True, the corrected device geometry will be binarized using a threshold
             method. This is useful for converting probabilistic corrections into binary
             geometries. Defaults to True.
-        gpu : bool, optional
+        gpu : bool
             If True, the prediction will be performed on a GPU. Defaults to False.
             Note: The GPU option has more overhead and will take longer for small
             devices, but will be faster for larger devices.
@@ -305,7 +305,7 @@ class Device(BaseModel):
 
         Raises
         ------
-        ValueError
+        RuntimeError
             If the correction service returns an error or if the response from the
             service cannot be processed correctly.
         """
@@ -341,16 +341,27 @@ class Device(BaseModel):
             in `models.py`. Each model is associated with a version and dataset that
             detail its creation and the data it was trained on, ensuring the SEMulation
             is tailored to specific fabrication parameters.
-        gpu : bool, optional
+        gpu : bool
             If True, the prediction will be performed on a GPU. Defaults to False.
             Note: The GPU option has more overhead and will take longer for small
             devices, but will be faster for larger devices.
+
+        Notes
+        -----
+        The salt-and-pepper noise is added manually until the model is trained to
+        generate this noise (not a big priority).
 
         Returns
         -------
         Device
             A new instance of the Device class with its geometry transformed to simulate
             an SEM image style.
+
+        Raises
+        ------
+        RuntimeError
+            If the prediction service returns an error or if the response from the
+            service cannot be processed correctly.
         """
         semulated_array = predict_array(
             device_array=self.device_array,
@@ -405,12 +416,12 @@ class Device(BaseModel):
 
         Parameters
         ----------
-        img_path : str, optional
+        img_path : str
             The path where the image file will be saved. If not specified, the image is
             saved as "prefab_device.png" in the current directory.
         """
         cv2.imwrite(img_path, 255 * self.flatten().to_ndarray())
-        print(f"Saved Device to '{img_path}'")
+        print(f"Saved Device image to '{img_path}'")
 
     def to_gds(
         self,
@@ -429,21 +440,21 @@ class Device(BaseModel):
 
         Parameters
         ----------
-        gds_path : str, optional
+        gds_path : str
             The path where the GDSII file will be saved. If not specified, the file is
             saved as "prefab_device.gds" in the current directory.
-        cell_name : str, optional
+        cell_name : str
             The name of the cell within the GDSII file. If not specified, defaults to
             "prefab_device".
-        gds_layer : tuple[int, int], optional
+        gds_layer : tuple[int, int]
             The layer and datatype to use within the GDSII file. Defaults to (1, 0).
-        contour_approx_mode : int, optional
+        contour_approx_mode : int
             The mode of contour approximation used during the conversion. Defaults to 2,
             which corresponds to `cv2.CHAIN_APPROX_SIMPLE`, a method that compresses
             horizontal, vertical, and diagonal segments and leaves only their endpoints.
-        origin : tuple[float, float], optional
-            The x and y coordinates of the origin for the GDSII export. Defaults to
-            (0.0, 0.0).
+        origin : tuple[float, float]
+            The x and y coordinates of the origin in µm for the GDSII export. Defaults
+            to (0.0, 0.0).
         """
         gdstk_cell = self.flatten()._device_to_gdstk(
             cell_name=cell_name,
@@ -473,17 +484,17 @@ class Device(BaseModel):
 
         Parameters
         ----------
-        cell_name : str, optional
+        cell_name : str
             The name of the cell to be created. Defaults to "prefab_device".
-        gds_layer : tuple[int, int], optional
+        gds_layer : tuple[int, int]
             The layer and datatype to use within the GDSTK cell. Defaults to (1, 0).
-        contour_approx_mode : int, optional
+        contour_approx_mode : int
             The mode of contour approximation used during the conversion. Defaults to 2,
             which corresponds to `cv2.CHAIN_APPROX_SIMPLE`, a method that compresses
             horizontal, vertical, and diagonal segments and leaves only their endpoints.
-        origin : tuple[float, float], optional
-            The x and y coordinates of the origin for the GDSTK cell. Defaults to
-            (0.0, 0.0).
+        origin : tuple[float, float]
+            The x and y coordinates of the origin in µm for the GDSTK cell. Defaults
+            to (0.0, 0.0).
 
         Returns
         -------
@@ -558,10 +569,12 @@ class Device(BaseModel):
                 center_y_um = center_y_nm / 1000
 
                 adjusted_polygons = [
-                    [
-                        (x - center_x_um + origin[0], y - center_y_um + origin[1])
-                        for x, y in polygon
-                    ]
+                    gdstk.Polygon(
+                        [
+                            (x - center_x_um + origin[0], y - center_y_um + origin[1])
+                            for x, y in polygon
+                        ]
+                    )
                     for polygon in polygons_to_process
                 ]
                 processed_polygons = gdstk.boolean(
@@ -576,7 +589,7 @@ class Device(BaseModel):
 
         return cell
 
-    def to_gdsfactory(self) -> "gf.Component":  # noqa: F821
+    def to_gdsfactory(self) -> "gf.Component":
         """
         Convert the device geometry to a gdsfactory Component.
 
@@ -669,11 +682,11 @@ class Device(BaseModel):
         """
         bottom_layer = self.device_array[:, :, 0]
         top_layer = self.device_array[:, :, -1]
-        dt_bottom = distance_transform_edt(bottom_layer) - distance_transform_edt(
-            1 - bottom_layer
+        dt_bottom = np.array(distance_transform_edt(bottom_layer)) - np.array(
+            distance_transform_edt(1 - bottom_layer)
         )
-        dt_top = distance_transform_edt(top_layer) - distance_transform_edt(
-            1 - top_layer
+        dt_top = np.array(distance_transform_edt(top_layer)) - np.array(
+            distance_transform_edt(1 - top_layer)
         )
         weights = np.linspace(0, 1, thickness_nm)
         layered_array = np.zeros(
@@ -692,7 +705,7 @@ class Device(BaseModel):
         ----------
         thickness_nm : int
             The thickness of the 3D representation in nanometers.
-        filename : str, optional
+        filename : str
             The name of the STL file to save. Defaults to "prefab_device.stl".
 
         Raises
@@ -750,7 +763,6 @@ class Device(BaseModel):
             plot_array.shape[0] - max_y : plot_array.shape[0] - min_y,
             min_x:max_x,
         ]
-        extent = [min_x, max_x, min_y, max_y]
 
         if not np.ma.is_masked(plot_array):
             max_size = (1000, 1000)
@@ -769,7 +781,12 @@ class Device(BaseModel):
 
         mappable = ax.imshow(
             plot_array,
-            extent=extent,
+            extent=(
+                float(min_x),
+                float(max_x),
+                float(min_y),
+                float(max_y),
+            ),
             **kwargs,
         )
 
@@ -803,17 +820,17 @@ class Device(BaseModel):
 
         Parameters
         ----------
-        show_buffer : bool, optional
+        show_buffer : bool
             If True, visualizes the buffer zones around the device. Defaults to True.
         bounds : Optional[tuple[tuple[int, int], tuple[int, int]]], optional
             Specifies the bounds for zooming into the device geometry, formatted as
             ((min_x, min_y), (max_x, max_y)). If 'max_x' or 'max_y' is set to "end", it
             will be replaced with the corresponding dimension size of the device array.
             If None, the entire device geometry is visualized.
-        level : int, optional
+        level : int
             The vertical layer to plot. If None, the device geometry is flattened.
             Defaults to None.
-        ax : Optional[Axes], optional
+        ax : Optional[Axes]
             An existing matplotlib Axes object to draw the device geometry on. If
             None, a new figure and axes will be created. Defaults to None.
         **kwargs
@@ -858,21 +875,21 @@ class Device(BaseModel):
 
         Parameters
         ----------
-        linewidth : Optional[int], optional
+        linewidth : Optional[int]
             The width of the contour lines. If None, the linewidth is automatically
             determined based on the size of the device array. Defaults to None.
-        show_buffer : bool, optional
+        show_buffer : bool
             If True, the buffer zones around the device will be visualized. By default,
             it is set to True.
-        bounds : Optional[tuple[tuple[int, int], tuple[int, int]]], optional
+        bounds : Optional[tuple[tuple[int, int], tuple[int, int]]]
             Specifies the bounds for zooming into the device geometry, formatted as
             ((min_x, min_y), (max_x, max_y)). If 'max_x' or 'max_y' is set to "end", it
             will be replaced with the corresponding dimension size of the device array.
             If None, the entire device geometry is visualized.
-        level : int, optional
+        level : int
             The vertical layer to plot. If None, the device geometry is flattened.
             Defaults to None.
-        ax : Optional[Axes], optional
+        ax : Optional[Axes]
             An existing matplotlib Axes object to draw the device contour on. If None, a
             new figure and axes will be created. Defaults to None.
         **kwargs
@@ -934,18 +951,18 @@ class Device(BaseModel):
 
         Parameters
         ----------
-        show_buffer : bool, optional
+        show_buffer : bool
             If True, the buffer zones around the device will also be visualized. By
             default, it is set to True.
-        bounds : Optional[tuple[tuple[int, int], tuple[int, int]]], optional
+        bounds : Optional[tuple[tuple[int, int], tuple[int, int]]]
             Specifies the bounds for zooming into the device geometry, formatted as
             ((min_x, min_y), (max_x, max_y)). If 'max_x' or 'max_y' is set to "end", it
             will be replaced with the corresponding dimension size of the device array.
             If None, the entire device geometry is visualized.
-        level : int, optional
+        level : int
             The vertical layer to plot. If None, the device geometry is flattened.
             Defaults to None.
-        ax : Optional[Axes], optional
+        ax : Optional[Axes]
             An existing matplotlib Axes object to draw the uncertainty visualization on.
             If None, a new figure and axes will be created. Defaults to None.
         **kwargs
@@ -997,17 +1014,17 @@ class Device(BaseModel):
         ----------
         ref_device : Device
             The reference device to compare against.
-        show_buffer : bool, optional
+        show_buffer : bool
             If True, visualizes the buffer zones around the device. Defaults to True.
-        bounds : Optional[tuple[tuple[int, int], tuple[int, int]]], optional
+        bounds : Optional[tuple[tuple[int, int], tuple[int, int]]]
             Specifies the bounds for zooming into the device geometry, formatted as
             ((min_x, min_y), (max_x, max_y)). If 'max_x' or 'max_y' is set to "end", it
             will be replaced with the corresponding dimension size of the device array.
             If None, the entire device geometry is visualized.
-        level : int, optional
+        level : int
             The vertical layer to plot. If None, the device geometry is flattened.
             Defaults to None.
-        ax : Optional[Axes], optional
+        ax : Optional[Axes]
             An existing matplotlib Axes object to draw the comparison on. If None, a new
             figure and axes will be created. Defaults to None.
         **kwargs
@@ -1113,9 +1130,9 @@ class Device(BaseModel):
 
         Parameters
         ----------
-        eta : float, optional
+        eta : float
             The threshold value for binarization. Defaults to 0.5.
-        beta : float, optional
+        beta : float
             The scaling factor for the binarization process. A higher value makes the
             transition sharper. Defaults to np.inf, which results in a hard threshold.
 
@@ -1137,15 +1154,15 @@ class Device(BaseModel):
         is generally preferred for most use cases, but it can create numerical artifacts
         for large beta values.
 
-            Parameters
-            ----------
-            eta : float, optional
-                The threshold value for binarization. Defaults to 0.5.
+        Parameters
+        ----------
+        eta : float
+            The threshold value for binarization. Defaults to 0.5.
 
-            Returns
-            -------
-            Device
-                A new instance of the Device with the threshold-binarized geometry.
+        Returns
+        -------
+        Device
+            A new instance of the Device with the threshold-binarized geometry.
         """
         binarized_device_array = geometry.binarize_hard(
             device_array=self.device_array, eta=eta
@@ -1156,26 +1173,31 @@ class Device(BaseModel):
 
     def binarize_monte_carlo(
         self,
-        threshold_noise_std: float = 2.0,
-        threshold_blur_std: float = 8.0,
+        noise_magnitude: float = 2.0,
+        blur_radius: float = 8.0,
     ) -> "Device":
         """
-        Binarize the device geometry using a Monte Carlo approach with Gaussian
-        blurring.
+        Binarize the input ndarray using a dynamic thresholding approach to simulate
+        surfaceroughness.
 
-        This method applies a dynamic thresholding technique where the threshold value
+        This function applies a dynamic thresholding technique where the threshold value
         is determined by a base value perturbed by Gaussian-distributed random noise.
-        The threshold is then spatially varied across the device array using Gaussian
-        blurring, simulating a more realistic scenario where the threshold is not
+        Thethreshold is then spatially varied across the array using Gaussian blurring,
+        simulating a potentially more realistic scenario where the threshold is not
         uniform across the device.
+
+        Notes
+        -----
+        This is a temporary solution, where the defaults are chosen based on what looks
+        good. A better, data-driven approach is needed.
 
         Parameters
         ----------
-        threshold_noise_std : float, optional
+        noise_magnitude : float
             The standard deviation of the Gaussian distribution used to generate noise
             for the threshold values. This controls the amount of randomness in the
             threshold. Defaults to 2.0.
-        threshold_blur_std : float, optional
+        blur_radius : float
             The standard deviation for the Gaussian kernel used in blurring the
             threshold map. This controls the spatial variation of the threshold across
             the array. Defaults to 9.0.
@@ -1187,8 +1209,8 @@ class Device(BaseModel):
         """
         binarized_device_array = geometry.binarize_monte_carlo(
             device_array=self.device_array,
-            threshold_noise_std=threshold_noise_std,
-            threshold_blur_std=threshold_blur_std,
+            noise_magnitude=noise_magnitude,
+            blur_radius=blur_radius,
         )
         return self.model_copy(update={"device_array": binarized_device_array})
 
@@ -1199,9 +1221,9 @@ class Device(BaseModel):
 
         Parameters
         ----------
-        eta1 : float, optional
+        eta1 : float
             The first threshold value for ternarization. Defaults to 1/3.
-        eta2 : float, optional
+        eta2 : float
             The second threshold value for ternarization. Defaults to 2/3.
 
         Returns
@@ -1235,7 +1257,7 @@ class Device(BaseModel):
 
         Parameters
         ----------
-        sigma : float, optional
+        sigma : float
             The standard deviation for the Gaussian kernel. This controls the amount of
             blurring. Defaults to 1.0.
 
@@ -1347,11 +1369,16 @@ class Device(BaseModel):
         device geometry are at least the specified minimum size. It uses either a disk
         or square structuring element for the operations.
 
+        Notes
+        -----
+        This function does not guarantee that the minimum feature size is enforced in
+        all cases. A better process is needed.
+
         Parameters
         ----------
         min_feature_size : int
             The minimum feature size to enforce, in nanometers.
-        strel : str, optional
+        strel : str
             The type of structuring element to use. Can be either "disk" or "square".
             Defaults to "disk".
 
@@ -1383,11 +1410,16 @@ class Device(BaseModel):
         between the original and modified geometries, providing a measure of the changes
         introduced by the feature size enforcement.
 
+        Notes
+        -----
+        This is not a design-rule-checking function, but it can be useful for quick
+        checks.
+
         Parameters
         ----------
         min_feature_size : int
             The minimum feature size to enforce, in nanometers.
-        strel : str, optional
+        strel : str
             The type of structuring element to use. Can be either "disk" or "square".
             Defaults to "disk".
 
