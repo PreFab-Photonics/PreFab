@@ -1,21 +1,23 @@
 """Contains functions for creating various shapes as Device objects."""
 
+from typing import Optional
+
 import numpy as np
 from skimage.draw import polygon
 
 from .device import Device
 
 
-def rectangle(width: int = 200, height: int = None, **kwargs) -> Device:
+def rectangle(width: int = 200, height: Optional[int] = None, **kwargs) -> Device:
     """
     Create a Device object with a rectangular shape.
 
     Parameters
     ----------
-    width : int, optional
+    width : int
         The width of the rectangle. Defaults to 200.
-    height : int, optional
-        The height of the rectangle. Defaults to the value of width.
+    height : Optional[int]
+        The height of the rectangle. Defaults to the value of width if None.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
 
@@ -26,24 +28,23 @@ def rectangle(width: int = 200, height: int = None, **kwargs) -> Device:
     """
     if height is None:
         height = width
-    rectangle = np.zeros((height, width))
-    rectangle[:, :] = 1
+    rectangle = np.ones((height, width))
     return Device(device_array=rectangle, **kwargs)
 
 
 def window(
-    width: int = 200, height: int = None, border_width: int = 60, **kwargs
+    width: int = 200, height: Optional[int] = None, border_width: int = 60, **kwargs
 ) -> Device:
     """
-    Create a Device object with a window shape (hollow square).
+    Create a Device object with a window shape (hollow rectangle).
 
     Parameters
     ----------
-    width : int, optional
+    width : int
         The overall width of the window. Defaults to 200.
-    height : int, optional
+    height : Optional[int]
         The overall height of the window. Defaults to the value of width.
-    border_width : int, optional
+    border_width : int
         The width of the window border. Defaults to 60.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -64,18 +65,18 @@ def window(
 
 
 def cross(
-    width: int = 200, height: int = None, arm_width: int = 60, **kwargs
+    width: int = 200, height: Optional[int] = None, arm_width: int = 60, **kwargs
 ) -> Device:
     """
     Create a Device object with a cross shape.
 
     Parameters
     ----------
-    width : int, optional
+    width : int
         The overall width of the cross. Defaults to 200.
-    height : int, optional
+    height : Optional[int]
         The overall height of the cross. Defaults to the value of width.
-    arm_width : int, optional
+    arm_width : int
         The width of the cross arms. Defaults to 60.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -97,18 +98,18 @@ def cross(
 
 
 def target(
-    width: int = 200, height: int = None, arm_width: int = 60, **kwargs
+    width: int = 200, height: Optional[int] = None, arm_width: int = 60, **kwargs
 ) -> Device:
     """
     Create a Device object with a target shape (cross with center removed).
 
     Parameters
     ----------
-    width : int, optional
+    width : int
         The overall width of the target. Defaults to 200.
-    height : int, optional
+    height : Optional[int]
         The overall height of the target. Defaults to the value of width.
-    arm_width : int, optional
+    arm_width : int
         The width of the target arms. Defaults to 60.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -133,15 +134,15 @@ def target(
     return Device(device_array=target, **kwargs)
 
 
-def disk(width: int = 200, height: int = None, **kwargs) -> Device:
+def disk(width: int = 200, height: Optional[int] = None, **kwargs) -> Device:
     """
     Create a Device object with an elliptical shape.
 
     Parameters
     ----------
-    width : int, optional
+    width : int
         The width of the ellipse. Defaults to 200.
-    height : int, optional
+    height : Optional[int]
         The height of the ellipse. Defaults to the value of width.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -163,18 +164,18 @@ def disk(width: int = 200, height: int = None, **kwargs) -> Device:
 
 
 def ring(
-    width: int = 200, height: int = None, border_width: int = 60, **kwargs
+    width: int = 200, height: Optional[int] = None, border_width: int = 60, **kwargs
 ) -> Device:
     """
-    Create a Device object with a ring shape.
+    Create a Device object with a ring shape (hollow ellipse).
 
     Parameters
     ----------
-    width : int, optional
+    width : int
         The overall width of the ring. Defaults to 200.
-    height : int, optional
+    height : Optional[int]
         The overall height of the ring. Defaults to the value of width.
-    border_width : int, optional
+    border_width : int
         The width of the ring border. Defaults to 60.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -206,11 +207,11 @@ def disk_wavy(
 
     Parameters
     ----------
-    width : int, optional
+    width : int
         The overall width and height of the wavy circle. Defaults to 200.
-    wave_amplitude : float, optional
+    wave_amplitude : float
         The amplitude of the waves. Defaults to 10.
-    wave_frequency : float, optional
+    wave_frequency : float
         The frequency of the waves. Defaults to 10.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -233,18 +234,18 @@ def disk_wavy(
 
 
 def pie(
-    width: int = 200, height: int = None, arc_angle: float = 270, **kwargs
+    width: int = 200, height: Optional[int] = None, arc_angle: float = 270, **kwargs
 ) -> Device:
     """
     Create a Device object with a pie shape.
 
     Parameters
     ----------
-    width : int, optional
+    width : int
         The width of the pie. Defaults to 200.
-    height : int, optional
+    height : Optional[int]
         The height of the pie. Defaults to the value of width.
-    arc_angle : float, optional
+    arc_angle : float
         The angle of the pie slice in degrees. Defaults to 270.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -279,13 +280,13 @@ def grating(
 
     Parameters
     ----------
-    height : int, optional
+    height : int
         The height of the grating. Defaults to 200.
-    pitch : int, optional
+    pitch : int
         The pitch (period) of the grating. Defaults to 120.
-    duty_cycle : float, optional
+    duty_cycle : float
         The duty cycle of the grating. Defaults to 0.5.
-    num_gratings : int, optional
+    num_gratings : int
         The number of grating periods. Defaults to 3.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -310,9 +311,9 @@ def star(width: int = 200, num_points: int = 5, **kwargs) -> Device:
 
     Parameters
     ----------
-    width : int, optional
+    width : int
         The overall width and height of the star. Defaults to 200.
-    num_points : int, optional
+    num_points : int
         The number of points on the star. Defaults to 5.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -350,9 +351,9 @@ def poly(width: int = 200, num_points: int = 5, **kwargs) -> Device:
 
     Parameters
     ----------
-    width : int, optional
+    width : int
         The overall width and height of the polygon. Defaults to 200.
-    num_points : int, optional
+    num_points : int
         The number of sides of the polygon. Defaults to 5.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -382,11 +383,11 @@ def radial_grating(
 
     Parameters
     ----------
-    width : int, optional
+    width : int
         The overall width and height of the radial grating. Defaults to 200.
-    grating_skew : int, optional
+    grating_skew : int
         The skew angle of the grating arms. Defaults to 0.
-    num_gratings : int, optional
+    num_gratings : int
         The number of grating arms. Defaults to 6.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -429,13 +430,13 @@ def offset_grating(
 
     Parameters
     ----------
-    height : int, optional
+    height : int
         The height of the grating. Defaults to 200.
-    pitch : int, optional
+    pitch : int
         The pitch (period) of the grating. Defaults to 120.
-    duty_cycle : float, optional
+    duty_cycle : float
         The duty cycle of the grating. Defaults to 0.5.
-    num_gratings : int, optional
+    num_gratings : int
         The number of grating periods. Defaults to 3.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -458,9 +459,9 @@ def offset_grating(
     return Device(device_array=grating, **kwargs)
 
 
-def L_grating(
+def l_grating(
     width: int = 200,
-    height: int = None,
+    height: Optional[int] = None,
     pitch: int = 100,
     duty_cycle: float = 0.5,
     **kwargs,
@@ -470,13 +471,13 @@ def L_grating(
 
     Parameters
     ----------
-    width : int, optional
+    width : int
         The width of the L-grating. Defaults to 200.
-    height : int, optional
+    height : Optional[int]
         The height of the L-grating. Defaults to the value of width.
-    pitch : int, optional
+    pitch : int
         The pitch (period) of the L-shapes. Defaults to 100.
-    duty_cycle : float, optional
+    duty_cycle : float
         The duty cycle of the L-shapes. Defaults to 0.5.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -506,13 +507,13 @@ def disks(
 
     Parameters
     ----------
-    rows : int, optional
+    rows : int
         The number of rows in the grid. Defaults to 5.
-    cols : int, optional
+    cols : int
         The number of columns in the grid. Defaults to 5.
-    disk_radius : int, optional
+    disk_radius : int
         The radius of each disk. Defaults to 30.
-    spacing : int, optional
+    spacing : int
         The spacing between disk centers. Defaults to 60.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -546,13 +547,13 @@ def disks_offset(
 
     Parameters
     ----------
-    rows : int, optional
+    rows : int
         The number of rows in the grid. Defaults to 5.
-    cols : int, optional
+    cols : int
         The number of columns in the grid. Defaults to 5.
-    disk_radius : int, optional
+    disk_radius : int
         The radius of each disk. Defaults to 30.
-    spacing : int, optional
+    spacing : int
         The spacing between disk centers. Defaults to 30.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -597,15 +598,15 @@ def disks_varying(
 
     Parameters
     ----------
-    rows : int, optional
+    rows : int
         The number of rows in the grid. Defaults to 5.
-    cols : int, optional
+    cols : int
         The number of columns in the grid. Defaults to 5.
-    min_disk_radius : int, optional
+    min_disk_radius : int
         The minimum radius of the disks. Defaults to 10.
-    max_disk_radius : int, optional
+    max_disk_radius : int
         The maximum radius of the disks. Defaults to 30.
-    spacing : int, optional
+    spacing : int
         The spacing between disk centers. Defaults to 30.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -643,13 +644,13 @@ def holes(
 
     Parameters
     ----------
-    rows : int, optional
+    rows : int
         The number of rows in the grid. Defaults to 5.
-    cols : int, optional
+    cols : int
         The number of columns in the grid. Defaults to 5.
-    hole_radius : int, optional
+    hole_radius : int
         The radius of each hole. Defaults to 30.
-    spacing : int, optional
+    spacing : int
         The spacing between hole centers. Defaults to 30.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -683,13 +684,13 @@ def holes_offset(
 
     Parameters
     ----------
-    rows : int, optional
+    rows : int
         The number of rows in the grid. Defaults to 5.
-    cols : int, optional
+    cols : int
         The number of columns in the grid. Defaults to 5.
-    hole_radius : int, optional
+    hole_radius : int
         The radius of each hole. Defaults to 30.
-    spacing : int, optional
+    spacing : int
         The spacing between hole centers. Defaults to 30.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -734,15 +735,15 @@ def holes_varying(
 
     Parameters
     ----------
-    rows : int, optional
+    rows : int
         The number of rows in the grid. Defaults to 5.
-    cols : int, optional
+    cols : int
         The number of columns in the grid. Defaults to 5.
-    min_hole_radius : int, optional
+    min_hole_radius : int
         The minimum radius of the holes. Defaults to 10.
-    max_hole_radius : int, optional
+    max_hole_radius : int
         The maximum radius of the holes. Defaults to 30.
-    spacing : int, optional
+    spacing : int
         The spacing between hole centers. Defaults to 30.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
