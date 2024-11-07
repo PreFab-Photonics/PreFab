@@ -1,6 +1,7 @@
-"""Provides functions to create a Device from various data sources."""
+"""Functions to create a Device from various data sources."""
 
 import re
+from typing import TYPE_CHECKING, Optional
 
 import cv2
 import gdstk
@@ -8,6 +9,10 @@ import numpy as np
 
 from . import geometry
 from .device import Device
+
+if TYPE_CHECKING:
+    import gdsfactory as gf
+    import tidy3d as td
 
 
 def from_ndarray(
@@ -19,12 +24,12 @@ def from_ndarray(
     Parameters
     ----------
     ndarray : np.ndarray
-        The input array representing the device layout.
-    resolution : float, optional
+        The input array representing the device geometry.
+    resolution : float
         The resolution of the ndarray in nanometers per pixel, defaulting to 1.0 nm per
         pixel. If specified, the input array will be resized based on this resolution to
         match the desired physical size.
-    binarize : bool, optional
+    binarize : bool
         If True, the input array will be binarized (converted to binary values) before
         conversion to a Device object. This is useful for processing grayscale arrays
         into binary masks. Defaults to True.
@@ -34,8 +39,7 @@ def from_ndarray(
     Returns
     -------
     Device
-        A Device object representing the input array, after optional resizing and
-        binarization.
+        A Device object representing the input array, after resizing and binarization.
     """
     device_array = ndarray
     if resolution != 1.0:
@@ -48,7 +52,7 @@ def from_ndarray(
 
 
 def from_img(
-    img_path: str, img_width_nm: int = None, binarize: bool = True, **kwargs
+    img_path: str, img_width_nm: Optional[int] = None, binarize: bool = True, **kwargs
 ) -> Device:
     """
     Create a Device from an image file.
@@ -57,10 +61,10 @@ def from_img(
     ----------
     img_path : str
         The path to the image file to be converted into a Device object.
-    img_width_nm : int, optional
+    img_width_nm : Optional[int]
         The width of the image in nanometers. If specified, the Device will be resized
         to this width while maintaining aspect ratio. If None, no resizing is performed.
-    binarize : bool, optional
+    binarize : bool
         If True, the image will be binarized (converted to binary values) before
         conversion to a Device object. This is useful for processing grayscale images
         into binary masks. Defaults to True.
@@ -88,9 +92,9 @@ def from_gds(
     gds_path: str,
     cell_name: str,
     gds_layer: tuple[int, int] = (1, 0),
-    bounds: tuple[tuple[int, int], tuple[int, int]] = None,
+    bounds: Optional[tuple[tuple[float, float], tuple[float, float]]] = None,
     **kwargs,
-):
+) -> Device:
     """
     Create a Device from a GDS cell.
 
@@ -100,10 +104,10 @@ def from_gds(
         The file path to the GDS file.
     cell_name : str
         The name of the cell within the GDS file to be converted into a Device object.
-    gds_layer : tuple[int, int], optional
+    gds_layer : tuple[int, int]
         A tuple specifying the layer and datatype to be used from the GDS file. Defaults
         to (1, 0).
-    bounds : tuple[tuple[int, int], tuple[int, int]], optional
+    bounds : Optional[tuple[tuple[float, float], tuple[float, float]]]
         A tuple specifying the bounds for cropping the cell before conversion, formatted
         as ((min_x, min_y), (max_x, max_y)), in units of the GDS file. If None, the
         entire cell is used.
@@ -117,7 +121,7 @@ def from_gds(
         processing based on the specified layer.
     """
     gdstk_library = gdstk.read_gds(gds_path)
-    gdstk_cell = gdstk_library[cell_name]
+    gdstk_cell = gdstk_library[cell_name]  # type: ignore
     device_array = _gdstk_to_device_array(
         gdstk_cell=gdstk_cell, gds_layer=gds_layer, bounds=bounds
     )
@@ -127,7 +131,7 @@ def from_gds(
 def from_gdstk(
     gdstk_cell: gdstk.Cell,
     gds_layer: tuple[int, int] = (1, 0),
-    bounds: tuple[tuple[int, int], tuple[int, int]] = None,
+    bounds: Optional[tuple[tuple[float, float], tuple[float, float]]] = None,
     **kwargs,
 ):
     """
@@ -137,12 +141,12 @@ def from_gdstk(
     ----------
     gdstk_cell : gdstk.Cell
         The gdstk.Cell object to be converted into a Device object.
-    gds_layer : tuple[int, int], optional
+    gds_layer : tuple[int, int]
         A tuple specifying the layer and datatype to be used from the cell. Defaults to
         (1, 0).
-    bounds : tuple[tuple[int, int], tuple[int, int]], optional
+    bounds : tuple[tuple[float, float], tuple[float, float]]
         A tuple specifying the bounds for cropping the cell before conversion, formatted
-        as ((min_x, min_y), (max_x, max_y)), in units of the GDS file. If None, the
+        as ((min_x, min_y), (max_x, max_y)), in units of the GDS cell. If None, the
         entire cell is used.
     **kwargs
         Additional keyword arguments to be passed to the Device constructor.
@@ -162,7 +166,7 @@ def from_gdstk(
 def _gdstk_to_device_array(
     gdstk_cell: gdstk.Cell,
     gds_layer: tuple[int, int] = (1, 0),
-    bounds: tuple[tuple[int, int], tuple[int, int]] = None,
+    bounds: Optional[tuple[tuple[float, float], tuple[float, float]]] = None,
 ) -> np.ndarray:
     """
     Convert a gdstk.Cell to a device array.
@@ -171,9 +175,9 @@ def _gdstk_to_device_array(
     ----------
     gdstk_cell : gdstk.Cell
         The gdstk.Cell object to be converted.
-    gds_layer : tuple[int, int], optional
+    gds_layer : tuple[int, int]
         The layer and datatype to be used from the cell. Defaults to (1, 0).
-    bounds : tuple[tuple[int, int], tuple[int, int]], optional
+    bounds : Optional[tuple[tuple[float, float], tuple[float, float]]]
         Bounds for cropping the cell, formatted as ((min_x, min_y), (max_x, max_y)).
         If None, the entire cell is used.
 
@@ -190,11 +194,17 @@ def _gdstk_to_device_array(
         polygons = gdstk.slice(
             polygons, position=(bounds[0][1], bounds[1][1]), axis="y"
         )[1]
-        bounds = tuple(tuple(x * 1000 for x in sub_tuple) for sub_tuple in bounds)
+        bounds = (
+            (int(1000 * bounds[0][0]), int(1000 * bounds[0][1])),
+            (int(1000 * bounds[1][0]), int(1000 * bounds[1][1])),
+        )
     else:
-        bounds = tuple(
-            tuple(1000 * x for x in sub_tuple)
-            for sub_tuple in gdstk_cell.bounding_box()
+        bbox = gdstk_cell.bounding_box()
+        if bbox is None:
+            raise ValueError("Cell has no geometry, cannot determine bounds.")
+        bounds = (
+            (float(1000 * bbox[0][0]), float(1000 * bbox[0][1])),
+            (float(1000 * bbox[1][0]), float(1000 * bbox[1][1])),
         )
     contours = [
         np.array(
@@ -220,7 +230,7 @@ def _gdstk_to_device_array(
 
 
 def from_gdsfactory(
-    component: "gf.Component",  # noqa: F821
+    component: "gf.Component",
     **kwargs,
 ) -> Device:
     """
@@ -265,13 +275,8 @@ def from_gdsfactory(
     contours = [
         np.array(
             [
-                [
-                    [
-                        int(1000 * vertex[0] - bounds[0][0]),
-                        int(1000 * vertex[1] - bounds[0][1]),
-                    ]
-                ]
-                for vertex in polygon
+                [[int(1000 * x - bounds[0][0]), int(1000 * y - bounds[0][1])]]
+                for x, y in polygon  # type: ignore
             ]
         )
         for polygon in polygons
@@ -288,10 +293,10 @@ def from_gdsfactory(
 
 def from_sem(
     sem_path: str,
-    sem_resolution: float = None,
-    sem_resolution_key: str = None,
+    sem_resolution: Optional[float] = None,
+    sem_resolution_key: Optional[str] = None,
     binarize: bool = False,
-    bounds: tuple[tuple[int, int], tuple[int, int]] = None,
+    bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
     **kwargs,
 ) -> Device:
     """
@@ -301,18 +306,18 @@ def from_sem(
     ----------
     sem_path : str
         The file path to the SEM image.
-    sem_resolution : float, optional
+    sem_resolution : Optional[float]
         The resolution of the SEM image in nanometers per pixel. If not provided, it
         will be extracted from the image metadata using the `sem_resolution_key`.
-    sem_resolution_key : str, optional
+    sem_resolution_key : Optional[str]
         The key to look for in the SEM image metadata to extract the resolution.
         Required if `sem_resolution` is not provided.
-    binarize : bool, optional
+    binarize : bool
         If True, the SEM image will be binarized (converted to binary values) before
         conversion to a Device object. This is needed for processing grayscale images
         into binary masks. Defaults to False.
-    bounds : tuple[tuple[int, int], tuple[int, int]], optional
-        A tuple specifying the bounds for cropping the image before conversion,
+    bounds : Optional[tuple[tuple[int, int], tuple[int, int]]]
+        A tuple specifying the bounds in nm for cropping the image before conversion,
         formatted as ((min_x, min_y), (max_x, max_y)). If None, the entire image is
         used.
     **kwargs
@@ -352,7 +357,7 @@ def get_sem_resolution(sem_path: str, sem_resolution_key: str) -> float:
     Extracts the resolution of a scanning electron microscope (SEM) image from its
     metadata.
 
-    Note:
+    Notes
     -----
     This function is used internally and may not be useful for most users.
 
@@ -388,9 +393,11 @@ def get_sem_resolution(sem_path: str, sem_resolution_key: str) -> float:
 
 
 def from_tidy3d(
-    tidy3d_sim: "tidy3d.Simulation",  # noqa: F821
-    eps_threshold: float,
+    tidy3d_sim: "td.Simulation",
+    eps: float,
     z: float,
+    freq: float,
+    buffer_width: float = 0.1,
     **kwargs,
 ) -> Device:
     """
@@ -400,10 +407,16 @@ def from_tidy3d(
     ----------
     tidy3d_sim : tidy3d.Simulation
         The Tidy3D simulation object.
-    eps_threshold : float
-        The threshold value for the permittivity to binarize the device array.
+    eps : float
+        The permittivity of the layer to extract from the simulation.
     z : float
-        The z-coordinate at which to extract the permittivity.
+        The z-coordinate of the layer to extract from the simulation.
+    freq : float
+        The frequency at which to extract the permittivity.
+    buffer_width : float
+        The width of the buffer region around the layer to extract from the
+        simulation. Defaults to 0.1 µm. This is useful for ensuring the inputs/outputs
+        of the simulation are not affected by prediction.
     **kwargs
         Additional keyword arguments to be passed to the Device constructor.
 
@@ -415,9 +428,6 @@ def from_tidy3d(
 
     Raises
     ------
-    ValueError
-        If the z-coordinate is outside the bounds of the simulation size in the
-        z-direction.
     ImportError
         If the tidy3d package is not installed.
     """
@@ -429,29 +439,24 @@ def from_tidy3d(
             "try `pip install tidy3d`."
         ) from None
 
-    if not (
-        tidy3d_sim.center[2] - tidy3d_sim.size[2] / 2
-        <= z
-        <= tidy3d_sim.center[2] + tidy3d_sim.size[2] / 2
-    ):
-        raise ValueError(
-            f"z={z} is outside the bounds of the simulation size in the z-direction."
-        )
-
-    x = np.arange(
-        tidy3d_sim.center[0] - tidy3d_sim.size[0] / 2,
-        tidy3d_sim.center[0] + tidy3d_sim.size[0] / 2,
+    X = np.arange(
+        tidy3d_sim.bounds[0][0] - buffer_width,
+        tidy3d_sim.bounds[1][0] + buffer_width,
         0.001,
     )
-    y = np.arange(
-        tidy3d_sim.center[1] - tidy3d_sim.size[1] / 2,
-        tidy3d_sim.center[1] + tidy3d_sim.size[1] / 2,
+    Y = np.arange(
+        tidy3d_sim.bounds[0][1] - buffer_width,
+        tidy3d_sim.bounds[1][1] + buffer_width,
         0.001,
     )
-    z = np.array([z])
+    Z = np.array([z])
 
-    grid = Grid(boundaries=Coords(x=x, y=y, z=z))
-    eps = np.real(tidy3d_sim.epsilon_on_grid(grid=grid, coord_key="boundaries").values)
-    device_array = geometry.binarize_hard(device_array=eps, eta=eps_threshold)[:, :, 0]
-    device_array = np.fliplr(np.rot90(device_array, k=-1))
+    grid = Grid(attrs={}, boundaries=Coords(attrs={}, x=X, y=Y, z=Z))
+    eps_array = np.real(
+        tidy3d_sim.epsilon_on_grid(grid=grid, coord_key="boundaries", freq=freq).values
+    )
+    device_array = geometry.binarize_hard(device_array=eps_array, eta=eps - 0.1)[
+        :, :, 0
+    ]
+    device_array = np.rot90(device_array, k=1)
     return Device(device_array=device_array, **kwargs)
