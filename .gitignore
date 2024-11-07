@@ -1,6 +1,9 @@
 .DS_Store
 __pycache__/
 .ipynb_checkpoints
+docs/blog/archive/
+docs/examples/archive/
+docs/examples/data/
 dist/
 local/
 tests/
