@@ -15,7 +15,6 @@ nav:
       - Working with sidewall angles: examples/3_sidewall_angle.ipynb
       - SEM generation: examples/4_SEM_generation.ipynb
       - Simulating a predicted device: examples/5_prediction_simulation.ipynb
-      - Fabrication-aware inverse design: examples/6_WDM_FAID.ipynb
   - Blog:
       - blog/index.md
   - Reference:
