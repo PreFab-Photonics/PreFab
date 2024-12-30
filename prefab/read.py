@@ -8,7 +8,7 @@ import gdstk
 import numpy as np
 
 from . import geometry
-from .device import Device
+from .device import BufferSpec, Device
 
 if TYPE_CHECKING:
     import gdsfactory as gf
@@ -342,14 +342,55 @@ def from_sem(
     device_array = cv2.resize(
         device_array, dsize=(0, 0), fx=sem_resolution, fy=sem_resolution
     )
+
     if bounds is not None:
-        device_array = device_array[
-            device_array.shape[0] - bounds[1][1] : device_array.shape[0] - bounds[0][1],
-            bounds[0][0] : bounds[1][0],
-        ]
+        pad_left = max(0, -bounds[0][0])
+        pad_right = max(0, bounds[1][0] - device_array.shape[1])
+        pad_bottom = max(0, -bounds[0][1])
+        pad_top = max(0, bounds[1][1] - device_array.shape[0])
+
+        if pad_left or pad_right or pad_top or pad_bottom:
+            device_array = np.pad(
+                device_array,
+                ((pad_top, pad_bottom), (pad_left, pad_right)),
+                mode="constant",
+                constant_values=0,
+            )
+
+        start_x = max(0, bounds[0][0] + pad_left)
+        end_x = min(device_array.shape[1], bounds[1][0] + pad_left)
+        start_y = max(0, device_array.shape[0] - (bounds[1][1] + pad_top))
+        end_y = min(
+            device_array.shape[0], device_array.shape[0] - (bounds[0][1] + pad_top)
+        )
+
+        if start_x >= end_x or start_y >= end_y:
+            raise ValueError(
+                "Invalid bounds resulted in zero-size array: "
+                f"x=[{start_x}, {end_x}], "
+                f"y=[{start_y}, {end_y}]"
+            )
+
+        device_array = device_array[start_y:end_y, start_x:end_x]
+
     if binarize:
         device_array = geometry.binarize_sem(device_array)
-    return Device(device_array=device_array, **kwargs)
+
+    buffer_spec = BufferSpec(
+        mode={
+            "top": "none",
+            "bottom": "none",
+            "left": "none",
+            "right": "none",
+        },
+        thickness={
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0,
+        },
+    )
+    return Device(device_array=device_array, buffer_spec=buffer_spec, **kwargs)
 
 
 def get_sem_resolution(sem_path: str, sem_resolution_key: str) -> float:
