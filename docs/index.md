@@ -12,6 +12,10 @@ This guide will get you all set up and ready to use PreFab to predict the fabric
     Before you can make PreFab requests, you will need to create an account[^1]. Sign
     up [here](https://www.prefabphotonics.com/signup).
 
+!!! info "Try Rosette"
+
+    Want a more visual experience? Try [Rosette](https://rosette.dev) - our new layout tool with PreFab models built in, designed for rapid chip design.
+
 ## Install PreFab
 
 Before making your first prediction, follow the steps below to install the [PreFab Python package](https://pypi.org/project/prefab/).
