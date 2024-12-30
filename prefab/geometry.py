@@ -4,7 +4,6 @@ from typing import Optional
 
 import cv2
 import numpy as np
-from skimage.morphology import closing, disk, opening, square
 
 
 def normalize(device_array: np.ndarray) -> np.ndarray:
@@ -378,12 +377,18 @@ def enforce_feature_size(
         If an invalid structuring element type is specified.
     """
     if strel == "disk":
-        structuring_element = disk(radius=min_feature_size / 2)
+        kernel = cv2.getStructuringElement(
+            cv2.MORPH_ELLIPSE, (min_feature_size, min_feature_size)
+        )
     elif strel == "square":
-        structuring_element = square(width=min_feature_size)
+        kernel = cv2.getStructuringElement(
+            cv2.MORPH_RECT, (min_feature_size, min_feature_size)
+        )
     else:
         raise ValueError(f"Invalid structuring element: {strel}")
 
-    modified_geometry = closing(device_array[:, :, 0], structuring_element)
-    modified_geometry = opening(modified_geometry, structuring_element)
-    return np.expand_dims(modified_geometry, axis=-1)
+    device_array_2d = (device_array[:, :, 0] * 255).astype(np.uint8)
+    modified_geometry = cv2.morphologyEx(device_array_2d, cv2.MORPH_CLOSE, kernel)
+    modified_geometry = cv2.morphologyEx(modified_geometry, cv2.MORPH_OPEN, kernel)
+
+    return np.expand_dims(modified_geometry.astype(float) / 255, axis=-1)

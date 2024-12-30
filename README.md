@@ -4,6 +4,8 @@
 
 PreFab is a _virtual nanofabrication environment_ that leverages **deep learning** and **computer vision** to predict and correct for structural variations in integrated photonic devices during nanofabrication.
 
+> **Try Rosette**: Want a more visual experience? Try [Rosette](https://rosette.dev) - our new layout tool with PreFab models built in, designed for rapid chip design.
+
 ## Prediction
 
 PreFab predicts process-induced structural variations, including corner rounding, loss of small lines and islands, filling of narrow holes and channels, sidewall angle deviations, and stochastic effects. This allows designers to rapidly prototype and evaluate expected performance pre-fabrication.

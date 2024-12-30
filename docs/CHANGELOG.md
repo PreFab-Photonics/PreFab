@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.6](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.1.6) - 2024-12-30
+
+- Added Tidy3D fabrication-aware inverse design (FAID) example notebook.
+- Remove buffer from `Device` created with `read.from_sem` method.
+- Handling of extended bounds in `read.from_sem` method.
+- Use OpenCV for morphological operations in `geometry.enforce_feature_size`.
+- Add handling for `None` casee for `BufferSpec` in `Device` constructor.
+
 ## [1.1.5](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.1.5) - 2024-11-05
 
 - Fix alignment issue in `Device._device_to_gdstk` method, which is used in `Device.to_gdstk` and `Device.to_gds`.

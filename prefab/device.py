@@ -9,7 +9,7 @@ import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.patches import Rectangle
 from PIL import Image
-from pydantic import BaseModel, Field, root_validator, validator
+from pydantic import BaseModel, Field, model_validator, validator
 from scipy.ndimage import distance_transform_edt
 from skimage import measure
 
@@ -37,19 +37,21 @@ class BufferSpec(BaseModel):
     ----------
     mode : dict[str, str]
         A dictionary that defines the buffer mode for each side of the device
-        ('top', 'bottom', 'left', 'right'), where 'constant' is used for isolated
-        structures and 'edge' is utilized for preserving the edge, such as for waveguide
-        connections.
+        ('top', 'bottom', 'left', 'right'), where:
+        - 'constant' is used for isolated structures
+        - 'edge' is utilized for preserving the edge, such as for waveguide connections
+        - 'none' for no buffer on that side
     thickness : dict[str, int]
         A dictionary that defines the thickness of the buffer zone for each side of the
-        device ('top', 'bottom', 'left', 'right'). Each value must be greater than 0.
+        device ('top', 'bottom', 'left', 'right'). Each value must be greater than or
+        equal to 0.
 
     Raises
     ------
     ValueError
         If any of the modes specified in the 'mode' dictionary are not one of the
-        allowed values ('constant', 'edge'). Or if any of the thickness values are not
-        greater than 0.
+        allowed values ('constant', 'edge', 'none'). Or if any of the thickness values
+        are negative.
 
     Example
     -------
@@ -58,20 +60,20 @@ class BufferSpec(BaseModel):
         buffer_spec = pf.BufferSpec(
             mode={
                 "top": "constant",
-                "bottom": "edge",
+                "bottom": "none",
                 "left": "constant",
                 "right": "edge",
             },
             thickness={
                 "top": 150,
-                "bottom": 100,
+                "bottom": 0,
                 "left": 200,
                 "right": 250,
             },
         )
     """
 
-    mode: dict[str, Literal["constant", "edge"]] = Field(
+    mode: dict[str, Literal["constant", "edge", "none"]] = Field(
         default_factory=lambda: {
             "top": "constant",
             "bottom": "constant",
@@ -90,16 +92,31 @@ class BufferSpec(BaseModel):
 
     @validator("mode", pre=True)
     def check_mode(cls, v):
-        allowed_modes = ["constant", "edge"]
+        allowed_modes = ["constant", "edge", "none"]
         if not all(mode in allowed_modes for mode in v.values()):
             raise ValueError(f"Buffer mode must be one of {allowed_modes}, got '{v}'.")
         return v
 
     @validator("thickness")
     def check_thickness(cls, v):
-        if not all(t > 0 for t in v.values()):
-            raise ValueError("All thickness values must be greater than 0.")
+        if not all(t >= 0 for t in v.values()):
+            raise ValueError("All thickness values must be greater than or equal to 0.")
         return v
+
+    @model_validator(mode="after")
+    def check_none_thickness(cls, values):
+        mode = values.mode
+        thickness = values.thickness
+        for side in mode:
+            if mode[side] == "none" and thickness[side] != 0:
+                raise ValueError(
+                    f"Thickness must be 0 when mode is 'none' for {side} side"
+                )
+            if mode[side] != "none" and thickness[side] == 0:
+                raise ValueError(
+                    f"Mode must be 'none' when thickness is 0 for {side} side"
+                )
+        return values
 
 
 class Device(BaseModel):
@@ -164,30 +181,37 @@ class Device(BaseModel):
         buffer_thickness = self.buffer_spec.thickness
         buffer_mode = self.buffer_spec.mode
 
-        self.device_array = np.pad(
-            self.device_array,
-            pad_width=((buffer_thickness["top"], 0), (0, 0)),
-            mode=buffer_mode["top"],
-        )
-        self.device_array = np.pad(
-            self.device_array,
-            pad_width=((0, buffer_thickness["bottom"]), (0, 0)),
-            mode=buffer_mode["bottom"],
-        )
-        self.device_array = np.pad(
-            self.device_array,
-            pad_width=((0, 0), (buffer_thickness["left"], 0)),
-            mode=buffer_mode["left"],
-        )
-        self.device_array = np.pad(
-            self.device_array,
-            pad_width=((0, 0), (0, buffer_thickness["right"])),
-            mode=buffer_mode["right"],
-        )
+        if buffer_mode["top"] != "none":
+            self.device_array = np.pad(
+                self.device_array,
+                pad_width=((buffer_thickness["top"], 0), (0, 0)),
+                mode=buffer_mode["top"],
+            )
+
+        if buffer_mode["bottom"] != "none":
+            self.device_array = np.pad(
+                self.device_array,
+                pad_width=((0, buffer_thickness["bottom"]), (0, 0)),
+                mode=buffer_mode["bottom"],
+            )
+
+        if buffer_mode["left"] != "none":
+            self.device_array = np.pad(
+                self.device_array,
+                pad_width=((0, 0), (buffer_thickness["left"], 0)),
+                mode=buffer_mode["left"],
+            )
+
+        if buffer_mode["right"] != "none":
+            self.device_array = np.pad(
+                self.device_array,
+                pad_width=((0, 0), (0, buffer_thickness["right"])),
+                mode=buffer_mode["right"],
+            )
 
         self.device_array = np.expand_dims(self.device_array, axis=-1)
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
     def check_device_array(cls, values):
         device_array = values.get("device_array")
         if not isinstance(device_array, np.ndarray):
@@ -1250,6 +1274,15 @@ class Device(BaseModel):
             buffer_thickness=self.buffer_spec.thickness,
         )
         return self.model_copy(update={"device_array": trimmed_device_array})
+
+    def pad(self, pad_width: int) -> "Device":
+        """
+        Pad the device geometry with a specified width on all sides.
+        """
+        padded_device_array = geometry.pad(
+            device_array=self.device_array, pad_width=pad_width
+        )
+        return self.model_copy(update={"device_array": padded_device_array})
 
     def blur(self, sigma: float = 1.0) -> "Device":
         """
