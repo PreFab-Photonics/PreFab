@@ -164,19 +164,18 @@ def predict_array_with_grad(device_array: np.ndarray, model: Model) -> np.ndarra
     return prediction_array
 
 
-def predict_array_with_grad_vjp(ans: np.ndarray, x: np.ndarray):
+def predict_array_with_grad_vjp(ans: np.ndarray, device_array: np.ndarray, *args):
     """
     Define the vector-Jacobian product (VJP) for the prediction function.
-
-    This function provides the VJP for the `predict_array_with_grad` function,
-    which is used in reverse-mode automatic differentiation to compute gradients.
 
     Parameters
     ----------
     ans : np.ndarray
         The output of the `predict_array_with_grad` function.
-    x : np.ndarray
+    device_array : np.ndarray
         The input device array for which the gradient is computed.
+    *args :
+        Additional arguments that aren't used in the VJP computation.
 
     Returns
     -------
