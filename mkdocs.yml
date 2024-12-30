@@ -108,5 +108,3 @@ plugins:
   - mkdocs-jupyter:
       include_source: true
       theme: dark
-      requirements:
-        - nbconvert==7.13.1

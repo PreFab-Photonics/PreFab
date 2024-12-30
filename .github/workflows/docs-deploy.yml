@@ -30,6 +30,7 @@ jobs:
       - run: pip install mkdocs-material
       - run: pip install mkdocstrings[python]
       - run: pip install mkdocs-jupyter
+      - run: pip install nbconvert==7.13
       - name: Create CNAME file
         run: echo "docs.prefabphotonics.com" > docs/CNAME
       - run: mkdocs gh-deploy --force
