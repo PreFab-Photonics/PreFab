@@ -5,10 +5,12 @@ repo_url: https://github.com/PreFab-Photonics/PreFab
 repo_name: PreFab-Photonics/PreFab
 
 nav:
-  - Home:
-      - Getting started: index.md
-      - Model library: models.md
-      - Changelog: CHANGELOG.md
+  - Home: index.md
+  - Setup: setup.md
+  - Fab-aware design: fab_aware_design.md
+  - Model library: models.md
+  - Changelog: CHANGELOG.md
+  - Blog: blog/index.md
   - Examples:
       - Making a prediction: examples/1_prediction.ipynb
       - Making a correction: examples/2_correction.ipynb
@@ -16,8 +18,6 @@ nav:
       - SEM generation: examples/4_SEM_generation.ipynb
       - Simulating a predicted device: examples/5_prediction_simulation.ipynb
       - Fabrication-aware inverse design: examples/6_fabrication-aware_inverse_design.ipynb
-  - Blog:
-      - blog/index.md
   - Reference:
       - Compare: reference/compare.md
       - Device: reference/device.md
@@ -31,22 +31,19 @@ theme:
   name: "material"
   custom_dir: docs/overrides
   palette:
-    scheme: slate
-    primary: black
-    accent: yellow
+    scheme: prefab
   font:
-    text: Roboto
-    code: Roboto Mono
+    text: Geist
+    code: Geist Mono
   language: en
-  logo: assets/logo-white.png
+  logo: assets/prefab_logo_box.svg
   favicon: assets/favicon.ico
-  # icon:
-  #   repo: fontawesome/brands/github
+  icon:
+    repo: fontawesome/brands/github
   features:
     - announce.dismiss
     - navigation.instant
     - navigation.instant.progress
-    - navigation.tabs
     - navigation.sections
     - navigation.footer
     - content.code.copy
@@ -68,12 +65,16 @@ extra:
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/prefab/
 
-copyright: Copyright &copy; 2024 PreFab Photonics
+copyright: Copyright &copy; 2025 PreFab Photonics
 
 markdown_extensions:
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -108,3 +109,6 @@ plugins:
   - mkdocs-jupyter:
       include_source: true
       theme: dark
+
+extra_css:
+  - stylesheets/extra.css
