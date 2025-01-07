@@ -1,72 +1,35 @@
 ---
-title: Installation
-description: This guide will get you all set up and ready to use the PreFab API.
+title: Home
+description: Documentation for PreFab - a virtual nanofab for photonic integrated circuit design
 ---
+<img src="assets/prefab_logo_box.svg" alt="PreFab logo" width="80">
 
-PreFab leverages deep learning to model fabrication-induced structural variations in integrated photonic devices. Through this _virtual nanofabrication environment_, we uncover valuable insights into nanofabrication processes and enhance device design accuracy.
+PreFab is a virtual nanofabrication environment that leverages deep learning to model fabrication-induced structural variations in integrated photonic devices. Our mission is to bridge the gap between design and fabrication in photonic integrated circuits.
 
-This guide will get you all set up and ready to use PreFab to predict the fabrication-induced structural variations of your own integrated photonic devices.
+## What PreFab does
 
-!!! note "Sign up"
+### Prediction of fabrication
 
-    Before you can make PreFab requests, you will need to create an account[^1]. Sign
-    up [here](https://www.prefabphotonics.com/signup).
+Anticipate how your designs will be affected by real fabrication processes. PreFab predicts process-induced structural variations: corner rounding, loss of small features, filling of narrow gaps, sidewall angle variations, and stochastic effects.
 
-!!! info "Try Rosette"
+![Example of PreFab prediction](assets/promo_p.png)
 
-    Want a more visual experience? Try [Rosette](https://rosette.dev) - our new layout tool with PreFab models built in, designed for rapid chip design.
+### Correction of fabrication
 
-## Install PreFab
+Automatically optimize your designs to ensure fabricated results match your specifications. Our correction algorithms help minimize structural variations and reduce performance discrepancies between simulations and fabricated devices.
 
-Before making your first prediction, follow the steps below to install the [PreFab Python package](https://pypi.org/project/prefab/).
+![Example of PreFab correction](assets/promo_c.png)
 
-### From PyPI
+## Getting started
 
-You can easily install PreFab using pip, which is the Python package installer. This method is suitable for most users.
+!!! tip "Quick links"
+    1. [Setup guide](setup.md)
+    2. [Learn about fabrication-aware design](fab_aware_design.md)
+    3. [Explore example notebooks](examples/1_prediction.ipynb)
 
-```sh
-pip install prefab
-```
+!!! info "Try Rosette (beta)"
+    Want a more visual experience? Try the [Rosette beta](https://rosette.dev) - our new layout tool with PreFab models built in, designed for rapid chip design.
 
-### From GitHub
+## Get in touch
 
-For those who wish to make changes to the source code for their own development purposes, PreFab can also be installed directly from [GitHub](https://github.com/PreFab-Photonics/PreFab).
-
-```sh
-git clone https://github.com/PreFab-Photonics/PreFab.git
-cd PreFab
-pip install -e .
-```
-
-## Authenticate PreFab token
-
-To link your PreFab account to the API, you will need to create an authentication token. You can do this by running the following command in your terminal. This will open a browser window where you can log in and generate a token.
-
-```sh
-python3 -m prefab setup
-```
-
-## PreFab~ricate~ your designs
-
-See the following guides to get started with making your first predictions and corrections of fabrication-induced variations with PreFab:
-
-1. [Making a prediction](examples/1_prediction.ipynb)
-2. [Making a correction](examples/2_correction.ipynb)
-
-If you are new to Python, we recommend starting with the [Python for Photonics](blog/posts/python-for-photonics.md) blog post.
-
-!!! tip "Performance and usage"
-
-    PreFab models are served via a serverless [cloud platform](https://modal.com/). Please note:
-
-    - 🐢 CPU inference may result in slower performance. Future updates will introduce GPU inference.
-    - 🥶 The first prediction may take longer due to cold start server loading. Subsequent predictions will be faster.
-    - 😊 Be considerate of usage. Start small and limit usage during the initial stages. Thank you!
-
-## Your thoughts are valuable
-
-PreFab is a new design tool, still in its early days, that we hope will become useful to the photonics community. We are eager to hear about your experiences with PreFab. Please share your thoughts [with us](mailto:dusan@prefabphotonics.com) and any issues you may have on [GitHub](https://github.com/PreFab-Photonics/PreFab/issues).
-
-Happy designing :fontawesome-solid-computer: :material-arrow-right: :material-chip:
-
-[^1]: For more information, visit our [Privacy Policy](https://www.prefabphotonics.com/legal/privacy-policy) and [Terms of Service](https://www.prefabphotonics.com/legal/terms). <!-- markdownlint-disable-line MD053 -->
+PreFab is continuously evolving to serve the photonics community better. We welcome your feedback and contributions. Share your thoughts via [email](mailto:hi@prefabphotonics.com), report issues on [GitHub](https://github.com/PreFab-Photonics/PreFab/issues), or follow our updates on [LinkedIn](https://www.linkedin.com/company/prefab-photonics).
