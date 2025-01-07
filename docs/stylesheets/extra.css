@@ -1,0 +1,81 @@
+[data-md-color-scheme="prefab"] {
+    --md-primary-fg-color:               hsla(0, 0%, 10%, 1);
+    --md-primary-fg-color--light:        hsla(0, 0%, 25%, 1);
+    --md-primary-fg-color--dark:         hsla(0, 0%, 5%, 0.87);
+    --md-primary-bg-color:               hsla(0, 0%, 100%, 1);
+    --md-primary-bg-color--light:        hsla(0, 0%, 100%, 0.7);
+
+    --md-accent-fg-color:                hsla(204, 100%, 72%, 1);
+    --md-accent-fg-color--transparent:   hsla(204, 100%, 72%, 0.1);
+    --md-accent-bg-color:                hsla(0, 0%, 100%, 1);
+    --md-accent-bg-color--light:         hsla(0, 0%, 100%, 0.7);
+
+    --md-hue: 225deg;
+
+    --md-default-fg-color:               hsla(0, 0%, 100%, 0.92);
+    --md-default-fg-color--light:        hsla(0, 0%, 100%, 0.65);
+    --md-default-fg-color--lighter:      hsla(0, 0%, 100%, 0.4);
+    --md-default-fg-color--lightest:     hsla(0, 0%, 100%, 0.1);
+    --md-default-bg-color:               hsla(220, 10%, 12%, 1);
+    --md-default-bg-color--light:        hsla(220, 10%, 10%, 0.7);
+    --md-default-bg-color--lighter:      hsla(220, 10%, 8%, 0.3);
+    --md-default-bg-color--lightest:     hsla(220, 10%, 6%, 0.12);
+
+    --md-code-fg-color:                  hsla(0, 0%, 95%, 1);
+    --md-code-bg-color:                  hsla(220, 10%, 16%, 1);
+
+    --md-code-hl-color:                  hsla(204, 100%, 72%, 1);
+    --md-code-hl-color--light:           hsla(204, 100%, 72%, 0.1);
+
+    --md-code-hl-number-color:           hsla(358, 100%, 75%, 1);
+    --md-code-hl-special-color:          hsla(326, 100%, 74%, 1);
+    --md-code-hl-function-color:         hsla(291, 85%, 75%, 1);
+    --md-code-hl-constant-color:         hsla(250, 85%, 75%, 1);
+    --md-code-hl-keyword-color:          hsla(204, 100%, 72%, 1);
+    --md-code-hl-string-color:           hsla(150, 85%, 70%, 1);
+    --md-code-hl-name-color:             var(--md-code-fg-color);
+    --md-code-hl-operator-color:         var(--md-default-fg-color--light);
+    --md-code-hl-punctuation-color:      var(--md-default-fg-color--light);
+    --md-code-hl-comment-color:          var(--md-default-fg-color--light);
+    --md-code-hl-generic-color:          var(--md-default-fg-color--light);
+    --md-code-hl-variable-color:         var(--md-default-fg-color--light);
+
+    --md-typeset-color:                  var(--md-default-fg-color);
+    --md-typeset-a-color:                hsla(204, 100%, 72%, 1);
+
+    --md-typeset-del-color:              hsla(358, 100%, 65%, 0.15);
+    --md-typeset-ins-color:              hsla(150, 100%, 50%, 0.15);
+
+    --md-typeset-kbd-color:              hsla(220, 10%, 15%, 1);
+    --md-typeset-kbd-accent-color:       hsla(220, 10%, 20%, 1);
+    --md-typeset-kbd-border-color:       hsla(220, 10%, 30%, 1);
+
+    --md-typeset-mark-color:             hsla(60, 100%, 50%, 0.3);
+
+    --md-typeset-table-color:            hsla(0, 0%, 100%, 0.12);
+    --md-typeset-table-color--light:     hsla(0, 0%, 100%, 0.035);
+
+    --md-admonition-fg-color:            var(--md-default-fg-color);
+    --md-admonition-bg-color:            hsla(220, 10%, 12%, 1);
+
+    --md-warning-fg-color:               hsla(0, 0%, 100%, 0.92);
+    --md-warning-bg-color:               hsla(45, 100%, 35%, 1);
+
+    --md-footer-fg-color:                hsla(0, 0%, 100%, 1);
+    --md-footer-fg-color--light:         hsla(0, 0%, 100%, 0.7);
+    --md-footer-fg-color--lighter:       hsla(0, 0%, 100%, 0.45);
+    --md-footer-bg-color:                hsla(220, 10%, 12%, 1);
+    --md-footer-bg-color--dark:          hsla(220, 10%, 12%, 0.32);
+
+    --md-shadow-z1:
+        0 #{px2rem(4px)} #{px2rem(10px)} hsla(0, 0%, 0%, 0.3),
+        0 0              #{px2rem(1px)}  hsla(0, 0%, 0%, 0.2);
+
+    --md-shadow-z2:
+        0 #{px2rem(4px)} #{px2rem(10px)} hsla(0, 0%, 0%, 0.4),
+        0 0              #{px2rem(1px)}  hsla(0, 0%, 0%, 0.35);
+
+    --md-shadow-z3:
+        0 #{px2rem(4px)} #{px2rem(10px)} hsla(0, 0%, 0%, 0.5),
+        0 0              #{px2rem(1px)}  hsla(0, 0%, 0%, 0.45);
+}
