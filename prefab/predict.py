@@ -17,7 +17,7 @@ from .geometry import binarize_hard
 from .models import Model
 
 BASE_ENDPOINT_URL = "https://prefab-photonics--predict"
-ENDPOINT_VERSION = 1
+ENDPOINT_VERSION = 2
 
 
 def predict_array(
