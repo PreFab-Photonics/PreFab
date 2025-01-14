@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block announce %}
+<span style="color: #b0b0b0;">For updates follow</span> <strong>PreFab Photonics</strong> <span
+    style="color: #b0b0b0;">on</span> <a rel="me"
+    href="https://www.linkedin.com/company/102847109/"><strong>LinkedIn</strong>
+</a>
+{% endblock %}
+
+{% block content %}
+{% if page.nb_url %}
+<a href="{{ page.nb_url }}" title="Download Notebook" class="md-content__button md-icon"
+    style="display: inline; color: #b0b0b0;">
+    {% include ".icons/material/download.svg" %}
+</a>
+{% endif %}
+
+{{ super() }}
+{% endblock content %}
