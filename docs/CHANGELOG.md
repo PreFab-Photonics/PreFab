@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.7](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.1.7) - 2025-01-14
+
+- Added `autograd` and `pydantic` (version requirement) dependencies in `pyproject.toml`.
+- Server-side improvements (update endpoint version number to 2).
+
 ## [1.1.6](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.1.6) - 2024-12-30
 
 - Added Tidy3D fabrication-aware inverse design (FAID) example notebook.
