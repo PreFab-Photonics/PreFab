@@ -9,15 +9,15 @@ from .device import Device
 
 def mean_squared_error(device_a: Device, device_b: Device) -> float:
     """
-    Calculate the mean squared error (MSE) between two non-binarized devices. A lower
-    value indicates more similarity.
+    Calculate the mean squared error (MSE) between two devices. A lower value indicates
+    more similarity.
 
     Parameters
     ----------
     device_a : Device
-        The first device (non-binarized).
+        The first device.
     device_b : Device
-        The second device (non-binarized).
+        The second device.
 
     Returns
     -------
