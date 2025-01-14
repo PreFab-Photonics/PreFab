@@ -6,8 +6,16 @@ build-backend = "hatchling.build"
 name = "prefab"
 version = "1.1.6"
 description = "Artificial nanofabrication of integrated photonic circuits using deep learning"
-authors = [{ name = "Dusan Gostimirovic", email = "dusan@prefabphotonics.com" }]
-keywords = ["photonics", "nanofabrication", "machine-learning"]
+authors = [{ name = "PreFab Photonics Inc.", email = "hi@prefabphotonics.com" }]
+keywords = [
+    "integrated-photonics",
+    "electronic-design-automation",
+    "nanofabrication",
+    "semiconductor-manufacturing",
+    "deep-learning",
+    "machine-learning",
+    "computer-vision",
+]
 readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
@@ -17,12 +25,13 @@ classifiers = [
 ]
 license = { file = "LICENSE" }
 dependencies = [
+    "autograd",
     "gdstk>=0.9.55",
     "matplotlib",
     "numpy",
     "opencv-python-headless",
     "pillow",
-    "pydantic",
+    "pydantic>=2.10",
     "requests",
     "scikit-image",
     "scipy",
