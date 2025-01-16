@@ -38,7 +38,7 @@ Before you can make PreFab requests, you will need to create an account. Sign up
 To link your PreFab account to the API, you will need to create an authentication token. You can do this by running the following command in your terminal. This will open a browser window where you can log in and generate a token.
 
 ```sh
-python3 -m prefab setup
+prefab setup
 ```
 
 ## Verify installation
