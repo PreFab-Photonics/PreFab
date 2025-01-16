@@ -50,9 +50,22 @@ class CallbackHandler(BaseHTTPRequestHandler):
                 self.send_response_only(200, "OK")
                 self.send_header("Content-type", "text/html")
                 self.end_headers()
-                self.wfile.write(
-                    b"Authentication successful, you can close this window."
-                )
+                redirect_html = b"""
+                    <html>
+                        <head>
+                            <meta http-equiv="refresh" content="0;url=https://www.prefabphotonics.com/token-success">
+                            <style>
+                                body {
+                                    background-color: #0A0A0A;
+                                    color: #ffffff;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                        </body>
+                    </html>
+                """
+                self.wfile.write(redirect_html)
                 threading.Thread(target=self.server.shutdown).start()
             else:
                 self.send_error(400, "Bad Request: Missing tokens in callback URL.")
