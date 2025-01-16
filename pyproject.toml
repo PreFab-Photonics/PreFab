@@ -43,3 +43,6 @@ dependencies = [
 Homepage = "https://prefabphotonics.com"
 Repository = "https://github.com/PreFab-Photonics/PreFab"
 Docs = "https://docs.prefabphotonics.com"
+
+[project.scripts]
+prefab = "prefab.__main__:main"
