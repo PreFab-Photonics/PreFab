@@ -413,22 +413,17 @@ class Device(BaseModel):
         """
         device_array = np.copy(self.device_array)
         buffer_thickness = self.buffer_spec.thickness
-        buffer_mode = self.buffer_spec.mode
 
-        crop_top = buffer_thickness["top"] if buffer_mode["top"] == "constant" else 0
-        crop_bottom = (
-            buffer_thickness["bottom"] if buffer_mode["bottom"] == "constant" else 0
-        )
-        crop_left = buffer_thickness["left"] if buffer_mode["left"] == "constant" else 0
-        crop_right = (
-            buffer_thickness["right"] if buffer_mode["right"] == "constant" else 0
-        )
+        crop_top = buffer_thickness["top"]
+        crop_bottom = buffer_thickness["bottom"]
+        crop_left = buffer_thickness["left"]
+        crop_right = buffer_thickness["right"]
 
         ndarray = device_array[
             crop_top : device_array.shape[0] - crop_bottom,
             crop_left : device_array.shape[1] - crop_right,
         ]
-        return np.squeeze(ndarray)
+        return ndarray
 
     def to_img(self, img_path: str = "prefab_device.png"):
         """
