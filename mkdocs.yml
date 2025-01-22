@@ -18,6 +18,7 @@ nav:
       - SEM generation: examples/4_SEM_generation.ipynb
       - Simulating a predicted device: examples/5_prediction_simulation.ipynb
       - Fabrication-aware inverse design: examples/6_fabrication-aware_inverse_design.ipynb
+      - Simulating sidewall angle: examples/7_sidewall_simulation.ipynb
   - Reference:
       - Compare: reference/compare.md
       - Device: reference/device.md
