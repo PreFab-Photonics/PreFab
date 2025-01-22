@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.9](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.1.9) - 2025-01-22
+
+- Fix cropping issue with `device.to_ndarray`.
+- Add example of sidewall angle simulation and correction to docs.
+
 ## [1.1.8](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.1.8) - 2025-01-16
 
 - Added `prefab` command to the `pyproject.toml` file so that `prefab` can be run from the command line (e.g., `prefab setup`).
