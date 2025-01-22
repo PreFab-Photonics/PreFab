@@ -1,0 +1,1501 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://docs.prefabphotonics.com/blog/2024/10/10/python-for-photonics-development/">
+      
+      
+        <link rel="prev" href="../../../09/23/prefab-v110/">
+      
+      
+      
+      <link rel="icon" href="../../../../../assets/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.50">
+    
+    
+      
+        <title>Python for Photonics Development - PreFab Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.a40c8224.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Geist:300,300i,400,400i,700,700i%7CGeist+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Geist";--md-code-font:"Geist Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="prefab" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#python-for-photonics-development" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+              <button class="md-banner__button md-icon" aria-label="Don't show this again">
+                
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+              </button>
+            
+            
+<span style="color: #b0b0b0;">For updates follow</span> <strong>PreFab Photonics</strong> <span
+    style="color: #b0b0b0;">on</span> <a rel="me"
+    href="https://www.linkedin.com/company/102847109/"><strong>LinkedIn</strong>
+</a>
+
+          </div>
+          
+            <script>var el=document.querySelector("[data-md-component=announce]");if(el){var content=el.querySelector(".md-typeset");__md_hash(content.innerHTML)===__md_get("__announce")&&(el.hidden=!0)}</script>
+          
+        </aside>
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="https://prefabphotonics.com" title="PreFab Docs" class="md-header__button md-logo" aria-label="PreFab Docs" data-md-component="logo">
+      
+  <img src="../../../../../assets/prefab_logo_box.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PreFab Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Python for Photonics Development
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/PreFab-Photonics/PreFab" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    PreFab-Photonics/PreFab
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+                
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" hidden>
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://prefabphotonics.com" title="PreFab Docs" class="md-nav__button md-logo" aria-label="PreFab Docs" data-md-component="logo">
+      
+  <img src="../../../../../assets/prefab_logo_box.svg" alt="logo">
+
+    </a>
+    PreFab Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/PreFab-Photonics/PreFab" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    PreFab-Photonics/PreFab
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../fab_aware_design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Fab-aware design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../models/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Model library
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../CHANGELOG/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Changelog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      <a href="../../../../" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Blog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Examples
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../examples/1_prediction/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Making a prediction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../examples/2_correction/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Making a correction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../examples/3_sidewall_angle/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Working with sidewall angles
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../examples/4_SEM_generation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Generating SEM-like images
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../examples/5_prediction_simulation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Simulating device predictions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../examples/6_fabrication-aware_inverse_design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Fabrication-aware inverse design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../examples/7_sidewall_simulation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Predicting, simulating, and correcting sidewall angle
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Reference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../reference/compare/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Compare
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../reference/device/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Device
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../reference/geometry/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Geometry
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../reference/models/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Models
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../reference/predict/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Predict
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../reference/read/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Read
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../reference/shapes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shapes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+                
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#essential-python-libraries-for-photonics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Essential Python Libraries for Photonics
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setting-up-your-integrated-development-environment-ide" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting up Your Integrated Development Environment (IDE)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Setting up Your Integrated Development Environment (IDE)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#essential-vs-code-extensions-for-python-development" class="md-nav__link">
+    <span class="md-ellipsis">
+      Essential VS Code Extensions for Python Development
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Essential VS Code Extensions for Python Development">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-to-install-extensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      How to Install Extensions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#useful-vs-code-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Useful VS Code Settings
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setting-up-your-python-virtual-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting Up Your Python Virtual Environment
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Setting Up Your Python Virtual Environment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setting-up-conda" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting Up Conda
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#selecting-the-conda-environment-in-vs-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      Selecting the Conda Environment in VS Code
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Selecting the Conda Environment in VS Code">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#choosing-the-python-interpreter" class="md-nav__link">
+    <span class="md-ellipsis">
+      Choosing the Python Interpreter
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choosing-the-jupyter-kernel" class="md-nav__link">
+    <span class="md-ellipsis">
+      Choosing the Jupyter Kernel
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#leveraging-cloud-and-remote-tools-for-computational-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Leveraging Cloud and Remote Tools for Computational Resources
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#terminal-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Terminal Tools
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ai-coding-assistants" class="md-nav__link">
+    <span class="md-ellipsis">
+      AI Coding Assistants
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Other Resources
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      What's Next
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+  <div class="md-content md-content--post" data-md-component="content">
+    <div class="md-sidebar md-sidebar--post" data-md-component="sidebar" data-md-type="navigation">
+      <div class="md-sidebar__scrollwrap">
+        <div class="md-sidebar__inner md-post">
+          <nav class="md-nav md-nav--primary">
+            <div class="md-post__back">
+              <div class="md-nav__title md-nav__container">
+                <a href="../../../../" class="md-nav__link">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+                  <span class="md-ellipsis">
+                    Back to index
+                  </span>
+                </a>
+              </div>
+            </div>
+            
+              <div class="md-post__authors md-typeset">
+                
+                  <div class="md-profile md-post__profile">
+                    <span class="md-author md-author--long">
+                      <img src="https://media.licdn.com/dms/image/v2/C4E03AQGWxb8cTGgvjg/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1516680366323?e=1741824000&v=beta&t=bDdtLURRzsoGP6PtFziaMMod36_ZSY0EEEY6ZB4QavU" alt="Dusan Gostimirovic">
+                    </span>
+                    <span class="md-profile__description">
+                      <strong>
+                        
+                          <a href="https://www.linkedin.com/in/dusangostimirovic/">Dusan Gostimirovic</a>
+                        
+                      </strong>
+                      <br>
+                      Founder
+                    </span>
+                  </div>
+                
+              </div>
+            
+            <ul class="md-post__meta md-nav__list">
+              <li class="md-nav__item md-nav__item--section">
+                <div class="md-post__title">
+                  <span class="md-ellipsis">
+                    Metadata
+                  </span>
+                </div>
+                <nav class="md-nav">
+                  <ul class="md-nav__list">
+                    <li class="md-nav__item">
+                      <div class="md-nav__link">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 19H5V8h14m-3-7v2H8V1H6v2H5c-1.11 0-2 .89-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-1V1m-1 11h-5v5h5z"/></svg>
+                        <time datetime="2024-10-10 00:00:00+00:00" class="md-ellipsis">October 10, 2024</time>
+                      </div>
+                    </li>
+                    
+                    
+                    
+                      
+                      <li class="md-nav__item">
+                        <div class="md-nav__link">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 20a8 8 0 0 0 8-8 8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8m0-18a10 10 0 0 1 10 10 10 10 0 0 1-10 10C6.47 22 2 17.5 2 12A10 10 0 0 1 12 2m.5 5v5.25l4.5 2.67-.75 1.23L11 13V7z"/></svg>
+                          <span class="md-ellipsis">
+                            
+                              13 min read
+                            
+                          </span>
+                        </div>
+                      </li>
+                    
+                  </ul>
+                </nav>
+              </li>
+            </ul>
+          </nav>
+          
+        </div>
+      </div>
+    </div>
+    <article class="md-content__inner md-typeset">
+      
+        
+
+  
+  
+
+
+<h1 id="python-for-photonics-development">Python for Photonics Development</h1>
+<p><a href="https://www.python.org/">Python</a> has become an indispensable tool in many technical fields, including ours. It gives researchers and engineers a versatile platform for simulating, modeling, and analyzing photonic systems, effectively streamlining the <strong>entire development workflow.</strong> With its extensive ecosystem of libraries and tools, Python enables efficient and innovative solutions in photonics that we think are worth exploring.</p>
+<p>In this guide, we'll walk you through setting up your Python development environment, introduce essential libraries, explore cloud and remote tools to leverage computational resources, share valuable settings for an enhanced coding experience, and provide additional tips to elevate your photonics projects using Python.</p>
+<!-- more -->
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>PreFab is developed using Python, and we leverage many Python packages to enhance our development process. This guide is a compilation of resources and insights that have been beneficial in <em>our</em> work. While it's not exhaustive, we hope it proves useful to you in your photonics development endeavors.</p>
+</div>
+<h2 id="essential-python-libraries-for-photonics">Essential Python Libraries for Photonics</h2>
+<p>The Python ecosystem offers a variety of powerful tools specifically designed for photonics design and development. Here are some of the most notable ones:</p>
+<ul>
+<li>
+<p><strong><a href="https://www.flexcompute.com/tidy3d/">Tidy3D</a></strong>: A commercial cloud-based FDTD solver for simulating electromagnetic fields in photonic structures, offering ultrahigh-speed simulations, an intuitive Python API, and <em>incredible</em> documentation and tutorials.</p>
+</li>
+<li>
+<p><strong><a href="https://meep.readthedocs.io/en/latest/">Meep</a></strong>: An open-source software package for simulating electromagnetic systems using FDTD, with extensive Python bindings for scripting and automation. Meep also has fantastic documentation and tutorials to help you learn not just how to use the software, but also fundamentals of photonics and electromagnetics.</p>
+</li>
+<li>
+<p><strong><a href="https://gdsfactory.github.io/gdsfactory/">gdsfactory</a></strong>: An industry-leading, open-source Python library for designing and automating photonic integrated circuits, facilitating layout generation, verification, and integration with simulation tools. If you are designing photonic integrated circuits with Python, this is a fantastic starting point.</p>
+</li>
+<li>
+<p><strong><a href="https://www.klayout.org/klayout-pypi/">KLayout</a>:</strong> KLayout is a versatile 2D viewer and editor for mask layouts in chip manufacturing. The KLayout Python module extends its functionality, allowing for scripting and automation within the KLayout system.</p>
+</li>
+<li>
+<p><strong><a href="https://heitzmann.github.io/gdstk/">gdstk</a></strong>: A Python library for creating and manipulating GDS files, supporting complex geometric operations essential for photonic design.</p>
+</li>
+<li>
+<p><strong><a href="https://github.com/joamatab/awesome_photonics">Awesome Photonics</a></strong>: A curated GitHub repository compiling a comprehensive list of photonics tools and resources, many of which are Python-based or compatible with a Python-based workflow. This repository is an excellent starting point to discover new libraries, frameworks, and tools in the photonics domain.</p>
+</li>
+</ul>
+<h2 id="setting-up-your-integrated-development-environment-ide">Setting up Your Integrated Development Environment (IDE)</h2>
+<p>Choosing the right Integrated Development Environment (IDE) is crucial for an efficient and productive workflow in photonics development. Here are three excellent options to consider:</p>
+<ul>
+<li>
+<p><strong><a href="https://code.visualstudio.com/">Visual Studio Code (VS Code)</a></strong>: Visual Studio Code is a free, open-source IDE developed by Microsoft. It's highly popular due to its versatility (much like Python) and extensive extension marketplace. VS Code offers powerful features like IntelliSense (smart code completion), debugging tools, Git integration, and customizable workspaces, making it an excellent choice for Python development.</p>
+</li>
+<li>
+<p><strong><a href="https://cursor.sh/">Cursor</a></strong>: Cursor is an enhanced version (fork) of VS Code, augmented with thoughtful AI tools that assist in code development. With integrated AI capabilities, Cursor can help you write, debug, and optimize your code more efficiently. It provides features like code autocompletion, intelligent code analysis, and automated code refactoring, making it a powerful tool for both beginners and experienced developers.</p>
+</li>
+<li>
+<p><strong><a href="https://zed.dev/">Zed</a></strong>: Zed is a new, ultra-fast IDE that focuses on performance and a responsive coding experience. While it is still under active development and may have limited functionality and operating system support, Zed aims to provide a sleek and efficient environment for developers. Its emphasis on speed and minimalism could make it a strong contender as it matures. We recommend keeping a close eye on this IDE as it evolves.</p>
+</li>
+</ul>
+<p>For the rest of this guide, we will use VS Code (and therefore Cursor).</p>
+<h3 id="essential-vs-code-extensions-for-python-development">Essential VS Code Extensions for Python Development</h3>
+<p>To further enhance your development experience in VS Code (or Cursor), add these essential extensions (see below for how to install them):</p>
+<ul>
+<li>
+<p><strong><a href="https://marketplace.visualstudio.com/items?itemName=ms-python.python">Python</a></strong>: The Python extension for VS Code provides rich support for the Python language, including features like IntelliSense, linting, debugging, code navigation, code formatting, and testing. It is maintained by Microsoft and is one of the most installed extensions for Python development.</p>
+</li>
+<li>
+<p><strong><a href="https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter">Jupyter</a></strong>: The Jupyter extension for VS Code allows you to work with Jupyter Notebooks directly within VS Code, offering an interactive environment for data analysis, visualization, and computational experimentation. We love Jupyter for rapidly prototyping and exploring new ideas, and this extension makes working with them in VS Code a pleasure.</p>
+</li>
+<li>
+<p><strong><a href="https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff">Ruff</a></strong>: The Ruff extension for VS Code is a fast, highly configurable linter (code quality check) and formatter for Python, designed to help you maintain code quality and adhere to coding standards. It is so fast that it can run in the background while you code, and it will notify you of any issues in your code as you save your file (which we will configure later in this guide). We also love Ruff because it is opinionated and enforces a consistent style guide, which can help you focus on what really matters and not waste precious development time on style choices.</p>
+</li>
+<li>
+<p><strong><a href="https://marketplace.visualstudio.com/items?itemName=GitHub.github-vscode-theme">GitHub Theme</a></strong>: The GitHub Theme (Dark) for VS Code is a visually appealing theme that enhances the appearance of your editor, making it easier on the eyes (especially in the evening) and more enjoyable to work with. Even if you don't like this theme, we think it's a good idea to browse the marketplace and find a theme that you do like, making for a more pleasant coding experience under long hours of work.</p>
+</li>
+</ul>
+<h4 id="how-to-install-extensions">How to Install Extensions</h4>
+<ol>
+<li>
+<p><strong>Open VS Code</strong>: Launch Visual Studio Code on your computer.</p>
+</li>
+<li>
+<p><strong>Access the Extensions View</strong>: Click on the Extensions icon in the Activity Bar on the side of the window or press <code>Ctrl+Shift+X</code> (<code>Cmd+Shift+X</code> on macOS).</p>
+</li>
+<li>
+<p><strong>Search for Extensions</strong>: In the Extensions view, type the name of the extension you want to install (e.g., "Python", "Jupyter", "Ruff") in the search bar.</p>
+</li>
+<li>
+<p><strong>Install the Extension</strong>: Click the <code>Install</code> button next to the extension in the search results.</p>
+</li>
+<li>
+<p><strong>Reload if Necessary</strong>: Some extensions may require you to reload VS Code to activate them. If prompted, click the <code>Reload</code> button.</p>
+</li>
+</ol>
+<h3 id="useful-vs-code-settings">Useful VS Code Settings</h3>
+<p>Optimizing your VS Code settings can enhance your coding efficiency and code quality. Below are some recommended settings tailored for Python development:</p>
+<p><strong>Enable Format on Save for Python Files and Notebooks</strong>: Automatically format your code every time you save a file, both in Python scripts and Jupyter Notebooks.</p>
+<ul>
+<li>Go to <code>File</code> &gt; <code>Preferences</code> &gt; <code>Settings</code> (or press <code>Ctrl+,</code> on Windows/Linux or <code>Cmd+,</code> on macOS).</li>
+<li>Search for <code>Format On Save</code>.</li>
+<li>Check the box for <strong><code>Editor: Format On Save</code></strong>.</li>
+<li>Search for <code>Notebook: Format On Save</code>.</li>
+<li>Check the box for <strong><code>Notebook: Format On Save</code></strong>.</li>
+</ul>
+<p><strong>Set Ruff as the Default Formatter for Python and Notebooks</strong>:</p>
+<ul>
+<li>Open your settings and search for <code>Editor: Default Formatter</code>.</li>
+<li>Select <strong><code>Ruff</code></strong> from the dropdown menu.</li>
+<li>Search for <code>Notebook: Default Formatter</code>.</li>
+<li>Set it to use <strong><code>Ruff</code></strong> for formatting code cells in Jupyter Notebooks.</li>
+</ul>
+<div class="admonition success">
+<p class="admonition-title">Success</p>
+<p>Now, with just a click of the save button, Ruff will automatically enhance the appearance and readability of your code.</p>
+</div>
+<p><strong>Configure Jupyter Startup Commands</strong>:</p>
+<ul>
+<li>These commands ensure that your notebook automatically reloads modules before executing code, which is helpful during development. This one has saved us many headaches in the early days of working with Python.</li>
+<li>Add the following setting to your <code>settings.json</code> file:</li>
+</ul>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">&quot;jupyter.runStartupCommands&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="s2">&quot;%load_ext autoreload&quot;</span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="s2">&quot;%autoreload 2&quot;</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">],</span>
+</span></code></pre></div>
+<p><strong>Accessing the <code>settings.json</code> File</strong>:</p>
+<ul>
+<li>To open the <code>settings.json</code> file in VS Code:</li>
+<li>Go to <code>File</code> &gt; <code>Preferences</code> &gt; <code>Settings</code> (or press <code>Ctrl+,</code> on Windows/Linux or <code>Cmd+,</code> on macOS).</li>
+<li>In the Settings page, click on the <strong>Open Settings (JSON)</strong> icon (a document with a small arrow) in the upper-right corner. This will open the <code>settings.json</code> file where you can edit your settings directly.</li>
+<li>Alternatively, you can use the Command Palette:<ul>
+<li>Press <code>Ctrl+Shift+P</code> (<code>Cmd+Shift+P</code> on macOS) to open the Command Palette.</li>
+<li>Type <code>**Open User Settings (JSON)**</code> and select it from the list.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Example <code>settings.json</code> Entries</strong>:</p>
+<p>Replace or update your <code>settings.json</code> with the following entries:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="nt">&quot;editor&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">        </span><span class="nt">&quot;formatOnSave&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">        </span><span class="nt">&quot;codeActionsOnSave&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">            </span><span class="nt">&quot;source.fixAll&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;explicit&quot;</span><span class="p">,</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">            </span><span class="nt">&quot;source.organizeImports&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;explicit&quot;</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">        </span><span class="p">},</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">        </span><span class="nt">&quot;defaultFormatter&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;charliermarsh.ruff&quot;</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="p">},</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="nt">&quot;notebook&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">        </span><span class="nt">&quot;formatOnSave&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">            </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">        </span><span class="p">},</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">        </span><span class="nt">&quot;codeActionsOnSave&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">            </span><span class="nt">&quot;notebook.source.fixAll&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">            </span><span class="nt">&quot;notebook.source.organizeImports&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">        </span><span class="p">},</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">        </span><span class="nt">&quot;defaultFormatter&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;charliermarsh.ruff&quot;</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">    </span><span class="p">},</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">    </span><span class="nt">&quot;jupyter.runStartupCommands&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">        </span><span class="s2">&quot;%load_ext autoreload&quot;</span><span class="p">,</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="w">        </span><span class="s2">&quot;%autoreload 2&quot;</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="w">    </span><span class="p">],</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="p">}</span>
+</span></code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">Thought</p>
+<p>Customizing your IDE to suit your workflow—including setting up keyboard shortcuts that work best for you—can significantly improve your productivity and make your coding experience more enjoyable.</p>
+</div>
+<h2 id="setting-up-your-python-virtual-environment">Setting Up Your Python Virtual Environment</h2>
+<p>Creating a Python virtual environment is essential for managing dependencies and ensuring a clean development setup. It allows you to isolate your project's packages and Python version from other projects and the system-wide Python installation.</p>
+<blockquote>
+<p>We think it's a good idea to use a virtual environment manager to keep your global Python installation clean and to avoid conflicts between different projects.</p>
+</blockquote>
+<p>Here are three popular options for managing virtual environments:</p>
+<ul>
+<li>
+<p><strong><a href="https://docs.conda.io/en/latest/">Conda</a></strong>: Conda is a cross-platform package and environment manager that can handle both Python and non-Python dependencies, making it ideal for complex projects in scientific computing and data science. It supports creating isolated environments and includes its own package repositories.</p>
+</li>
+<li>
+<p><strong><a href="https://docs.python.org/3/library/venv.html">venv</a></strong>: The venv module is the built-in tool for creating virtual environments in Python 3. It's simple to use and comes pre-installed with Python, making it a convenient choice for managing environments with different packages or Python versions.</p>
+</li>
+<li>
+<p><strong><a href="https://astral.sh/uv/">uv</a></strong>: uv is a high-performance virtual environment manager created by Astral (the creators of Ruff). It offers rapid environment creation and management, aiming to be a minimalistic and efficient alternative to existing tools. Although still in its early stages, uv is designed to push the boundaries of performance and development ergonomics. We get inspired just by using it, and we think you will too.</p>
+</li>
+</ul>
+<p>For the rest of this tutorial, we will use Conda due to its popularity and robust feature set.</p>
+<h3 id="setting-up-conda">Setting Up Conda</h3>
+<p>To set up a Python virtual environment using Conda, follow these steps:</p>
+<p><strong>1. Install Conda</strong></p>
+<p>If you don't have Conda installed, you can install either Anaconda or Miniconda. Miniconda is a minimal installer for Conda that includes only Conda and its dependencies.</p>
+<ul>
+<li>
+<p><strong>Download Miniconda</strong> from the <a href="https://docs.conda.io/en/latest/miniconda.html">official website</a> suitable for your operating system.</p>
+</li>
+<li>
+<p><strong>Install Miniconda</strong> by running the installer and following the on-screen instructions.</p>
+</li>
+</ul>
+<p><strong>2. Create a New Environment</strong></p>
+<p>Open the integrated terminal in VS Code by going to <code>View</code> &gt; <code>Terminal</code> (or pressing <code>Ctrl+`</code> on Windows/Linux or <code>Cmd+`</code> on macOS). Use the following command to create a new Conda environment. Replace <code>myenv</code> with your desired environment name and <code>3.11</code> with the Python version you need.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>myenv<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.11
+</span></code></pre></div>
+<p><strong>3. Activate the Environment</strong></p>
+<p>Activate your new environment with the following command:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>conda<span class="w"> </span>activate<span class="w"> </span>myenv
+</span></code></pre></div>
+<p><strong>4. Install Necessary Packages</strong></p>
+<p>You can now install any packages you need using Conda or <code>pip</code>. For example, to install NumPy and SciPy, use:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>conda<span class="w"> </span>install<span class="w"> </span>numpy<span class="w"> </span>scipy
+</span></code></pre></div>
+<p>Or, to install a package via <code>pip</code>:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pip<span class="w"> </span>install<span class="w"> </span>prefab
+</span></code></pre></div>
+<h3 id="selecting-the-conda-environment-in-vs-code">Selecting the Conda Environment in VS Code</h3>
+<p>After setting up your Conda environment, you'll want to ensure that VS Code uses this environment for running and debugging your Python code and Jupyter Notebooks.</p>
+<h4 id="choosing-the-python-interpreter">Choosing the Python Interpreter</h4>
+<p><strong>1. Open a Python File</strong>:</p>
+<ul>
+<li>Open any Python file in VS Code or create a new one with the <code>.py</code> extension.</li>
+</ul>
+<p><strong>2. Select the Interpreter</strong>:</p>
+<ul>
+<li>
+<p>Click on the Python version displayed in the bottom-right corner of the VS Code status bar. It might say something like <code>Python 3.x.x</code>.</p>
+</li>
+<li>
+<p>A list of available Python interpreters will appear. Look for your Conda environment in the list. It should be listed with the name you gave it (e.g., <code>myenv</code>) and the path to the Python executable.</p>
+</li>
+<li>
+<p>Select your Conda environment from the list.</p>
+</li>
+</ul>
+<p><strong>3. Verify the Interpreter</strong>:</p>
+<ul>
+<li>Once selected, the status bar should update to reflect the interpreter from your Conda environment.</li>
+</ul>
+<h4 id="choosing-the-jupyter-kernel">Choosing the Jupyter Kernel</h4>
+<p>When working with Jupyter Notebooks in VS Code, you need to select the appropriate kernel associated with your Conda environment.</p>
+<p><strong>1. Open a Jupyter Notebook</strong>:</p>
+<ul>
+<li>Open an existing <code>.ipynb</code> file or create a new one in VS Code.</li>
+</ul>
+<p><strong>2. Select the Kernel</strong>:</p>
+<ul>
+<li>
+<p>At the top-right corner of the notebook editor, you will see the kernel name (e.g., <code>Python 3</code>). Click on it to change the kernel.</p>
+</li>
+<li>
+<p>In the kernel selection dialog, you should see a list of available kernels. Your Conda environment should be listed, often with the name of the environment and the Python version.</p>
+</li>
+<li>
+<p>Select the kernel corresponding to your Conda environment.</p>
+</li>
+</ul>
+<p><strong>3. Verify the Kernel</strong>:</p>
+<ul>
+<li>The kernel name should update to reflect the selected Conda environment.</li>
+</ul>
+<p><strong>Troubleshooting</strong>:</p>
+<p>If your Conda environment's kernel doesn't appear in the list, you may need to install the <code>ipykernel</code> package in your environment:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>conda<span class="w"> </span>activate<span class="w"> </span>myenv<span class="w">  </span><span class="c1"># or the name of your environment</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>conda<span class="w"> </span>install<span class="w"> </span>ipykernel
+</span></code></pre></div>
+<p>Alternatively, you can register the environment's kernel manually:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python<span class="w"> </span>-m<span class="w"> </span>ipykernel<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>--name<span class="o">=</span>myenv
+</span></code></pre></div>
+<p>After installing the kernel, restart VS Code, and it should recognize the new kernel associated with your Conda environment.</p>
+<p>By selecting the correct Python interpreter and Jupyter kernel, you ensure that your code runs in the intended environment, using the packages and dependencies you've installed.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>And that's it! The rest of this guide will focus on additional tools and resources that can help you take your Python-based photonics development to the next level.</p>
+</div>
+<h2 id="leveraging-cloud-and-remote-tools-for-computational-resources">Leveraging Cloud and Remote Tools for Computational Resources</h2>
+<p>Photonics simulations and computations can be resource-intensive, often requiring significant computational power and specialized hardware. Leveraging cloud and remote tools allows you to access powerful computational resources without the need for expensive local hardware. Here are some platforms and tools that can help you take advantage of cloud computing:</p>
+<ul>
+<li>
+<p><a href="https://colab.research.google.com/">Google Colab</a> is a free cloud service (with some paid options) provided by Google that enables you to write and execute Python code through a web browser. It offers free access to GPUs and TPUs, allowing you to accelerate your simulations and computations using powerful hardware.</p>
+</li>
+<li>
+<p><a href="https://github.com/features/codespaces">GitHub Codespaces</a> provides a full-fledged cloud-based development environment directly within GitHub. It allows you to develop in the cloud using a cloud-hosted VS Code environment that's configured for your project.</p>
+</li>
+<li>
+<p><a href="https://modal.com/">Modal</a> is a platform that allows you to run your code in the cloud with minimal setup. It provides serverless computing, enabling you to run functions and scripts without managing servers. We love Modal for how easy it is to leverage powerful compute without having to leave the local Python environment.</p>
+</li>
+<li>
+<p><a href="https://lambdalabs.com/">Lambda Labs</a> provides cloud GPU workstations and servers for deep learning and computational tasks. They offer powerful NVIDIA GPUs (though sometimes limited based on usage) and pre-configured environments with popular frameworks, saving setup time.</p>
+</li>
+<li>
+<p><a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh">SSH VS Code Extension</a> allows you to develop remotely by connecting to remote servers in your organization or cloud instances (e.g., AWS, GCP, Lambda Labs) directly from your local VS Code editor.</p>
+</li>
+</ul>
+<h2 id="terminal-tools">Terminal Tools</h2>
+<p>In addition to a good IDE, having the right terminal tools can offer nice benefits. Here are some useful command-line tools you may want to install:</p>
+<ul>
+<li>
+<p><a href="https://git-scm.com/">Git</a> is a distributed version control system that allows you to track changes in your code, collaborate with others, and manage different versions of your project. It's an indispensable tool for any developer, and we think it is an underrated tool for photonics development too. Although VS Code has a built-in Git client, using Git in the terminal can be more flexible. We recommend <a href="https://www.youtube.com/watch?v=K6Q31YkorUE">this video</a> for a quick introduction on using Git.</p>
+</li>
+<li>
+<p><a href="https://github.com/htop-dev/htop">htop</a> is an interactive process viewer for Linux and macOS systems. It provides a real-time view of system processes, CPU, and memory usage, making it especially easy to monitor remote compute instances.</p>
+</li>
+<li>
+<p><a href="https://github.com/Syllo/nvtop">nvtop</a> is like <code>htop</code> for NVIDIA GPUs. There are also many other <code>top</code>-like tools out there, so pick the one that best fits your system and workflow.</p>
+</li>
+<li>
+<p><a href="https://ohmyz.sh/">Oh My Zsh</a> is a popular shell framework that enhances the capabilities of the Zsh shell (which we also recommend using). It provides a rich set of plugins that make using the terminal much more powerful. If you find yourself using the terminal even just a little bit, this is a great tool to have.</p>
+</li>
+</ul>
+<h2 id="ai-coding-assistants">AI Coding Assistants</h2>
+<p>AI-powered coding assistants have become invaluable tools for developers, whether you're just starting with Python or exploring new concepts in any field. These assistants offer real-time help, explanations, and code suggestions, making them excellent learning aids and productivity boosters.</p>
+<ul>
+<li>
+<p><strong><a href="https://chat.openai.com/">ChatGPT</a></strong>: Developed by OpenAI, ChatGPT is <em>the</em> widely recognized (large) language model. They make improvements to their models and user interface regularly, so we recommend staying updated with its latest features to ensure you're utilizing the most advanced tools available.</p>
+</li>
+<li>
+<p><strong><a href="https://www.anthropic.com/">Claude</a></strong>: Claude, developed by Anthropic, is a competitor to ChatGPT. While benchmarking language models can be challenging (many believe Claude offers superior capabilities at least in some contexts), using multiple models from different providers (there are many others!) can help you obtain the best possible answers.</p>
+</li>
+<li>
+<p><strong><a href="https://cursor.sh/">Cursor</a></strong>: As previously mentioned, Cursor is an AI-enhanced IDE based on VS Code. One of its unique features is the ability to choose from multiple language models, helping you get the most accurate and helpful responses at any given time.</p>
+</li>
+<li>
+<p><strong><a href="https://github.com/features/copilot">GitHub Copilot</a></strong>: GitHub Copilot integrates seamlessly into VS Code, providing AI-assisted code completion and suggestions. While we believe Cursor offers superior features as an AI coding assistant, Copilot is a strong option if you prefer VS Code as your IDE.</p>
+</li>
+</ul>
+<p>There has been considerable discussion surrounding AI assistants, with both positive and negative viewpoints. However, when used pragmatically, these tools can <a href="https://github.blog/news-insights/research/research-quantifying-github-copilots-impact-on-developer-productivity-and-happiness/">enhance productivity</a>. If you're not already using these tools, we strongly encourage you to consider doing so.</p>
+<h2 id="other-resources">Other Resources</h2>
+<p>While AI coding assistants are a great starting point when you need help with code, there are numerous online communities and resources available to assist with more specialized problems that other developers may have already solved. Engaging with these communities can provide valuable insights and support.</p>
+<ul>
+<li>
+<p><strong><a href="https://stackoverflow.com/">Stack Overflow</a></strong>: A premier platform for getting help with specific coding issues. You can ask questions, share knowledge, and learn from the experiences of other developers.</p>
+</li>
+<li>
+<p><strong><a href="https://github.com/">GitHub</a></strong>: Many photonics projects and libraries are hosted on GitHub. By engaging with repositories' issues and discussions, you can get direct support from developers and other users. Contributing to open-source projects or raising issues can also enhance your understanding and help improve the tools you use.</p>
+</li>
+<li>
+<p><strong>"Think Python: How to Think Like a Computer Scientist" by Allen B. Downey</strong>: An excellent introduction to Python programming, focusing on developing a computational thinking mindset. Python is an evolving language, so older books might not cover everything you need. But this one is so elegantly organized and written that it's still a great resource.</p>
+</li>
+<li>
+<p><strong>"Effective Computation in Physics: Field Guide to Research with Python" by Anthony Scopatz and Kathryn D. Huff</strong>: This guidebook covers Python in the context of scientific computing and physics research, making it particularly useful for photonics developers.</p>
+</li>
+<li>
+<p><strong>"Talk Python to Me"</strong>: A podcast that explores various topics in the Python ecosystem through interviews with experts and contributors. There is more to a language than just the syntax and libraries, and this podcast offers a great perspective on the language from the people who help shape it.</p>
+</li>
+</ul>
+<h2 id="whats-next">What's Next</h2>
+<p>To further advance your photonics development journey with Python:</p>
+<ol>
+<li>
+<p><strong>Explore Photonics Simulations</strong>: Experiment with examples from <a href="https://meep.readthedocs.io/en/latest/">Meep</a> and <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/">Tidy3D</a> documentation to deepen your understanding of photonic simulations and computational electromagnetics.</p>
+</li>
+<li>
+<p><strong>Contribute to Open-Source Projects</strong>: Get involved with projects like <a href="https://github.com/gdsfactory/gdsfactory">gdsfactory</a> and <a href="https://github.com/lukasc-ubc/SiEPIC-Tools">SiEPIC</a>. Contributing allows you to collaborate with others, improve existing tools, and engage with the photonics community.</p>
+</li>
+<li>
+<p><strong>Develop Your Own Tools!</strong>: We can't wait to see what you build.</p>
+</li>
+</ol>
+<p>And of course, you can run our <a href="../../../../../examples/1_prediction/">notebook examples</a> on using virtual nanofabrication models to add fabrication-awareness to your photonics simulations and designs.</p>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+  
+
+
+
+      
+    </article>
+  </div>
+
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+        
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../../../09/23/prefab-v110/" class="md-footer__link md-footer__link--prev" aria-label="Previous: PreFab v1.1.0">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                PreFab v1.1.0
+              </div>
+            </div>
+          </a>
+        
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025 PreFab Photonics
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/PreFab-Photonics/PreFab" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.linkedin.com/company/102847109/" target="_blank" rel="noopener" title="www.linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3M135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5m282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/prefab/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 404c11.1 0 20.1 9.1 20.1 20.3 0 11.3-9 20.4-20.1 20.4-11 0-20.1-9.2-20.1-20.4.1-11.3 9.1-20.3 20.1-20.3M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.7-142.6c-11.1 0-20.1-9.1-20.1-20.3.1-11.3 9-20.4 20.1-20.4 11 0 20.1 9.2 20.1 20.4s-9 20.3-20.1 20.3"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../../../..", "features": ["announce.dismiss", "navigation.instant", "navigation.instant.progress", "navigation.sections", "navigation.footer", "content.code.copy"], "search": "../../../../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../../../assets/javascripts/bundle.60a45f97.min.js"></script>
+      
+    
+  </body>
+</html>
