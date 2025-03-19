@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.0](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.2.0) - 2025-03-19
+
+- Added `Device.segment` method to segment an SEM image into a binary mask. Some more testing to be done.
+- Added `predict.predict_gdstk` to predict directly on a `gdstk.Cell`. This is useful for predicting very large devices that won't fit into memory.
+
 ## [1.1.9](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.1.9) - 2025-01-22
 
 - Fix cropping issue with `device.to_ndarray`.
