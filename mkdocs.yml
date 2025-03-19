@@ -102,9 +102,8 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          rendering:
-            show_source: true
           options:
+            show_source: true
             docstring_style: numpy
             show_docstring_examples: true
   - mkdocs-jupyter:
