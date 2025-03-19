@@ -54,7 +54,7 @@ Before you can make PreFab requests, you will need to [create an account](https:
 To link your account, you will need an token. You can do this by running the following command in your terminal. This will open a browser window where you can log in and authenticate your token.
 
 ```sh
-python3 -m prefab setup
+prefab setup
 ```
 
 ### Guides
@@ -71,4 +71,4 @@ PreFab models are hosted on a [serverless cloud platform](https://modal.com/). P
 
 ## License
 
-This project is licensed under the LGPL-2.1 license. © 2024 PreFab Photonics.
+This project is licensed under the LGPL-2.1 license. © 2025 PreFab Photonics.
