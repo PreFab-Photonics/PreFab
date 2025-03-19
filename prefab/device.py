@@ -397,6 +397,54 @@ class Device(BaseModel):
         semulated_array += np.random.normal(0, 0.03, semulated_array.shape)
         return self.model_copy(update={"device_array": semulated_array})
 
+    def segment(
+        self,
+        model: Model,
+        gpu: bool = False,
+    ) -> "Device":
+        """
+        Segment a scanning electron microscope (SEM) image into a binary mask.
+
+        This method applies a specified machine learning model to transform a grayscale
+        SEM image into a binary mask, where 1 represents the device structure and 0
+        represents the background. This is useful for extracting the device geometry
+        from experimental SEM images for analysis or comparison with design intent.
+
+        Parameters
+        ----------
+        model : Model
+            The model to use for segmentation, representing a specific fabrication
+            process and dataset. This model encapsulates details about the fabrication
+            foundry, process, material, technology, thickness, and sidewall presence, as
+            defined in `models.py`. Each model is associated with a version and dataset
+            that detail its creation and the data it was trained on, ensuring the
+            segmentation is tailored to specific fabrication parameters.
+        gpu : bool
+            If True, the prediction will be performed on a GPU. Defaults to False.
+            Note: The GPU option has more overhead and will take longer for small
+            devices, but will be faster for larger devices.
+
+        Returns
+        -------
+        Device
+            A new instance of the Device class with its geometry transformed into a
+            binary mask.
+
+        Raises
+        ------
+        RuntimeError
+            If the prediction service returns an error or if the response from the
+            service cannot be processed correctly.
+        """
+        segmented_array = predict_array(
+            device_array=self.normalize().device_array,
+            model=model,
+            model_type="b",
+            binarize=False,
+            gpu=gpu,
+        )
+        return self.model_copy(update={"device_array": segmented_array})
+
     def to_ndarray(self) -> np.ndarray:
         """
         Converts the device geometry to an ndarray.
@@ -520,7 +568,7 @@ class Device(BaseModel):
         gdstk.Cell
             The GDSTK cell object representing the device geometry.
         """
-        print(f"Creating cell '{cell_name}'...")
+        # print(f"Creating cell '{cell_name}'...")
         gdstk_cell = self.flatten()._device_to_gdstk(
             cell_name=cell_name,
             gds_layer=gds_layer,
