@@ -133,6 +133,7 @@ def binarize_monte_carlo(
     """
     device_array = np.squeeze(device_array)
     base_threshold = np.random.normal(loc=0.5, scale=0.1)
+    base_threshold = np.clip(base_threshold, 0.2, 0.8)
     threshold_noise = np.random.normal(
         loc=0, scale=noise_magnitude, size=device_array.shape
     )
