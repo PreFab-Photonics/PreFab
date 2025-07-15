@@ -376,7 +376,12 @@ def _predict_array_with_grad(
         The predicted output array and gradient array.
     """
     headers = _prepare_headers()
-    predict_data = _prepare_predict_data(device_array, model, "p", False)
+    predict_data = {
+        "device_array": _encode_array(np.squeeze(device_array)),
+        "model": model.to_json(),
+        "model_type": "p",
+        "binary": False,
+    }
     endpoint_url = f"{BASE_ENDPOINT_URL}-with-grad-v{ENDPOINT_VERSION}.modal.run"
 
     response = requests.post(
@@ -491,14 +496,4 @@ def _prepare_headers():
     return {
         "Authorization": f"Bearer {access_token}",
         "X-Refresh-Token": refresh_token,
-    }
-
-
-def _prepare_predict_data(device_array, model, model_type, binarize):
-    """Prepare the data payload for the prediction request."""
-    return {
-        "device_array": _encode_array(np.squeeze(device_array)),
-        "model": model.to_json(),
-        "model_type": model_type,
-        "binary": binarize,
     }
