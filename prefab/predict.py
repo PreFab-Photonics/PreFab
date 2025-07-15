@@ -12,13 +12,12 @@ import toml
 from autograd import primitive
 from autograd.extend import defvjp
 from PIL import Image
-from tqdm import tqdm
 
 from .geometry import binarize_hard
 from .models import Model
 
 BASE_ENDPOINT_URL = "https://prefab-photonics--predict"
-ENDPOINT_VERSION = "2"
+ENDPOINT_VERSION = "3"
 
 
 def _predict_poly(
@@ -28,7 +27,7 @@ def _predict_poly(
     eta: float = 0.5,
 ) -> list:
     """
-    Predict the nanofabrication outcome for a list of polygons.
+    Predict the nanofabrication outcome for a geometry (list of polygons).
 
     This function sends polygon data to the server, which uses a specified machine
     learning model to predict the outcome of the nanofabrication process.
@@ -194,14 +193,13 @@ def predict_array(
     model: Model,
     model_type: str,
     binarize: bool,
-    gpu: bool = False,
 ) -> np.ndarray:
     """
     Predict the nanofabrication outcome of a device array using a specified model.
 
     This function sends the device array to a serverless prediction service, which uses
     a specified machine learning model to predict the outcome of the nanofabrication
-    process. The prediction can be performed on a GPU if specified.
+    process.
 
     Parameters
     ----------
@@ -222,43 +220,61 @@ def predict_array(
         If True, the predicted device geometry will be binarized using a threshold
         method. This is useful for converting probabilistic predictions into binary
         geometries.
-    gpu : bool
-        If True, the prediction will be performed on a GPU. Defaults to False. Note: The
-        GPU option has more startup overhead and will take longer for small devices, but
-        will be faster for larger devices.
 
     Returns
     -------
     np.ndarray
-        The predicted output array.
+        The predicted output array. For single-channel predictions, returns shape
+        (h, w, 1). For multi-channel predictions, returns shape (h, w, n) where n is the
+        number of channels.
 
     Raises
     ------
     RuntimeError
         If the request to the prediction service fails.
+    ValueError
+        If the server returns an error or invalid response.
     """
+    endpoint_url = f"{BASE_ENDPOINT_URL}-v{ENDPOINT_VERSION}.modal.run"
+    predict_data = {
+        "device_array": _encode_array(np.squeeze(device_array)),
+        "model": model.to_json(),
+        "model_type": model_type,
+    }
     headers = _prepare_headers()
-    predict_data = _prepare_predict_data(device_array, model, model_type, binarize)
-    endpoint_url = (
-        f"{BASE_ENDPOINT_URL}-gpu-v{ENDPOINT_VERSION}.modal.run"
-        if gpu
-        else f"{BASE_ENDPOINT_URL}-v{ENDPOINT_VERSION}.modal.run"
-    )
 
     try:
-        with requests.post(
-            endpoint_url,
-            data=json.dumps(predict_data),
-            headers=headers,
-            stream=True,
-        ) as response:
-            response.raise_for_status()
-            result = _process_response(response, model_type, binarize)
-            if result is None:
-                raise RuntimeError("No prediction result received.")
-            return result
-    except requests.RequestException as e:
+        response = requests.post(
+            url=endpoint_url, data=json.dumps(predict_data), headers=headers
+        )
+        response.raise_for_status()
+
+        if not response.content:
+            raise ValueError("Empty response received from server")
+
+        response_data = response.json()
+
+        if "error" in response_data:
+            raise ValueError(f"Prediction error: {response_data['error']}")
+
+        results = response_data["results"]
+        result_arrays = [
+            _decode_array(results[key])
+            for key in sorted(results.keys())
+            if key.startswith("result")
+        ]
+
+        prediction_array = np.stack(result_arrays, axis=-1)
+
+        if binarize:
+            prediction_array = binarize_hard(prediction_array)
+
+        return prediction_array
+
+    except requests.exceptions.RequestException as e:
         raise RuntimeError(f"Request failed: {e}") from e
+    except json.JSONDecodeError as e:
+        raise ValueError(f"JSON decode error: {e}") from e
 
 
 def _predict_array_with_grad(
@@ -415,92 +431,3 @@ def _prepare_predict_data(device_array, model, model_type, binarize):
         "model_type": model_type,
         "binary": binarize,
     }
-
-
-def _process_response(response, model_type, binarize):
-    """Process the streaming response from the prediction request."""
-    event_type = None
-    model_descriptions = {
-        "p": "Prediction",
-        "c": "Correction",
-        "s": "SEMulate",
-    }
-    progress_bar = tqdm(
-        total=100,
-        desc=model_descriptions.get(model_type, "Processing"),
-        unit="%",
-        colour="green",
-        bar_format="{l_bar}{bar:30}{r_bar}{bar:-10b}",
-    )
-
-    for line in response.iter_lines():
-        if line:
-            decoded_line = line.decode("utf-8").strip()
-            if decoded_line.startswith("event:"):
-                event_type = decoded_line.split(":", 1)[1].strip()
-            elif decoded_line.startswith("data:"):
-                data_content = _parse_data_line(decoded_line)
-                result = _handle_event(event_type, data_content, progress_bar, binarize)
-                if result is not None:
-                    progress_bar.close()
-                    return result
-    progress_bar.close()
-
-
-def _parse_data_line(decoded_line):
-    """Parse a data line from the response stream."""
-    data_line = decoded_line.split(":", 1)[1].strip()
-    try:
-        return json.loads(data_line)
-    except json.JSONDecodeError:
-        raise ValueError(f"Failed to decode JSON: {data_line}") from None
-
-
-def _handle_event(event_type, data_content, progress_bar, binarize):
-    """Handle different types of events received from the server."""
-    if event_type == "progress":
-        _update_progress(progress_bar, data_content)
-    elif event_type == "result":
-        return _process_result(data_content, binarize)
-    elif event_type == "end":
-        print("Stream ended.")
-    elif event_type == "auth":
-        _update_tokens(data_content.get("auth", {}))
-    elif event_type == "error":
-        raise ValueError(f"{data_content['error']}")
-
-
-def _update_progress(progress_bar, data_content):
-    """Update the progress bar based on the progress event."""
-    progress = round(100 * data_content.get("progress", 0))
-    progress_bar.update(progress - progress_bar.n)
-
-
-def _process_result(data_content, binarize):
-    """Process the result event and return the prediction."""
-    results = [
-        _decode_array(data_content[key])
-        for key in sorted(data_content.keys())
-        if key.startswith("result")
-    ]
-    if results:
-        prediction = np.stack(results, axis=-1)
-        if binarize:
-            prediction = binarize_hard(prediction)
-        return prediction
-
-
-def _update_tokens(auth_data):
-    """Update tokens if new tokens are provided in the auth event."""
-    new_access_token = auth_data.get("new_access_token")
-    new_refresh_token = auth_data.get("new_refresh_token")
-    if new_access_token and new_refresh_token:
-        prefab_file_path = os.path.expanduser("~/.prefab.toml")
-        with open(prefab_file_path, "w", encoding="utf-8") as toml_file:
-            toml.dump(
-                {
-                    "access_token": new_access_token,
-                    "refresh_token": new_refresh_token,
-                },
-                toml_file,
-            )
