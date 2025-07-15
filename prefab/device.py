@@ -242,7 +242,6 @@ class Device(BaseModel):
         self,
         model: Model,
         binarize: bool = False,
-        gpu: bool = False,
     ) -> "Device":
         """
         Predict the nanofabrication outcome of the device using a specified model.
@@ -264,10 +263,6 @@ class Device(BaseModel):
             If True, the predicted device geometry will be binarized using a threshold
             method. This is useful for converting probabilistic predictions into binary
             geometries. Defaults to False.
-        gpu : bool
-            If True, the prediction will be performed on a GPU. Defaults to False.
-            Note: The GPU option has more overhead and will take longer for small
-            devices, but will be faster for larger devices.
 
         Returns
         -------
@@ -285,7 +280,6 @@ class Device(BaseModel):
             model=model,
             model_type="p",
             binarize=binarize,
-            gpu=gpu,
         )
         return self.model_copy(update={"device_array": prediction_array})
 
@@ -293,7 +287,6 @@ class Device(BaseModel):
         self,
         model: Model,
         binarize: bool = True,
-        gpu: bool = False,
     ) -> "Device":
         """
         Correct the nanofabrication outcome of the device using a specified model.
@@ -317,10 +310,6 @@ class Device(BaseModel):
             If True, the corrected device geometry will be binarized using a threshold
             method. This is useful for converting probabilistic corrections into binary
             geometries. Defaults to True.
-        gpu : bool
-            If True, the prediction will be performed on a GPU. Defaults to False.
-            Note: The GPU option has more overhead and will take longer for small
-            devices, but will be faster for larger devices.
 
         Returns
         -------
@@ -338,14 +327,12 @@ class Device(BaseModel):
             model=model,
             model_type="c",
             binarize=binarize,
-            gpu=gpu,
         )
         return self.model_copy(update={"device_array": correction_array})
 
     def semulate(
         self,
         model: Model,
-        gpu: bool = False,
     ) -> "Device":
         """
         Simulate the appearance of the device as if viewed under a scanning electron
@@ -365,10 +352,6 @@ class Device(BaseModel):
             in `models.py`. Each model is associated with a version and dataset that
             detail its creation and the data it was trained on, ensuring the SEMulation
             is tailored to specific fabrication parameters.
-        gpu : bool
-            If True, the prediction will be performed on a GPU. Defaults to False.
-            Note: The GPU option has more overhead and will take longer for small
-            devices, but will be faster for larger devices.
 
         Notes
         -----
@@ -392,7 +375,6 @@ class Device(BaseModel):
             model=model,
             model_type="s",
             binarize=False,
-            gpu=gpu,
         )
         semulated_array += np.random.normal(0, 0.03, semulated_array.shape)
         return self.model_copy(update={"device_array": semulated_array})
@@ -400,7 +382,6 @@ class Device(BaseModel):
     def segment(
         self,
         model: Model,
-        gpu: bool = False,
     ) -> "Device":
         """
         Segment a scanning electron microscope (SEM) image into a binary mask.
@@ -419,10 +400,6 @@ class Device(BaseModel):
             defined in `models.py`. Each model is associated with a version and dataset
             that detail its creation and the data it was trained on, ensuring the
             segmentation is tailored to specific fabrication parameters.
-        gpu : bool
-            If True, the prediction will be performed on a GPU. Defaults to False.
-            Note: The GPU option has more overhead and will take longer for small
-            devices, but will be faster for larger devices.
 
         Returns
         -------
@@ -441,7 +418,6 @@ class Device(BaseModel):
             model=model,
             model_type="b",
             binarize=False,
-            gpu=gpu,
         )
         return self.model_copy(update={"device_array": segmented_array})
 
