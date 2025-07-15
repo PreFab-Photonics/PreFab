@@ -105,6 +105,77 @@ def _predict_poly(
         raise
 
 
+def predict_gds(
+    gds_path: str,
+    cell_name: str,
+    model: Model,
+    model_type: str,
+    gds_layer: tuple[int, int] = (1, 0),
+    eta: float = 0.5,
+    output_path: str = None,
+) -> None:
+    """
+    Predict the nanofabrication outcome for a GDS file and cell.
+
+    This function loads a GDS file, extracts the specified cell, and predicts
+    the nanofabrication outcome using the specified model. The predicted cell
+    is automatically added to the original GDS library and the file is written
+    to the specified output path (or overwrites the original if no output path
+    is provided).
+
+    Parameters
+    ----------
+    gds_path : str
+        The file path to the GDS file.
+    cell_name : str
+        The name of the cell within the GDS file to predict.
+    model : Model
+        The model to use for prediction, representing a specific fabrication process and
+        dataset. This model encapsulates details about the fabrication foundry, process,
+        material, technology, thickness, and sidewall presence, as defined in
+        `models.py`. Each model is associated with a version and dataset that detail its
+        creation and the data it was trained on, ensuring the prediction is tailored to
+        specific fabrication parameters.
+    model_type : str
+        The type of model to use ('p' for prediction, 'c' for correction).
+    gds_layer : tuple[int, int]
+        The layer and datatype to use within the GDS file. Defaults to (1, 0).
+    eta : float
+        The threshold value for binarization. Defaults to 0.5. Because intermediate
+        values cannot be preserved in the polygon data, the predicted polygons are
+        binarized using a threshold value of eta.
+    output_path : str, optional
+        The file path where the updated GDS file will be written. If None, the
+        original file will be overwritten. Defaults to None.
+
+    Raises
+    ------
+    ValueError
+        If the GDS file cannot be read or the specified cell is not found.
+    """
+    gdstk_library = gdstk.read_gds(gds_path)
+    gdstk_cell = gdstk_library[cell_name]
+
+    predicted_cell = predict_gdstk(
+        gdstk_cell=gdstk_cell,
+        model=model,
+        model_type=model_type,
+        gds_layer=gds_layer,
+        eta=eta,
+    )
+
+    base_name = predicted_cell.name
+    counter = 1
+    while predicted_cell.name in [cell.name for cell in gdstk_library.cells]:
+        predicted_cell.name = f"{base_name}_{counter}"
+        counter += 1
+
+    gdstk_library.add(predicted_cell)
+
+    write_path = output_path if output_path is not None else gds_path
+    gdstk_library.write_gds(write_path, max_points=8190)
+
+
 def predict_gdstk(
     gdstk_cell: gdstk.Cell,
     model: Model,
