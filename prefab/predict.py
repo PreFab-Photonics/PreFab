@@ -470,8 +470,8 @@ def _decode_array(encoded_png):
     return np.array(image) / 255
 
 
-def _read_tokens():
-    """Read access and refresh tokens from the configuration file."""
+def _prepare_headers():
+    """Prepare HTTP headers for a server request."""
     token_file_path = os.path.expanduser("~/.prefab.toml")
     try:
         with open(token_file_path) as file:
@@ -480,7 +480,10 @@ def _read_tokens():
             refresh_token = tokens.get("refresh_token")
             if not access_token or not refresh_token:
                 raise ValueError("Tokens not found in the configuration file.")
-            return access_token, refresh_token
+            return {
+                "Authorization": f"Bearer {access_token}",
+                "X-Refresh-Token": refresh_token,
+            }
     except FileNotFoundError:
         raise FileNotFoundError(
             "Could not validate user.\n"
@@ -488,12 +491,3 @@ def _read_tokens():
             "Signup/login and generate a new token.\n"
             "See https://docs.prefabphotonics.com/."
         ) from None
-
-
-def _prepare_headers():
-    """Prepare HTTP headers for the request."""
-    access_token, refresh_token = _read_tokens()
-    return {
-        "Authorization": f"Bearer {access_token}",
-        "X-Refresh-Token": refresh_token,
-    }
