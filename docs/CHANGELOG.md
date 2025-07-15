@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.0](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.3.0) - 2025-07-15
+
+- Many changes on the server-side to significantly improve performance and accuracy. Some client-side changes to the prediction functions in `prefab.predict` to handle the updated server-side changes.
+- Added `predict.predict_gds` to predict directly on a GDS file.
+- Add small amount of clipping to binarization with roughness to avoid artifacts.
+
 ## [1.2.0](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.2.0) - 2025-03-19
 
 - Added `Device.segment` method to segment an SEM image into a binary mask. Some more testing to be done.
