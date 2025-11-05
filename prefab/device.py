@@ -449,7 +449,11 @@ class Device(BaseModel):
         ]
         return ndarray
 
-    def to_img(self, img_path: str = "prefab_device.png"):
+    def to_img(
+        self,
+        img_path: str = "prefab_device.png",
+        bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
+    ):
         """
         Exports the device geometry as an image file.
 
@@ -462,8 +466,49 @@ class Device(BaseModel):
         img_path : str
             The path where the image file will be saved. If not specified, the image is
             saved as "prefab_device.png" in the current directory.
+        bounds : Optional[tuple[tuple[int, int], tuple[int, int]]]
+            Specifies the bounds for cropping the device geometry, formatted as
+            ((min_x, min_y), (max_x, max_y)). Negative values count from the end
+            (e.g., -50 means 50 pixels from the edge). If 'max_x' or 'max_y' is set
+            to "end", it will be replaced with the corresponding dimension size of the
+            device array. If None, the entire device geometry is exported.
         """
-        cv2.imwrite(img_path, 255 * self.flatten().to_ndarray())
+        device_array = self.flatten().to_ndarray()
+
+        if bounds is not None:
+            min_x, min_y = bounds[0]
+            max_x, max_y = bounds[1]
+
+            # Handle negative indices (count from end)
+            if min_x < 0:
+                min_x = device_array.shape[1] + min_x
+            if min_y < 0:
+                min_y = device_array.shape[0] + min_y
+            if max_x != "end" and max_x < 0:
+                max_x = device_array.shape[1] + max_x
+            if max_y != "end" and max_y < 0:
+                max_y = device_array.shape[0] + max_y
+
+            # Clamp to valid range
+            min_x = max(min_x, 0)
+            min_y = max(min_y, 0)
+            max_x = "end" if max_x == "end" else min(max_x, device_array.shape[1])
+            max_y = "end" if max_y == "end" else min(max_y, device_array.shape[0])
+            max_x = device_array.shape[1] if max_x == "end" else max_x
+            max_y = device_array.shape[0] if max_y == "end" else max_y
+
+            if min_x >= max_x or min_y >= max_y:
+                raise ValueError(
+                    f"Invalid bounds: min values must be less than max values. "
+                    f"Got min_x={min_x}, max_x={max_x}, min_y={min_y}, max_y={max_y}"
+                )
+
+            device_array = device_array[
+                device_array.shape[0] - max_y : device_array.shape[0] - min_y,
+                min_x:max_x,
+            ]
+
+        cv2.imwrite(img_path, 255 * device_array)
         print(f"Saved Device image to '{img_path}'")
 
     def to_gds(
@@ -796,6 +841,18 @@ class Device(BaseModel):
 
         min_x, min_y = (0, 0) if bounds is None else bounds[0]
         max_x, max_y = plot_array.shape[::-1] if bounds is None else bounds[1]
+
+        # Handle negative indices (count from end)
+        if min_x < 0:
+            min_x = plot_array.shape[1] + min_x
+        if min_y < 0:
+            min_y = plot_array.shape[0] + min_y
+        if max_x != "end" and max_x < 0:
+            max_x = plot_array.shape[1] + max_x
+        if max_y != "end" and max_y < 0:
+            max_y = plot_array.shape[0] + max_y
+
+        # Clamp to valid range
         min_x = max(min_x, 0)
         min_y = max(min_y, 0)
         max_x = "end" if max_x == "end" else min(max_x, plot_array.shape[1])
@@ -867,9 +924,10 @@ class Device(BaseModel):
             If True, visualizes the buffer zones around the device. Defaults to True.
         bounds : Optional[tuple[tuple[int, int], tuple[int, int]]], optional
             Specifies the bounds for zooming into the device geometry, formatted as
-            ((min_x, min_y), (max_x, max_y)). If 'max_x' or 'max_y' is set to "end", it
-            will be replaced with the corresponding dimension size of the device array.
-            If None, the entire device geometry is visualized.
+            ((min_x, min_y), (max_x, max_y)). Negative values count from the end
+            (e.g., -50 means 50 pixels from the edge). If 'max_x' or 'max_y' is set
+            to "end", it will be replaced with the corresponding dimension size of the
+            device array. If None, the entire device geometry is visualized.
         level : int
             The vertical layer to plot. If None, the device geometry is flattened.
             Defaults to None.
@@ -926,9 +984,10 @@ class Device(BaseModel):
             it is set to True.
         bounds : Optional[tuple[tuple[int, int], tuple[int, int]]]
             Specifies the bounds for zooming into the device geometry, formatted as
-            ((min_x, min_y), (max_x, max_y)). If 'max_x' or 'max_y' is set to "end", it
-            will be replaced with the corresponding dimension size of the device array.
-            If None, the entire device geometry is visualized.
+            ((min_x, min_y), (max_x, max_y)). Negative values count from the end
+            (e.g., -50 means 50 pixels from the edge). If 'max_x' or 'max_y' is set
+            to "end", it will be replaced with the corresponding dimension size of the
+            device array. If None, the entire device geometry is visualized.
         level : int
             The vertical layer to plot. If None, the device geometry is flattened.
             Defaults to None.
@@ -999,9 +1058,10 @@ class Device(BaseModel):
             default, it is set to True.
         bounds : Optional[tuple[tuple[int, int], tuple[int, int]]]
             Specifies the bounds for zooming into the device geometry, formatted as
-            ((min_x, min_y), (max_x, max_y)). If 'max_x' or 'max_y' is set to "end", it
-            will be replaced with the corresponding dimension size of the device array.
-            If None, the entire device geometry is visualized.
+            ((min_x, min_y), (max_x, max_y)). Negative values count from the end
+            (e.g., -50 means 50 pixels from the edge). If 'max_x' or 'max_y' is set
+            to "end", it will be replaced with the corresponding dimension size of the
+            device array. If None, the entire device geometry is visualized.
         level : int
             The vertical layer to plot. If None, the device geometry is flattened.
             Defaults to None.
@@ -1061,9 +1121,10 @@ class Device(BaseModel):
             If True, visualizes the buffer zones around the device. Defaults to True.
         bounds : Optional[tuple[tuple[int, int], tuple[int, int]]]
             Specifies the bounds for zooming into the device geometry, formatted as
-            ((min_x, min_y), (max_x, max_y)). If 'max_x' or 'max_y' is set to "end", it
-            will be replaced with the corresponding dimension size of the device array.
-            If None, the entire device geometry is visualized.
+            ((min_x, min_y), (max_x, max_y)). Negative values count from the end
+            (e.g., -50 means 50 pixels from the edge). If 'max_x' or 'max_y' is set
+            to "end", it will be replaced with the corresponding dimension size of the
+            device array. If None, the entire device geometry is visualized.
         level : int
             The vertical layer to plot. If None, the device geometry is flattened.
             Defaults to None.
