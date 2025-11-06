@@ -1,10 +1,35 @@
-.DS_Store
+# Python
 __pycache__/
-.ipynb_checkpoints
+*.py[cod]
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+
+# Build and distribution
+dist/
+build/
+
+# Documentation
+site/
 docs/blog/archive/
 docs/examples/archive/
 docs/examples/data/
-dist/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Testing and linting
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+
+# OS
+.DS_Store
+
+# Project
 local/
-tests/
 publish.md
+.claude/

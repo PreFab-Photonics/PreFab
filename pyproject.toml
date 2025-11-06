@@ -27,6 +27,7 @@ license = { file = "LICENSE" }
 dependencies = [
     "autograd",
     "gdstk>=0.9.55",
+    "ipykernel>=6.31.0",
     "matplotlib",
     "numpy",
     "opencv-python-headless",
@@ -36,7 +37,19 @@ dependencies = [
     "scikit-image",
     "scipy",
     "toml",
-    "tqdm",
+]
+
+[project.optional-dependencies]
+dev = [
+    "jupyter",
+    "jupyterlab",
+]
+docs = [
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocstrings[python]",
+    "mkdocs-jupyter",
+    "mistune==3.0",
 ]
 
 [project.urls]

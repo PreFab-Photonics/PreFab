@@ -19,9 +19,54 @@ You can easily install PreFab using pip, which is the Python package installer. 
 pip install prefab
 ```
 
-### From GitHub
+PreFab includes `ipykernel` so you can use it directly in Jupyter notebooks, VS Code notebooks, and other notebook environments.
 
-For those who wish to make changes to the source code for their own development purposes, PreFab can also be installed directly from [GitHub](https://github.com/PreFab-Photonics/PreFab).
+### Using in Jupyter Notebooks
+
+After installation, PreFab is immediately available in your notebooks:
+
+```python
+import prefab as pf
+
+# Create a device
+device = pf.shapes.target()
+
+# Make a prediction
+prediction = device.predict(model=pf.models["ANT_NanoSOI"])
+
+# Visualize
+device.plot()
+```
+
+If you have multiple Python environments, you can register PreFab as a Jupyter kernel:
+
+```sh
+python -m ipykernel install --user --name=prefab --display-name="PreFab"
+```
+
+Then select the "PreFab" kernel from the kernel menu in Jupyter.
+
+### From GitHub (For Contributors)
+
+For those who wish to contribute to PreFab or make changes to the source code, we recommend using [uv](https://docs.astral.sh/uv/) for development, which provides faster dependency resolution and better reproducibility.
+
+**Using uv (recommended):**
+
+```sh
+# Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Clone and set up the project
+git clone https://github.com/PreFab-Photonics/PreFab.git
+cd PreFab
+uv sync
+
+# Optional: Install Jupyter Lab if you want to launch it
+uv sync --extra dev
+uv run jupyter lab
+```
+
+**Using pip:**
 
 ```sh
 git clone https://github.com/PreFab-Photonics/PreFab.git

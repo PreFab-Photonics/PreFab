@@ -15,9 +15,10 @@ jobs:
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Set up Python
+        run: uv python install
       - id: get_cache_id
         run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_OUTPUT
       - uses: actions/cache@v4
@@ -26,11 +27,9 @@ jobs:
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: pip install mkdocs
-      - run: pip install mkdocs-material
-      - run: pip install mkdocstrings[python]
-      - run: pip install mkdocs-jupyter
-      - run: pip install mistune==3.0
+      - name: Install documentation dependencies
+        run: uv sync --extra docs
       - name: Create CNAME file
         run: echo "docs.prefabphotonics.com" > docs/CNAME
-      - run: mkdocs gh-deploy --force
+      - name: Deploy documentation
+        run: uv run mkdocs gh-deploy --force

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.0](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.4.0) - 2025-XX-XX
+
+- Migrated to [uv](https://docs.astral.sh/uv/) for dependency management.
+- Removing unused dependencies.
+- Removing many unused functions throughout multiple modules.
+- Fixing many type issues throughout multiple modules.
+- Rename `binarize_monte_carlo` to `binarize_with_roughness`.
+
 ## [1.3.0](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.3.0) - 2025-07-15
 
 - Many changes on the server-side to significantly improve performance and accuracy. Some client-side changes to the prediction functions in `prefab.predict` to handle the updated server-side changes.
