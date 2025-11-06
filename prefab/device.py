@@ -1,25 +1,22 @@
 """Provides the Device class for representing photonic devices."""
 
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import Any, Literal
 
 import cv2
 import gdstk
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.typing as npt
 from matplotlib.axes import Axes
 from matplotlib.patches import Rectangle
 from PIL import Image
-from pydantic import BaseModel, Field, model_validator, validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from scipy.ndimage import distance_transform_edt
 from skimage import measure
 
-from . import compare, geometry
+from . import geometry
 from .models import Model
 from .predict import predict_array
-
-if TYPE_CHECKING:
-    import gdsfactory as gf
-    import tidy3d as td
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -90,23 +87,25 @@ class BufferSpec(BaseModel):
         }
     )
 
-    @validator("mode", pre=True)
-    def check_mode(cls, v):
+    @field_validator("mode", mode="before")
+    @classmethod
+    def check_mode(cls, v: dict[str, str]) -> dict[str, str]:
         allowed_modes = ["constant", "edge", "none"]
         if not all(mode in allowed_modes for mode in v.values()):
             raise ValueError(f"Buffer mode must be one of {allowed_modes}, got '{v}'.")
         return v
 
-    @validator("thickness")
-    def check_thickness(cls, v):
+    @field_validator("thickness")
+    @classmethod
+    def check_thickness(cls, v: dict[str, int]) -> dict[str, int]:
         if not all(t >= 0 for t in v.values()):
             raise ValueError("All thickness values must be greater than or equal to 0.")
         return v
 
     @model_validator(mode="after")
-    def check_none_thickness(cls, values):
-        mode = values.mode
-        thickness = values.thickness
+    def check_none_thickness(self) -> "BufferSpec":
+        mode = self.mode
+        thickness = self.thickness
         for side in mode:
             if mode[side] == "none" and thickness[side] != 0:
                 raise ValueError(
@@ -116,22 +115,22 @@ class BufferSpec(BaseModel):
                 raise ValueError(
                     f"Mode must be 'none' when thickness is 0 for {side} side"
                 )
-        return values
+        return self
 
 
 class Device(BaseModel):
-    device_array: np.ndarray = Field(...)
+    device_array: npt.NDArray[Any] = Field(...)
     buffer_spec: BufferSpec = Field(default_factory=BufferSpec)
 
     class Config:
-        arbitrary_types_allowed = True
+        arbitrary_types_allowed: bool = True
 
     @property
     def shape(self) -> tuple[int, ...]:
         return tuple(self.device_array.shape)
 
     def __init__(
-        self, device_array: np.ndarray, buffer_spec: Optional[BufferSpec] = None
+        self, device_array: npt.NDArray[Any], buffer_spec: BufferSpec | None = None
     ):
         """
         Represents the planar geometry of a photonic device design that will have its
@@ -174,10 +173,10 @@ class Device(BaseModel):
         )
         self._initial_processing()
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any) -> Axes:
         return self.plot(*args, **kwargs)
 
-    def _initial_processing(self):
+    def _initial_processing(self) -> None:
         buffer_thickness = self.buffer_spec.thickness
         buffer_mode = self.buffer_spec.mode
 
@@ -212,7 +211,8 @@ class Device(BaseModel):
         self.device_array = np.expand_dims(self.device_array, axis=-1)
 
     @model_validator(mode="before")
-    def check_device_array(cls, values):
+    @classmethod
+    def check_device_array(cls, values: dict[str, Any]) -> dict[str, Any]:
         device_array = values.get("device_array")
         if not isinstance(device_array, np.ndarray):
             raise ValueError("device_array must be a numpy ndarray.")
@@ -330,55 +330,6 @@ class Device(BaseModel):
         )
         return self.model_copy(update={"device_array": correction_array})
 
-    def semulate(
-        self,
-        model: Model,
-    ) -> "Device":
-        """
-        Simulate the appearance of the device as if viewed under a scanning electron
-        microscope (SEM).
-
-        This method applies a specified machine learning model to transform the device
-        geometry into a style that resembles an SEM image. This can be useful for
-        visualizing how the device might appear under an SEM, which is often used for
-        inspecting the surface and composition of materials at high magnification.
-
-        Parameters
-        ----------
-        model : Model
-            The model to use for SEMulation, representing a specific fabrication process
-            and dataset. This model encapsulates details about the fabrication foundry,
-            process, material, technology, thickness, and sidewall presence, as defined
-            in `models.py`. Each model is associated with a version and dataset that
-            detail its creation and the data it was trained on, ensuring the SEMulation
-            is tailored to specific fabrication parameters.
-
-        Notes
-        -----
-        The salt-and-pepper noise is added manually until the model is trained to
-        generate this noise (not a big priority).
-
-        Returns
-        -------
-        Device
-            A new instance of the Device class with its geometry transformed to simulate
-            an SEM image style.
-
-        Raises
-        ------
-        RuntimeError
-            If the prediction service returns an error or if the response from the
-            service cannot be processed correctly.
-        """
-        semulated_array = predict_array(
-            device_array=self.device_array,
-            model=model,
-            model_type="s",
-            binarize=False,
-        )
-        semulated_array += np.random.normal(0, 0.03, semulated_array.shape)
-        return self.model_copy(update={"device_array": semulated_array})
-
     def segment(
         self,
         model: Model,
@@ -421,7 +372,7 @@ class Device(BaseModel):
         )
         return self.model_copy(update={"device_array": segmented_array})
 
-    def to_ndarray(self) -> np.ndarray:
+    def to_ndarray(self) -> npt.NDArray[Any]:
         """
         Converts the device geometry to an ndarray.
 
@@ -452,8 +403,8 @@ class Device(BaseModel):
     def to_img(
         self,
         img_path: str = "prefab_device.png",
-        bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
-    ):
+        bounds: tuple[tuple[int, int], tuple[int, int]] | None = None,
+    ) -> None:
         """
         Exports the device geometry as an image file.
 
@@ -499,8 +450,8 @@ class Device(BaseModel):
 
             if min_x >= max_x or min_y >= max_y:
                 raise ValueError(
-                    f"Invalid bounds: min values must be less than max values. "
-                    f"Got min_x={min_x}, max_x={max_x}, min_y={min_y}, max_y={max_y}"
+                    "Invalid bounds: min values must be less than max values. "
+                    + f"Got min_x={min_x}, max_x={max_x}, min_y={min_y}, max_y={max_y}"
                 )
 
             device_array = device_array[
@@ -508,7 +459,7 @@ class Device(BaseModel):
                 min_x:max_x,
             ]
 
-        cv2.imwrite(img_path, 255 * device_array)
+        _ = cv2.imwrite(img_path, 255 * device_array)
         print(f"Saved Device image to '{img_path}'")
 
     def to_gds(
@@ -518,7 +469,7 @@ class Device(BaseModel):
         gds_layer: tuple[int, int] = (1, 0),
         contour_approx_mode: int = 2,
         origin: tuple[float, float] = (0.0, 0.0),
-    ):
+    ) -> None:
         """
         Exports the device geometry as a GDSII file.
 
@@ -552,7 +503,7 @@ class Device(BaseModel):
         )
         print(f"Saving GDS to '{gds_path}'...")
         gdstk_library = gdstk.Library()
-        gdstk_library.add(gdstk_cell)
+        _ = gdstk_library.add(gdstk_cell)
         gdstk_library.write_gds(outfile=gds_path, max_points=8190)
 
     def to_gdstk(
@@ -561,7 +512,7 @@ class Device(BaseModel):
         gds_layer: tuple[int, int] = (1, 0),
         contour_approx_mode: int = 2,
         origin: tuple[float, float] = (0.0, 0.0),
-    ):
+    ) -> gdstk.Cell:
         """
         Converts the device geometry to a GDSTK cell object.
 
@@ -673,85 +624,11 @@ class Device(BaseModel):
                     datatype=gds_layer[1],
                 )
         for polygon in processed_polygons:
-            cell.add(polygon)
+            _ = cell.add(polygon)
 
         return cell
 
-    def to_gdsfactory(self) -> "gf.Component":
-        """
-        Convert the device geometry to a gdsfactory Component.
-
-        Returns
-        -------
-        gf.Component
-            A gdsfactory Component object representing the device geometry.
-
-        Raises
-        ------
-        ImportError
-            If the gdsfactory package is not installed.
-        """
-        try:
-            import gdsfactory as gf
-        except ImportError:
-            raise ImportError(
-                "The gdsfactory package is required to use this function; "
-                "try `pip install gdsfactory`."
-            ) from None
-
-        device_array = np.rot90(self.to_ndarray(), k=-1)
-        return gf.read.from_np(device_array, nm_per_pixel=1)
-
-    def to_tidy3d(
-        self,
-        eps0: float,
-        thickness: float,
-    ) -> "td.Structure":
-        """
-        Convert the device geometry to a Tidy3D Structure.
-
-        Parameters
-        ----------
-        eps0 : float
-            The permittivity value to assign to the device array.
-        thickness : float
-            The thickness of the device in the z-direction.
-
-        Returns
-        -------
-        td.Structure
-            A Tidy3D Structure object representing the device geometry.
-
-        Raises
-        ------
-        ImportError
-            If the tidy3d package is not installed.
-        """
-        try:
-            from tidy3d import Box, CustomMedium, SpatialDataArray, Structure, inf
-        except ImportError:
-            raise ImportError(
-                "The tidy3d package is required to use this function; "
-                "try `pip install tidy3d`."
-            ) from None
-
-        X = np.linspace(-self.shape[1] / 2000, self.shape[1] / 2000, self.shape[1])
-        Y = np.linspace(-self.shape[0] / 2000, self.shape[0] / 2000, self.shape[0])
-        Z = np.array([0])
-
-        device_array = np.rot90(np.fliplr(self.device_array), k=1)
-        eps_array = np.where(device_array >= 1.0, eps0, device_array)
-        eps_array = np.where(eps_array < 1.0, 1.0, eps_array)
-        eps_dataset = SpatialDataArray(eps_array, coords=dict(x=X, y=Y, z=Z))
-        medium = CustomMedium.from_eps_raw(eps_dataset)
-        return Structure(
-            geometry=Box(center=(0, 0, 0), size=(inf, inf, thickness), attrs={}),
-            medium=medium,
-            name="device",
-            attrs={},
-        )
-
-    def to_3d(self, thickness_nm: int) -> np.ndarray:
+    def to_3d(self, thickness_nm: int) -> npt.NDArray[Any]:
         """
         Convert the 2D device geometry into a 3D representation.
 
@@ -785,7 +662,7 @@ class Device(BaseModel):
             layered_array[:, :, i] = dt_interp >= 0
         return layered_array
 
-    def to_stl(self, thickness_nm: int, filename: str = "prefab_device.stl"):
+    def to_stl(self, thickness_nm: int, filename: str = "prefab_device.stl") -> None:
         """
         Export the device geometry as an STL file.
 
@@ -808,7 +685,7 @@ class Device(BaseModel):
         except ImportError:
             raise ImportError(
                 "The stl package is required to use this function; "
-                "try `pip install numpy-stl`."
+                + "try `pip install numpy-stl`."
             ) from None
 
         if thickness_nm <= 0:
@@ -828,16 +705,16 @@ class Device(BaseModel):
 
     def _plot_base(
         self,
-        plot_array: np.ndarray,
+        plot_array: npt.NDArray[Any],
         show_buffer: bool,
-        bounds: Optional[tuple[tuple[int, int], tuple[int, int]]],
-        ax: Optional[Axes],
-        **kwargs,
+        bounds: tuple[tuple[int, int], tuple[int, int]] | None,
+        ax: Axes | None,
+        **kwargs: Any,
     ) -> tuple[plt.cm.ScalarMappable, Axes]:
         if ax is None:
             _, ax = plt.subplots()
-        ax.set_ylabel("y (nm)")
-        ax.set_xlabel("x (nm)")
+        _ = ax.set_ylabel("y (nm)")
+        _ = ax.set_xlabel("x (nm)")
 
         min_x, min_y = (0, 0) if bounds is None else bounds[0]
         max_x, max_y = plot_array.shape[::-1] if bounds is None else bounds[1]
@@ -905,10 +782,10 @@ class Device(BaseModel):
     def plot(
         self,
         show_buffer: bool = True,
-        bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
-        level: Optional[int] = None,
-        ax: Optional[Axes] = None,
-        **kwargs,
+        bounds: tuple[tuple[int, int], tuple[int, int]] | None = None,
+        level: int | None = None,
+        ax: Axes | None = None,
+        **kwargs: Any,
     ) -> Axes:
         """
         Visualizes the device geometry.
@@ -958,14 +835,14 @@ class Device(BaseModel):
 
     def plot_contour(
         self,
-        linewidth: Optional[int] = None,
-        # label: Optional[str] = "Device contour",
+        linewidth: int | None = None,
+        # label: str | None = "Device contour",
         show_buffer: bool = True,
-        bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
-        level: Optional[int] = None,
-        ax: Optional[Axes] = None,
-        **kwargs,
-    ):
+        bounds: tuple[tuple[int, int], tuple[int, int]] | None = None,
+        level: int | None = None,
+        ax: Axes | None = None,
+        **kwargs: Any,
+    ) -> Axes:
         """
         Visualizes the contour of the device geometry.
 
@@ -1018,7 +895,7 @@ class Device(BaseModel):
             cv2.CHAIN_APPROX_SIMPLE,
         )
         contour_array = np.zeros_like(device_array, dtype=np.uint8)
-        cv2.drawContours(contour_array, contours, -1, (255,), linewidth)
+        _ = cv2.drawContours(contour_array, contours, -1, (255,), linewidth)
         contour_array = np.ma.masked_equal(contour_array, 0)
 
         _, ax = self._plot_base(
@@ -1036,11 +913,11 @@ class Device(BaseModel):
     def plot_uncertainty(
         self,
         show_buffer: bool = True,
-        bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
-        level: Optional[int] = None,
-        ax: Optional[Axes] = None,
-        **kwargs,
-    ):
+        bounds: tuple[tuple[int, int], tuple[int, int]] | None = None,
+        level: int | None = None,
+        ax: Axes | None = None,
+        **kwargs: Any,
+    ) -> Axes:
         """
         Visualizes the uncertainty in the edge positions of the predicted device.
 
@@ -1100,10 +977,10 @@ class Device(BaseModel):
         self,
         ref_device: "Device",
         show_buffer: bool = True,
-        bounds: Optional[tuple[tuple[int, int], tuple[int, int]]] = None,
-        level: Optional[int] = None,
-        ax: Optional[Axes] = None,
-        **kwargs,
+        bounds: tuple[tuple[int, int], tuple[int, int]] | None = None,
+        level: int | None = None,
+        ax: Axes | None = None,
+        **kwargs: Any,
     ) -> Axes:
         """
         Visualizes the comparison between the current device geometry and a reference
@@ -1160,7 +1037,7 @@ class Device(BaseModel):
         cbar.set_label("Added (a.u.)                        Removed (a.u.)")
         return ax
 
-    def _add_buffer_visualization(self, ax: Axes):
+    def _add_buffer_visualization(self, ax: Axes) -> None:
         plot_array = self.device_array
 
         buffer_thickness = self.buffer_spec.thickness
@@ -1175,7 +1052,7 @@ class Device(BaseModel):
             edgecolor="black",
             linewidth=1,
         )
-        ax.add_patch(mid_rect)
+        _ = ax.add_patch(mid_rect)
 
         top_rect = Rectangle(
             (0, 0),
@@ -1184,7 +1061,7 @@ class Device(BaseModel):
             facecolor=buffer_fill,
             hatch=buffer_hatch,
         )
-        ax.add_patch(top_rect)
+        _ = ax.add_patch(top_rect)
 
         bottom_rect = Rectangle(
             (0, plot_array.shape[0] - buffer_thickness["bottom"]),
@@ -1193,7 +1070,7 @@ class Device(BaseModel):
             facecolor=buffer_fill,
             hatch=buffer_hatch,
         )
-        ax.add_patch(bottom_rect)
+        _ = ax.add_patch(bottom_rect)
 
         left_rect = Rectangle(
             (0, buffer_thickness["top"]),
@@ -1202,7 +1079,7 @@ class Device(BaseModel):
             facecolor=buffer_fill,
             hatch=buffer_hatch,
         )
-        ax.add_patch(left_rect)
+        _ = ax.add_patch(left_rect)
 
         right_rect = Rectangle(
             (
@@ -1214,7 +1091,7 @@ class Device(BaseModel):
             facecolor=buffer_fill,
             hatch=buffer_hatch,
         )
-        ax.add_patch(right_rect)
+        _ = ax.add_patch(right_rect)
 
     def normalize(self) -> "Device":
         """
@@ -1275,7 +1152,7 @@ class Device(BaseModel):
             update={"device_array": binarized_device_array.astype(np.uint8)}
         )
 
-    def binarize_monte_carlo(
+    def binarize_with_roughness(
         self,
         noise_magnitude: float = 2.0,
         blur_radius: float = 8.0,
@@ -1311,7 +1188,7 @@ class Device(BaseModel):
         Device
             A new instance of the Device with the binarized geometry.
         """
-        binarized_device_array = geometry.binarize_monte_carlo(
+        binarized_device_array = geometry.binarize_with_roughness(
             device_array=self.device_array,
             noise_magnitude=noise_magnitude,
             blur_radius=blur_radius,
@@ -1455,7 +1332,7 @@ class Device(BaseModel):
         flattened_device_array = geometry.flatten(device_array=self.device_array)
         return self.model_copy(update={"device_array": flattened_device_array})
 
-    def get_uncertainty(self) -> np.ndarray:
+    def get_uncertainty(self) -> npt.NDArray[Any]:
         """
         Calculate the uncertainty in the edge positions of the predicted device.
 
@@ -1471,96 +1348,3 @@ class Device(BaseModel):
             with higher values indicating greater uncertainty.
         """
         return 1 - 2 * np.abs(0.5 - self.device_array)
-
-    def enforce_feature_size(
-        self, min_feature_size: int, strel: str = "disk"
-    ) -> "Device":
-        """
-        Enforce a minimum feature size on the device geometry.
-
-        This method applies morphological operations to ensure that all features in the
-        device geometry are at least the specified minimum size. It uses either a disk
-        or square structuring element for the operations.
-
-        Notes
-        -----
-        This function does not guarantee that the minimum feature size is enforced in
-        all cases. A better process is needed.
-
-        Parameters
-        ----------
-        min_feature_size : int
-            The minimum feature size to enforce, in nanometers.
-        strel : str
-            The type of structuring element to use. Can be either "disk" or "square".
-            Defaults to "disk".
-
-        Returns
-        -------
-        Device
-            A new instance of the Device with the modified geometry.
-
-        Raises
-        ------
-        ValueError
-            If an invalid structuring element type is specified.
-        """
-        modified_geometry = geometry.enforce_feature_size(
-            device_array=self.device_array,
-            min_feature_size=min_feature_size,
-            strel=strel,
-        )
-        return self.model_copy(update={"device_array": modified_geometry})
-
-    def check_feature_size(self, min_feature_size: int, strel: str = "disk"):
-        """
-        Check and visualize the effect of enforcing a minimum feature size on the device
-        geometry.
-
-        This method enforces a minimum feature size on the device geometry using the
-        specified structuring element, compares the modified geometry with the original,
-        and plots the differences. It also calculates and prints the Hamming distance
-        between the original and modified geometries, providing a measure of the changes
-        introduced by the feature size enforcement.
-
-        Notes
-        -----
-        This is not a design-rule-checking function, but it can be useful for quick
-        checks.
-
-        Parameters
-        ----------
-        min_feature_size : int
-            The minimum feature size to enforce, in nanometers.
-        strel : str
-            The type of structuring element to use. Can be either "disk" or "square".
-            Defaults to "disk".
-
-        Raises
-        ------
-        ValueError
-            If an invalid structuring element type is specified or if min_feature_size
-            is not a positive integer.
-        """
-        if min_feature_size <= 0:
-            raise ValueError("min_feature_size must be a positive integer.")
-
-        enforced_device = self.enforce_feature_size(min_feature_size, strel)
-
-        difference = np.abs(
-            enforced_device.device_array[:, :, 0] - self.device_array[:, :, 0]
-        )
-        _, ax = self._plot_base(
-            plot_array=difference,
-            show_buffer=False,
-            ax=None,
-            bounds=None,
-            cmap="jet",
-        )
-
-        hamming_distance = compare.hamming_distance(self, enforced_device)
-        print(
-            f"Feature size check with minimum size {min_feature_size} "
-            f"using '{strel}' structuring element resulted in a Hamming "
-            f"distance of: {hamming_distance}"
-        )

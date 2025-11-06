@@ -99,7 +99,7 @@ def binarize_sem(sem_array: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
     )[1].astype(np.float64)
 
 
-def binarize_monte_carlo(
+def binarize_with_roughness(
     device_array: npt.NDArray[np.float64],
     noise_magnitude: float,
     blur_radius: float,
@@ -373,60 +373,3 @@ def flatten(device_array: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
     return normalize(
         cast(npt.NDArray[np.float64], np.sum(device_array, axis=-1, keepdims=True))
     )
-
-
-def enforce_feature_size(
-    device_array: npt.NDArray[np.float64], min_feature_size: int, strel: str = "disk"
-) -> npt.NDArray[np.float64]:
-    """
-    Enforce a minimum feature size on the device geometry.
-
-    This function applies morphological operations to ensure that all features in the
-    device geometry are at least the specified minimum size. It uses either a disk
-    or square structuring element for the operations.
-
-    Notes
-    -----
-    This function does not guarantee that the minimum feature size is enforced in all
-    cases. A better process is needed.
-
-    Parameters
-    ----------
-    device_array : npt.NDArray[np.float64]
-        The input array representing the device geometry.
-    min_feature_size : int
-        The minimum feature size to enforce, in nanometers.
-    strel : str
-        The type of structuring element to use. Can be "disk" or "square".
-        Defaults to "disk".
-        - "disk": circular element (smooth corners)
-        - "square": rectangular element (90° corners)
-
-    Returns
-    -------
-    npt.NDArray[np.float64]
-        The modified device array with enforced feature size.
-
-    Raises
-    ------
-    ValueError
-        If an invalid structuring element type is specified.
-    """
-    if strel == "disk":
-        kernel = cv2.getStructuringElement(
-            cv2.MORPH_ELLIPSE, (min_feature_size, min_feature_size)
-        )
-    elif strel == "square":
-        kernel = cv2.getStructuringElement(
-            cv2.MORPH_RECT, (min_feature_size, min_feature_size)
-        )
-    else:
-        raise ValueError(
-            f"Invalid structuring element: {strel}. Must be 'disk' or 'square'."
-        )
-
-    device_array_2d = (device_array[:, :, 0] * 255).astype(np.uint8)
-    modified_geometry = cv2.morphologyEx(device_array_2d, cv2.MORPH_CLOSE, kernel)
-    modified_geometry = cv2.morphologyEx(modified_geometry, cv2.MORPH_OPEN, kernel)
-
-    return np.expand_dims(modified_geometry.astype(float) / 255, axis=-1)

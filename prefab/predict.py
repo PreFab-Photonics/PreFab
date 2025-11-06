@@ -4,9 +4,11 @@ import base64
 import io
 import json
 import os
+from typing import Any
 
 import gdstk
 import numpy as np
+import numpy.typing as npt
 import requests
 import toml
 from autograd import primitive
@@ -21,11 +23,11 @@ ENDPOINT_VERSION = "3"
 
 
 def predict_array(
-    device_array: np.ndarray,
+    device_array: npt.NDArray[Any],
     model: Model,
     model_type: str,
     binarize: bool,
-) -> np.ndarray:
+) -> npt.NDArray[Any]:
     """
     Predict the nanofabrication outcome of a device array using a specified model.
 
@@ -110,11 +112,11 @@ def predict_array(
 
 
 def _predict_poly(
-    polygon_points: list,
+    polygon_points: list[Any],
     model: Model,
     model_type: str,
     eta: float = 0.5,
-) -> list:
+) -> list[Any]:
     """
     Predict the nanofabrication outcome for a geometry (list of polygons).
 
@@ -198,7 +200,7 @@ def predict_gds(
     model_type: str,
     gds_layer: tuple[int, int] = (1, 0),
     eta: float = 0.5,
-    output_path: str = None,
+    output_path: str | None = None,
 ) -> None:
     """
     Predict the nanofabrication outcome for a GDS file and cell.
@@ -242,7 +244,14 @@ def predict_gds(
         returns an error or invalid response.
     """
     gdstk_library = gdstk.read_gds(gds_path)
-    gdstk_cell = gdstk_library[cell_name]
+    cells = [
+        cell
+        for cell in gdstk_library.cells
+        if isinstance(cell, gdstk.Cell) and cell.name == cell_name
+    ]
+    if not cells:
+        raise ValueError(f"Cell '{cell_name}' not found in GDS file")
+    gdstk_cell = cells[0]
 
     predicted_cell = predict_gdstk(
         gdstk_cell=gdstk_cell,
@@ -261,6 +270,7 @@ def predict_gds(
     gdstk_library.add(predicted_cell)
 
     write_path = output_path if output_path is not None else gds_path
+    print(f"Writing to {write_path}")
     gdstk_library.write_gds(write_path, max_points=8190)
 
 
@@ -317,7 +327,7 @@ def predict_gdstk(
     if not polygons:
         raise ValueError("No polygons found in the specified layer")
 
-    polygon_points = [polygon.points.tolist() for polygon in polygons]
+    polygon_points = [polygon.points.tolist() for polygon in polygons]  # pyright: ignore[reportAttributeAccessIssue]
 
     predicted_polygon_data = _predict_poly(
         polygon_points=polygon_points,
@@ -326,7 +336,8 @@ def predict_gdstk(
         eta=eta,
     )
 
-    result_cell = gdstk.Cell(f"{gdstk_cell.name}_predicted")
+    suffix = "corrected" if model_type == "c" else "predicted"
+    result_cell = gdstk.Cell(f"{gdstk_cell.name}_{suffix}")
 
     polygons_by_channel = {}
     for polygon_data in predicted_polygon_data:
@@ -344,15 +355,15 @@ def predict_gdstk(
 
         for points in points_list:
             points_array = np.array(points)
-            polygon = gdstk.Polygon(points_array, layer=layer, datatype=datatype)
+            polygon = gdstk.Polygon(points_array, layer=layer, datatype=datatype)  # pyright: ignore[reportArgumentType]
             result_cell.add(polygon)
 
     return result_cell
 
 
 def _predict_array_with_grad(
-    device_array: np.ndarray, model: Model
-) -> tuple[np.ndarray, np.ndarray]:
+    device_array: npt.NDArray[Any], model: Model
+) -> tuple[npt.NDArray[Any], npt.NDArray[Any]]:
     """
     Predict the nanofabrication outcome of a device array and compute its gradient.
 
@@ -422,7 +433,9 @@ def _predict_array_with_grad(
 
 
 @primitive
-def predict_array_with_grad(device_array: np.ndarray, model: Model) -> np.ndarray:
+def predict_array_with_grad(
+    device_array: npt.NDArray[Any], model: Model
+) -> npt.NDArray[Any]:
     """
     Predict the nanofabrication outcome of a device array and compute its gradient.
 
@@ -453,11 +466,13 @@ def predict_array_with_grad(device_array: np.ndarray, model: Model) -> np.ndarra
     prediction_array, gradient_array = _predict_array_with_grad(
         device_array=device_array, model=model
     )
-    predict_array_with_grad.gradient_array = gradient_array  # type: ignore
+    predict_array_with_grad.gradient_array = gradient_array  # pyright: ignore[reportFunctionMemberAccess]
     return prediction_array
 
 
-def predict_array_with_grad_vjp(ans: np.ndarray, device_array: np.ndarray, *args):
+def predict_array_with_grad_vjp(
+    ans: npt.NDArray[Any], device_array: npt.NDArray[Any], *args: Any
+) -> Any:
     """
     Define the vector-Jacobian product (VJP) for the prediction function.
 
@@ -475,10 +490,10 @@ def predict_array_with_grad_vjp(ans: np.ndarray, device_array: np.ndarray, *args
     function
         A function that computes the VJP given an upstream gradient `g`.
     """
-    grad_x = predict_array_with_grad.gradient_array  # type: ignore
+    grad_x = predict_array_with_grad.gradient_array  # pyright: ignore[reportFunctionMemberAccess]
 
-    def vjp(g: np.ndarray) -> np.ndarray:
-        return g * grad_x
+    def vjp(g: npt.NDArray[Any]) -> npt.NDArray[Any]:
+        return g * grad_x  # type: ignore[no-any-return]
 
     return vjp
 
@@ -486,7 +501,7 @@ def predict_array_with_grad_vjp(ans: np.ndarray, device_array: np.ndarray, *args
 defvjp(predict_array_with_grad, predict_array_with_grad_vjp)
 
 
-def _encode_array(array):
+def _encode_array(array: npt.NDArray[Any]) -> str:
     """Encode an ndarray as a base64 encoded image for transmission."""
     image = Image.fromarray(np.uint8(array * 255))
     buffered = io.BytesIO()
@@ -495,14 +510,14 @@ def _encode_array(array):
     return encoded_png
 
 
-def _decode_array(encoded_png):
+def _decode_array(encoded_png: str) -> npt.NDArray[Any]:
     """Decode a base64 encoded image and return an ndarray."""
     binary_data = base64.b64decode(encoded_png)
     image = Image.open(io.BytesIO(binary_data))
-    return np.array(image) / 255
+    return np.array(image) / 255  # type: ignore[no-any-return]
 
 
-def _prepare_headers():
+def _prepare_headers() -> dict[str, str]:
     """Prepare HTTP headers for a server request."""
     token_file_path = os.path.expanduser("~/.prefab.toml")
     try:
@@ -519,7 +534,7 @@ def _prepare_headers():
     except FileNotFoundError:
         raise FileNotFoundError(
             "Could not validate user.\n"
-            "Please update prefab using: pip install --upgrade prefab.\n"
-            "Signup/login and generate a new token.\n"
-            "See https://docs.prefabphotonics.com/."
+            + "Please update prefab using: pip install --upgrade prefab.\n"
+            + "Signup/login and generate a new token.\n"
+            + "See https://docs.prefabphotonics.com/."
         ) from None

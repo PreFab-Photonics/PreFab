@@ -67,7 +67,7 @@ class Model(BaseModel):
     tag: str
 
     def to_json(self):
-        return json.dumps(self.dict(), default=str)
+        return json.dumps(self.model_dump(), default=str)
 
 
 ANT_NanoSOI = Fab(
@@ -107,6 +107,7 @@ ANT_SiN_ANF1_d1 = Model(
 )
 
 models = dict(
+    GENERIC_SOI=ANT_NanoSOI_ANF1_d10,
     ANT_NanoSOI=ANT_NanoSOI_ANF1_d10,
     ANT_NanoSOI_ANF1_d10=ANT_NanoSOI_ANF1_d10,
     ANT_SiN=ANT_SiN_ANF1_d1,

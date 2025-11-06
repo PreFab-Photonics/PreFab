@@ -1,6 +1,6 @@
 """Contains functions for creating various shapes as Device objects."""
 
-from typing import Optional
+from typing import Any
 
 import numpy as np
 from skimage.draw import polygon
@@ -8,7 +8,7 @@ from skimage.draw import polygon
 from .device import Device
 
 
-def rectangle(width: int = 200, height: Optional[int] = None, **kwargs) -> Device:
+def rectangle(width: int = 200, height: int | None = None, **kwargs: Any) -> Device:
     """
     Create a Device object with a rectangular shape.
 
@@ -16,7 +16,7 @@ def rectangle(width: int = 200, height: Optional[int] = None, **kwargs) -> Devic
     ----------
     width : int
         The width of the rectangle. Defaults to 200.
-    height : Optional[int]
+    height : int | None
         The height of the rectangle. Defaults to the value of width if None.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -33,7 +33,7 @@ def rectangle(width: int = 200, height: Optional[int] = None, **kwargs) -> Devic
 
 
 def window(
-    width: int = 200, height: Optional[int] = None, border_width: int = 60, **kwargs
+    width: int = 200, height: int | None = None, border_width: int = 60, **kwargs: Any
 ) -> Device:
     """
     Create a Device object with a window shape (hollow rectangle).
@@ -42,7 +42,7 @@ def window(
     ----------
     width : int
         The overall width of the window. Defaults to 200.
-    height : Optional[int]
+    height : int | None
         The overall height of the window. Defaults to the value of width.
     border_width : int
         The width of the window border. Defaults to 60.
@@ -65,7 +65,7 @@ def window(
 
 
 def cross(
-    width: int = 200, height: Optional[int] = None, arm_width: int = 60, **kwargs
+    width: int = 200, height: int | None = None, arm_width: int = 60, **kwargs: Any
 ) -> Device:
     """
     Create a Device object with a cross shape.
@@ -74,7 +74,7 @@ def cross(
     ----------
     width : int
         The overall width of the cross. Defaults to 200.
-    height : Optional[int]
+    height : int | None
         The overall height of the cross. Defaults to the value of width.
     arm_width : int
         The width of the cross arms. Defaults to 60.
@@ -98,7 +98,7 @@ def cross(
 
 
 def target(
-    width: int = 200, height: Optional[int] = None, arm_width: int = 60, **kwargs
+    width: int = 200, height: int | None = None, arm_width: int = 60, **kwargs: Any
 ) -> Device:
     """
     Create a Device object with a target shape (cross with center removed).
@@ -107,7 +107,7 @@ def target(
     ----------
     width : int
         The overall width of the target. Defaults to 200.
-    height : Optional[int]
+    height : int | None
         The overall height of the target. Defaults to the value of width.
     arm_width : int
         The width of the target arms. Defaults to 60.
@@ -134,7 +134,7 @@ def target(
     return Device(device_array=target, **kwargs)
 
 
-def disk(width: int = 200, height: Optional[int] = None, **kwargs) -> Device:
+def disk(width: int = 200, height: int | None = None, **kwargs: Any) -> Device:
     """
     Create a Device object with an elliptical shape.
 
@@ -142,7 +142,7 @@ def disk(width: int = 200, height: Optional[int] = None, **kwargs) -> Device:
     ----------
     width : int
         The width of the ellipse. Defaults to 200.
-    height : Optional[int]
+    height : int | None
         The height of the ellipse. Defaults to the value of width.
     **kwargs : dict
         Additional keyword arguments to be passed to the Device constructor.
@@ -164,7 +164,7 @@ def disk(width: int = 200, height: Optional[int] = None, **kwargs) -> Device:
 
 
 def ring(
-    width: int = 200, height: Optional[int] = None, border_width: int = 60, **kwargs
+    width: int = 200, height: int | None = None, border_width: int = 60, **kwargs: Any
 ) -> Device:
     """
     Create a Device object with a ring shape (hollow ellipse).
@@ -173,7 +173,7 @@ def ring(
     ----------
     width : int
         The overall width of the ring. Defaults to 200.
-    height : Optional[int]
+    height : int | None
         The overall height of the ring. Defaults to the value of width.
     border_width : int
         The width of the ring border. Defaults to 60.
@@ -200,7 +200,10 @@ def ring(
 
 
 def disk_wavy(
-    width: int = 200, wave_amplitude: float = 10, wave_frequency: float = 10, **kwargs
+    width: int = 200,
+    wave_amplitude: float = 10,
+    wave_frequency: float = 10,
+    **kwargs: Any,
 ) -> Device:
     """
     Create a Device object with a circular shape with wavy edges.
@@ -234,7 +237,7 @@ def disk_wavy(
 
 
 def pie(
-    width: int = 200, height: Optional[int] = None, arc_angle: float = 270, **kwargs
+    width: int = 200, height: int | None = None, arc_angle: float = 270, **kwargs: Any
 ) -> Device:
     """
     Create a Device object with a pie shape.
@@ -243,7 +246,7 @@ def pie(
     ----------
     width : int
         The width of the pie. Defaults to 200.
-    height : Optional[int]
+    height : int | None
         The height of the pie. Defaults to the value of width.
     arc_angle : float
         The angle of the pie slice in degrees. Defaults to 270.
@@ -273,7 +276,7 @@ def grating(
     pitch: int = 120,
     duty_cycle: float = 0.5,
     num_gratings: int = 3,
-    **kwargs,
+    **kwargs: Any,
 ) -> Device:
     """
     Create a Device object with a grating pattern.
@@ -305,7 +308,7 @@ def grating(
     return Device(device_array=grating, **kwargs)
 
 
-def star(width: int = 200, num_points: int = 5, **kwargs) -> Device:
+def star(width: int = 200, num_points: int = 5, **kwargs: Any) -> Device:
     """
     Create a Device object with a star shape.
 
@@ -345,7 +348,7 @@ def star(width: int = 200, num_points: int = 5, **kwargs) -> Device:
     return Device(device_array=star, **kwargs)
 
 
-def poly(width: int = 200, num_points: int = 5, **kwargs) -> Device:
+def poly(width: int = 200, num_points: int = 5, **kwargs: Any) -> Device:
     """
     Create a Device object with a regular polygon shape.
 
@@ -376,7 +379,7 @@ def poly(width: int = 200, num_points: int = 5, **kwargs) -> Device:
 
 
 def radial_grating(
-    width: int = 200, grating_skew: int = 0, num_gratings: int = 6, **kwargs
+    width: int = 200, grating_skew: int = 0, num_gratings: int = 6, **kwargs: Any
 ) -> Device:
     """
     Create a Device object with a radial grating pattern.
@@ -423,7 +426,7 @@ def offset_grating(
     pitch: int = 120,
     duty_cycle: float = 0.5,
     num_gratings: int = 3,
-    **kwargs,
+    **kwargs: Any,
 ) -> Device:
     """
     Create a Device object with an offset grating pattern (alternating rows).
@@ -461,10 +464,10 @@ def offset_grating(
 
 def l_grating(
     width: int = 200,
-    height: Optional[int] = None,
+    height: int | None = None,
     pitch: int = 100,
     duty_cycle: float = 0.5,
-    **kwargs,
+    **kwargs: Any,
 ) -> Device:
     """
     Create a Device object with an L-shaped grating pattern.
@@ -473,7 +476,7 @@ def l_grating(
     ----------
     width : int
         The width of the L-grating. Defaults to 200.
-    height : Optional[int]
+    height : int | None
         The height of the L-grating. Defaults to the value of width.
     pitch : int
         The pitch (period) of the L-shapes. Defaults to 100.
@@ -500,7 +503,11 @@ def l_grating(
 
 
 def disks(
-    rows: int = 5, cols: int = 5, disk_radius: int = 30, spacing: int = 60, **kwargs
+    rows: int = 5,
+    cols: int = 5,
+    disk_radius: int = 30,
+    spacing: int = 60,
+    **kwargs: Any,
 ) -> Device:
     """
     Create a Device object with a grid of uniform disks.
@@ -540,7 +547,11 @@ def disks(
 
 
 def disks_offset(
-    rows: int = 5, cols: int = 5, disk_radius: int = 30, spacing: int = 30, **kwargs
+    rows: int = 5,
+    cols: int = 5,
+    disk_radius: int = 30,
+    spacing: int = 30,
+    **kwargs: Any,
 ) -> Device:
     """
     Create a Device object with an offset grid of disks.
@@ -591,7 +602,7 @@ def disks_varying(
     min_disk_radius: int = 10,
     max_disk_radius: int = 30,
     spacing: int = 30,
-    **kwargs,
+    **kwargs: Any,
 ) -> Device:
     """
     Create a Device object with a grid of disks with varying radii.
@@ -637,7 +648,11 @@ def disks_varying(
 
 
 def holes(
-    rows: int = 5, cols: int = 5, hole_radius: int = 30, spacing: int = 30, **kwargs
+    rows: int = 5,
+    cols: int = 5,
+    hole_radius: int = 30,
+    spacing: int = 30,
+    **kwargs: Any,
 ) -> Device:
     """
     Create a Device object with a grid of uniform circular holes.
@@ -677,7 +692,11 @@ def holes(
 
 
 def holes_offset(
-    rows: int = 5, cols: int = 5, hole_radius: int = 30, spacing: int = 30, **kwargs
+    rows: int = 5,
+    cols: int = 5,
+    hole_radius: int = 30,
+    spacing: int = 30,
+    **kwargs: Any,
 ) -> Device:
     """
     Create a Device object with an offset grid of circular holes.
@@ -728,7 +747,7 @@ def holes_varying(
     min_hole_radius: int = 10,
     max_hole_radius: int = 30,
     spacing: int = 30,
-    **kwargs,
+    **kwargs: Any,
 ) -> Device:
     """
     Create a Device object with a grid of circular holes with varying radii.

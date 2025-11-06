@@ -1,6 +1,9 @@
 """Functions to measure the structural similarity between devices."""
 
+from __future__ import annotations
+
 import warnings
+from typing import Any, cast
 
 import numpy as np
 
@@ -54,9 +57,13 @@ def intersection_over_union(device_a: Device, device_b: Device) -> float:
             "One or both devices are not binarized.", UserWarning, stacklevel=2
         )
 
-    return np.sum(
-        np.logical_and(device_a.device_array, device_b.device_array)
-    ) / np.sum(np.logical_or(device_a.device_array, device_b.device_array))
+    intersection_sum = cast(
+        float, np.sum(np.logical_and(device_a.device_array, device_b.device_array))
+    )
+    union_sum = cast(
+        float, np.sum(np.logical_or(device_a.device_array, device_b.device_array))
+    )
+    return intersection_sum / union_sum
 
 
 def hamming_distance(device_a: Device, device_b: Device) -> int:
@@ -87,7 +94,11 @@ def hamming_distance(device_a: Device, device_b: Device) -> int:
             "One or both devices are not binarized.", UserWarning, stacklevel=2
         )
 
-    return int(np.sum(device_a.device_array != device_b.device_array))
+    diff_array = cast(
+        "np.ndarray[Any, Any]", device_a.device_array != device_b.device_array
+    )  # pyright: ignore[reportExplicitAny]
+    diff_sum = cast(int, np.sum(diff_array))
+    return diff_sum
 
 
 def dice_coefficient(device_a: Device, device_b: Device) -> float:
@@ -118,9 +129,9 @@ def dice_coefficient(device_a: Device, device_b: Device) -> float:
             "One or both devices are not binarized.", UserWarning, stacklevel=2
         )
 
-    intersection = 2.0 * np.sum(
-        np.logical_and(device_a.device_array, device_b.device_array)
+    intersection_sum = cast(
+        float, np.sum(np.logical_and(device_a.device_array, device_b.device_array))
     )
-    size_a = np.sum(device_a.device_array)
-    size_b = np.sum(device_b.device_array)
-    return intersection / (size_a + size_b)
+    size_a_sum = cast(float, np.sum(device_a.device_array))
+    size_b_sum = cast(float, np.sum(device_b.device_array))
+    return (2.0 * intersection_sum) / (size_a_sum + size_b_sum)

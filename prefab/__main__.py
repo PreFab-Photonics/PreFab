@@ -53,7 +53,7 @@ class CallbackHandler(BaseHTTPRequestHandler):
                 redirect_html = b"""
                     <html>
                         <head>
-                            <meta http-equiv="refresh" content="0;url=https://www.prefabphotonics.com/token-success">
+                            <meta http-equiv="refresh" content="0;url=https://www.prefabphotonics.com/auth/token-flow/success">
                             <style>
                                 body {
                                     background-color: #0A0A0A;
@@ -81,7 +81,7 @@ def main():
     args = parser.parse_args()
 
     if args.command == "setup":
-        webbrowser.open("https://www.prefabphotonics.com/token-flow")
+        webbrowser.open("https://www.prefabphotonics.com/auth/token-flow")
         httpd = GracefulHTTPServer(("localhost", args.port), CallbackHandler)
         print("Started token authentication flow on the web browser...")
         with suppress(KeyboardInterrupt):
