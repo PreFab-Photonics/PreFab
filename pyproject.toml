@@ -59,3 +59,11 @@ Docs = "https://docs.prefabphotonics.com"
 
 [project.scripts]
 prefab = "prefab.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["prefab"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "prefab/",
+]
