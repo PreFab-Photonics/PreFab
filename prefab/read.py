@@ -1,4 +1,10 @@
-"""Functions to create a Device from various data sources."""
+"""
+Functions to create Device objects from various data sources.
+
+This module provides utilities for loading device geometries from multiple formats,
+including image files, numpy arrays, and GDS layout files. All functions return
+Device objects with optional preprocessing capabilities.
+"""
 
 from typing import Any, cast
 
@@ -8,6 +14,32 @@ import numpy as np
 
 from . import geometry
 from .device import Device
+
+# Conversion factor from GDS units (micrometers) to nanometers
+_GDS_UM_TO_NM = 1000
+
+
+def _binarize_if_needed(
+    device_array: np.ndarray[Any, Any], binarize: bool
+) -> np.ndarray[Any, Any]:
+    """
+    Conditionally binarize a device array.
+
+    Parameters
+    ----------
+    device_array : np.ndarray
+        The array to potentially binarize.
+    binarize : bool
+        If True, binarize the array using hard thresholding.
+
+    Returns
+    -------
+    np.ndarray
+        The binarized array if binarize is True, otherwise the original array.
+    """
+    if binarize:
+        return geometry.binarize_hard(np.asarray(device_array, dtype=np.float64))
+    return device_array
 
 
 def from_ndarray(
@@ -44,10 +76,7 @@ def from_ndarray(
         device_array = cv2.resize(
             device_array, dsize=(0, 0), fx=resolution, fy=resolution
         )
-    if binarize:
-        device_array = geometry.binarize_hard(
-            np.asarray(device_array, dtype=np.float64)
-        )
+    device_array = _binarize_if_needed(device_array, binarize)
     return Device(device_array=device_array, **kwargs)
 
 
@@ -83,10 +112,7 @@ def from_img(
         device_array = cv2.resize(
             device_array, dsize=(0, 0), fx=resolution, fy=resolution
         )
-    if binarize:
-        device_array = geometry.binarize_hard(
-            np.asarray(device_array, dtype=np.float64)
-        )
+    device_array = _binarize_if_needed(device_array, binarize)
     return Device(device_array=device_array, **kwargs)
 
 
@@ -123,7 +149,6 @@ def from_gds(
         processing based on the specified layer.
     """
     gdstk_library = gdstk.read_gds(gds_path)
-    # pyright: ignore is needed because gdstk.Library does not have __getitem__ in stubs
     gdstk_cell = cast(gdstk.Cell, gdstk_library[cell_name])  # pyright: ignore[reportIndexIssue]
     device_array = _gdstk_to_device_array(
         gdstk_cell=gdstk_cell, gds_layer=gds_layer, bounds=bounds
@@ -136,7 +161,7 @@ def from_gdstk(
     gds_layer: tuple[int, int] = (1, 0),
     bounds: tuple[tuple[float, float], tuple[float, float]] | None = None,
     **kwargs: Any,
-):
+) -> Device:
     """
     Create a Device from a gdstk cell.
 
@@ -147,7 +172,7 @@ def from_gdstk(
     gds_layer : tuple[int, int]
         A tuple specifying the layer and datatype to be used from the cell. Defaults to
         (1, 0).
-    bounds : tuple[tuple[float, float], tuple[float, float]]
+    bounds : Optional[tuple[tuple[float, float], tuple[float, float]]]
         A tuple specifying the bounds for cropping the cell before conversion, formatted
         as ((min_x, min_y), (max_x, max_y)), in units of the GDS cell. If None, the
         entire cell is used.
@@ -198,24 +223,24 @@ def _gdstk_to_device_array(
             polygons, position=(bounds[0][1], bounds[1][1]), axis="y"
         )[1]
         bounds = (
-            (int(1000 * bounds[0][0]), int(1000 * bounds[0][1])),
-            (int(1000 * bounds[1][0]), int(1000 * bounds[1][1])),
+            (int(_GDS_UM_TO_NM * bounds[0][0]), int(_GDS_UM_TO_NM * bounds[0][1])),
+            (int(_GDS_UM_TO_NM * bounds[1][0]), int(_GDS_UM_TO_NM * bounds[1][1])),
         )
     else:
         bbox = gdstk_cell.bounding_box()
         if bbox is None:
             raise ValueError("Cell has no geometry, cannot determine bounds.")
         bounds = (
-            (float(1000 * bbox[0][0]), float(1000 * bbox[0][1])),
-            (float(1000 * bbox[1][0]), float(1000 * bbox[1][1])),
+            (float(_GDS_UM_TO_NM * bbox[0][0]), float(_GDS_UM_TO_NM * bbox[0][1])),
+            (float(_GDS_UM_TO_NM * bbox[1][0]), float(_GDS_UM_TO_NM * bbox[1][1])),
         )
     contours = [
         np.array(
             [
                 [
                     [
-                        int(1000 * vertex[0] - bounds[0][0]),
-                        int(1000 * vertex[1] - bounds[0][1]),
+                        int(_GDS_UM_TO_NM * vertex[0] - bounds[0][0]),
+                        int(_GDS_UM_TO_NM * vertex[1] - bounds[0][1]),
                     ]
                 ]
                 for vertex in polygon.points
@@ -227,6 +252,6 @@ def _gdstk_to_device_array(
         (int(bounds[1][1] - bounds[0][1]), int(bounds[1][0] - bounds[0][0])),
         dtype=np.uint8,
     )
-    _ = cv2.fillPoly(img=device_array, pts=contours, color=(1, 1, 1))
+    _ = cv2.fillPoly(device_array, contours, (1,))
     device_array = np.flipud(device_array)
     return device_array
