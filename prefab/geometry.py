@@ -1,4 +1,11 @@
-"""Provides functions for manipulating ndarrays of device geometries."""
+"""
+Functions for manipulating and transforming device geometry arrays.
+
+This module provides utilities for common geometric operations on numpy arrays
+representing device geometries, including normalization, binarization, trimming,
+padding, blurring, rotation, morphological operations (erosion/dilation), and
+flattening. All functions operate on npt.NDArray[np.float64] arrays.
+"""
 
 from typing import cast
 
@@ -75,28 +82,6 @@ def binarize_hard(
         The binarized array with elements set to 0 or 1 based on the threshold.
     """
     return np.where(device_array < eta, 0.0, 1.0)
-
-
-def binarize_sem(sem_array: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
-    """
-    Binarize a grayscale scanning electron microscope (SEM) image.
-
-    This function applies Otsu's method to automatically determine the optimal threshold
-    value for binarization of a grayscale SEM image.
-
-    Parameters
-    ----------
-    sem_array : npt.NDArray[np.float64]
-        The input SEM image array to be binarized.
-
-    Returns
-    -------
-    npt.NDArray[np.float64]
-        The binarized SEM image array with elements scaled to 0 or 1.
-    """
-    return cv2.threshold(
-        sem_array.astype("uint8"), 0, 1, cv2.THRESH_BINARY + cv2.THRESH_OTSU
-    )[1].astype(np.float64)
 
 
 def binarize_with_roughness(
@@ -203,10 +188,10 @@ def trim(
     nonzero_rows = nonzero_indices[0]
     nonzero_cols = nonzero_indices[1]
 
-    row_min_val = int(cast(int, nonzero_rows.min()))
-    row_max_val = int(cast(int, nonzero_rows.max()))
-    col_min_val = int(cast(int, nonzero_cols.min()))
-    col_max_val = int(cast(int, nonzero_cols.max()))
+    row_min_val = int(nonzero_rows.min())
+    row_max_val = int(nonzero_rows.max())
+    col_min_val = int(nonzero_cols.min())
+    col_max_val = int(nonzero_cols.max())
 
     row_min = max(row_min_val - buffer_thickness.get("top", 0), 0)
     row_max = min(
