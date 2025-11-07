@@ -69,15 +69,29 @@ def main():
     parser.add_argument(
         "--port", help="Port number for the HTTP server", type=int, default=8000
     )
+    parser.add_argument(
+        "--timeout", help="Timeout in seconds for authentication", type=int, default=300
+    )
     args = parser.parse_args()
 
     if args.command == "setup":
         webbrowser.open("https://www.prefabphotonics.com/auth/token-flow")
         httpd = GracefulHTTPServer(("localhost", args.port), CallbackHandler)
         print("Started token authentication flow on the web browser...")
-        with suppress(KeyboardInterrupt):
-            httpd.serve_forever()
-        httpd.server_close()
+
+        def timeout_handler():
+            print("\nAuthentication timed out. Please run 'prefab setup' again.")
+            httpd.shutdown()
+
+        timer = threading.Timer(args.timeout, timeout_handler)
+        timer.start()
+
+        try:
+            with suppress(KeyboardInterrupt):
+                httpd.serve_forever()
+        finally:
+            timer.cancel()
+            httpd.server_close()
     else:
         print(f"Command {args.command} not recognized.")
 
