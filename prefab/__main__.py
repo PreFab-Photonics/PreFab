@@ -17,9 +17,9 @@ def store_jwt(jwt, refresh_token):
         toml.dump({"access_token": jwt, "refresh_token": refresh_token}, toml_file)
     print(
         f"Token successfully stored in {prefab_file_path}.\n\n"
-        "🎉 Welcome to PreFab!.\n"
+        "🎉 Welcome to PreFab.\n"
         "See our examples at https://docs.prefabphotonics.com/examples to start.\n"
-        "Reach out to us at hi@prefabphotonics.com if you have any questions."
+        "Reach out to us at hi@prefabphotonics.com for support."
     )
 
 
@@ -35,6 +35,10 @@ class GracefulHTTPServer(HTTPServer):
 class CallbackHandler(BaseHTTPRequestHandler):
     """A request handler for the HTTP server that handles the JWT-auth callback."""
 
+    def log_message(self, format, *args):
+        """Suppress HTTP request logging."""
+        pass
+
     def do_GET(self):
         if self.path.startswith("/callback"):
             query_params = self.path.split("?")[1]
@@ -47,25 +51,12 @@ class CallbackHandler(BaseHTTPRequestHandler):
             if jwt_token and refresh_token:
                 print("Token verified.")
                 store_jwt(jwt_token, refresh_token)
-                self.send_response_only(200, "OK")
-                self.send_header("Content-type", "text/html")
+                self.send_response(302)
+                self.send_header(
+                    "Location",
+                    "https://www.prefabphotonics.com/auth/token-flow/success",
+                )
                 self.end_headers()
-                redirect_html = b"""
-                    <html>
-                        <head>
-                            <meta http-equiv="refresh" content="0;url=https://www.prefabphotonics.com/auth/token-flow/success">
-                            <style>
-                                body {
-                                    background-color: #0A0A0A;
-                                    color: #ffffff;
-                                }
-                            </style>
-                        </head>
-                        <body>
-                        </body>
-                    </html>
-                """
-                self.wfile.write(redirect_html)
                 threading.Thread(target=self.server.shutdown).start()
             else:
                 self.send_error(400, "Bad Request: Missing tokens in callback URL.")
