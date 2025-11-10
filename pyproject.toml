@@ -67,3 +67,6 @@ packages = ["prefab"]
 include = [
     "prefab/",
 ]
+
+[tool.basedpyright]
+typeCheckingMode = "standard"
