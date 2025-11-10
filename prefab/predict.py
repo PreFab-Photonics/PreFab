@@ -1,4 +1,12 @@
-"""Prediction functions for ndarrays of device geometries."""
+"""
+Serverless prediction interface for nanofabrication modeling.
+
+This module provides functions for predicting nanofabrication outcomes using machine
+learning models hosted on a serverless platform. It supports multiple input formats
+(ndarrays, polygons, GDSII files) and model types (prediction, correction,
+segmentation). Gradient computation is available for inverse design applications
+using automatic differentiation.
+"""
 
 import base64
 import io
@@ -42,14 +50,12 @@ def predict_array(
         various transformations to predict the nanofabrication process.
     model : Model
         The model to use for prediction, representing a specific fabrication process and
-        dataset. This model encapsulates details about the fabrication foundry, process,
-        material, technology, thickness, and sidewall presence, as defined in
-        `models.py`. Each model is associated with a version and dataset that detail its
-        creation and the data it was trained on, ensuring the prediction is tailored to
-        specific fabrication parameters.
+        dataset. This model encapsulates details about the fabrication foundry and
+        process, as defined in `models.py`. Each model is associated with a version and
+        dataset that detail its creation and the data it was trained on, ensuring the
+        prediction is tailored to specific fabrication parameters.
     model_type : str
-        The type of model to use (e.g., 'p' for prediction, 'c' for correction, or 's'
-        for SEMulate, 'b' for segmentation).
+        The type of model to use (e.g., 'p' for prediction or 'c' for correction).
     binarize : bool
         If True, the predicted device geometry will be binarized using a threshold
         method. This is useful for converting probabilistic predictions into binary
@@ -130,13 +136,12 @@ def _predict_poly(
         List of polygon points, where each polygon is a list of [x, y] coordinates.
     model : Model
         The model to use for prediction, representing a specific fabrication process and
-        dataset. This model encapsulates details about the fabrication foundry, process,
-        material, technology, thickness, and sidewall presence, as defined in
-        `models.py`. Each model is associated with a version and dataset that detail its
-        creation and the data it was trained on, ensuring the prediction is tailored to
-        specific fabrication parameters.
+        dataset. This model encapsulates details about the fabrication foundry and
+        process, as defined in `models.py`. Each model is associated with a version and
+        dataset that detail its creation and the data it was trained on, ensuring the
+        prediction is tailored to specific fabrication parameters.
     model_type : str
-        The type of model to use ('p' for prediction, 'c' for correction).
+        The type of model to use (e.g., 'p' for prediction or 'c' for correction).
     eta : float
         The threshold value for binarization. Defaults to 0.5. Because intermediate
         values cannot be preserved in the polygon data, the predicted polygons are
@@ -218,13 +223,12 @@ def predict_gds(
         The name of the cell within the GDS file to predict.
     model : Model
         The model to use for prediction, representing a specific fabrication process and
-        dataset. This model encapsulates details about the fabrication foundry, process,
-        material, technology, thickness, and sidewall presence, as defined in
-        `models.py`. Each model is associated with a version and dataset that detail its
-        creation and the data it was trained on, ensuring the prediction is tailored to
-        specific fabrication parameters.
+        dataset. This model encapsulates details about the fabrication foundry and
+        process, as defined in `models.py`. Each model is associated with a version and
+        dataset that detail its creation and the data it was trained on, ensuring the
+        prediction is tailored to specific fabrication parameters.
     model_type : str
-        The type of model to use ('p' for prediction, 'c' for correction).
+        The type of model to use (e.g., 'p' for prediction or 'c' for correction).
     gds_layer : tuple[int, int]
         The layer and datatype to use within the GDS file. Defaults to (1, 0).
     eta : float
@@ -293,13 +297,12 @@ def predict_gdstk(
         The gdstk.Cell object containing polygons to predict.
     model : Model
         The model to use for prediction, representing a specific fabrication process and
-        dataset. This model encapsulates details about the fabrication foundry, process,
-        material, technology, thickness, and sidewall presence, as defined in
-        `models.py`. Each model is associated with a version and dataset that detail its
-        creation and the data it was trained on, ensuring the prediction is tailored to
-        specific fabrication parameters.
+        dataset. This model encapsulates details about the fabrication foundry and
+        process, as defined in `models.py`. Each model is associated with a version and
+        dataset that detail its creation and the data it was trained on, ensuring the
+        prediction is tailored to specific fabrication parameters.
     model_type : str
-        The type of model to use ('p' for prediction, 'c' for correction).
+        The type of model to use (e.g., 'p' for prediction or 'c' for correction).
     gds_layer : tuple[int, int]
         The layer and datatype to use within the GDSTK cell. Defaults to (1, 0).
     eta : float
@@ -370,11 +373,6 @@ def _predict_array_with_grad(
     This function predicts the outcome of the nanofabrication process for a given
     device array using a specified model. It also computes the gradient of the
     prediction with respect to the input device array.
-
-    Notes
-    -----
-    This function is currently not used in the main `predict_array` function as
-    the main `predict_array` function (e.g., GPU support and progress bar) for now.
 
     Parameters
     ----------
