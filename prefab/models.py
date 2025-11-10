@@ -1,4 +1,12 @@
-"""Models for the PreFab library."""
+"""
+Fabrication process model definitions and configurations.
+
+This module defines the data structures for representing nanofabrication processes
+and their associated machine learning models. It includes Pydantic models for
+fabrication specifications (foundry, process) and versioned model configurations
+(dataset, version, release dates). Pre-configured model instances are provided
+for common fabrication processes.
+"""
 
 import json
 from datetime import date
@@ -16,22 +24,10 @@ class Fab(BaseModel):
         The name of the foundry where the fabrication process takes place.
     process : str
         The specific process used in the fabrication.
-    material : str
-        The material used in the fabrication process.
-    technology : str
-        The technology used in the fabrication process.
-    thickness : int
-        The thickness of the material used, measured in nanometers.
-    has_sidewall : bool
-        Indicates whether the fabrication has angled sidewalls.
     """
 
     foundry: str
     process: str
-    material: str
-    technology: str
-    thickness: int
-    has_sidewall: bool
 
 
 class Model(BaseModel):
@@ -70,46 +66,20 @@ class Model(BaseModel):
         return json.dumps(self.model_dump(), default=str)
 
 
-ANT_NanoSOI = Fab(
-    foundry="ANT",
-    process="NanoSOI",
-    material="SOI",
-    technology="E-Beam",
-    thickness=220,
-    has_sidewall=False,
+Generic = Fab(
+    foundry="Generic",
+    process="SOI",
 )
 
-ANT_SiN = Fab(
-    foundry="ANT",
-    process="SiN",
-    material="SiN",
-    technology="E-Beam",
-    thickness=400,
-    has_sidewall=True,
-)
-
-ANT_NanoSOI_ANF1_d10 = Model(
-    fab=ANT_NanoSOI,
+Generic_SOI_ANF1_d0 = Model(
+    fab=Generic,
     version="ANF1",
-    version_date=date(2024, 5, 6),
-    dataset="d10",
-    dataset_date=date(2024, 6, 8),
-    tag="",
-)
-
-ANT_SiN_ANF1_d1 = Model(
-    fab=ANT_SiN,
-    version="ANF1",
-    version_date=date(2024, 5, 6),
-    dataset="d1",
-    dataset_date=date(2024, 1, 31),
+    version_date=date(2025, 11, 7),
+    dataset="d0",
+    dataset_date=date(2025, 11, 7),
     tag="",
 )
 
 models = dict(
-    GENERIC_SOI=ANT_NanoSOI_ANF1_d10,
-    ANT_NanoSOI=ANT_NanoSOI_ANF1_d10,
-    ANT_NanoSOI_ANF1_d10=ANT_NanoSOI_ANF1_d10,
-    ANT_SiN=ANT_SiN_ANF1_d1,
-    ANT_SiN_ANF1_d1=ANT_SiN_ANF1_d1,
+    Generic_SOI=Generic_SOI_ANF1_d0,
 )
