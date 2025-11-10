@@ -32,7 +32,18 @@ theme:
   name: "material"
   custom_dir: docs/overrides
   palette:
-    scheme: prefab
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: prefab-light
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: prefab
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
   font:
     text: Geist
     code: Geist Mono
