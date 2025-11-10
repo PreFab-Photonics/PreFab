@@ -1,4 +1,13 @@
-"""Provides the Device class for representing photonic devices."""
+"""
+Core device representation and manipulation for photonic geometries.
+
+This module provides the Device class for representing planar photonic device
+geometries and performing operations on them. It includes buffer zone management,
+prediction and correction of nanofabrication outcomes, visualization capabilities,
+and export functions to various formats. The module also supports geometric
+transformations (rotation, dilation, erosion), image processing operations (blur,
+binarization), and comparison tools for analyzing fabrication deviations.
+"""
 
 from typing import Any, Literal
 
@@ -12,7 +21,6 @@ from matplotlib.patches import Rectangle
 from PIL import Image
 from pydantic import BaseModel, Field, field_validator, model_validator
 from scipy.ndimage import distance_transform_edt
-from skimage import measure
 
 from . import geometry
 from .models import Model
@@ -254,11 +262,10 @@ class Device(BaseModel):
         ----------
         model : Model
             The model to use for prediction, representing a specific fabrication process
-            and dataset. This model encapsulates details about the fabrication foundry,
-            process, material, technology, thickness, and sidewall presence, as defined
-            in `models.py`. Each model is associated with a version and dataset that
-            detail its creation and the data it was trained on, ensuring the prediction
-            is tailored to specific fabrication parameters.
+            and dataset. This model encapsulates details about the fabrication foundry
+            and process, as defined in `models.py`. Each model is associated with a
+            version and dataset that detail its creation and the data it was trained on,
+            ensuring the prediction is tailored to specific fabrication parameters.
         binarize : bool
             If True, the predicted device geometry will be binarized using a threshold
             method. This is useful for converting probabilistic predictions into binary
@@ -301,11 +308,10 @@ class Device(BaseModel):
         ----------
         model : Model
             The model to use for correction, representing a specific fabrication process
-            and dataset. This model encapsulates details about the fabrication foundry,
-            process, material, technology, thickness, and sidewall presence, as defined
-            in `models.py`. Each model is associated with a version and dataset that
-            detail its creation and the data it was trained on, ensuring the correction
-            is tailored to specific fabrication parameters.
+            and dataset. This model encapsulates details about the fabrication foundry
+            and process, as defined in `models.py`. Each model is associated with a
+            version and dataset that detail its creation and the data it was trained on,
+            ensuring the correction is tailored to specific fabrication parameters.
         binarize : bool
             If True, the corrected device geometry will be binarized using a threshold
             method. This is useful for converting probabilistic corrections into binary
@@ -329,48 +335,6 @@ class Device(BaseModel):
             binarize=binarize,
         )
         return self.model_copy(update={"device_array": correction_array})
-
-    def segment(
-        self,
-        model: Model,
-    ) -> "Device":
-        """
-        Segment a scanning electron microscope (SEM) image into a binary mask.
-
-        This method applies a specified machine learning model to transform a grayscale
-        SEM image into a binary mask, where 1 represents the device structure and 0
-        represents the background. This is useful for extracting the device geometry
-        from experimental SEM images for analysis or comparison with design intent.
-
-        Parameters
-        ----------
-        model : Model
-            The model to use for segmentation, representing a specific fabrication
-            process and dataset. This model encapsulates details about the fabrication
-            foundry, process, material, technology, thickness, and sidewall presence, as
-            defined in `models.py`. Each model is associated with a version and dataset
-            that detail its creation and the data it was trained on, ensuring the
-            segmentation is tailored to specific fabrication parameters.
-
-        Returns
-        -------
-        Device
-            A new instance of the Device class with its geometry transformed into a
-            binary mask.
-
-        Raises
-        ------
-        RuntimeError
-            If the prediction service returns an error or if the response from the
-            service cannot be processed correctly.
-        """
-        segmented_array = predict_array(
-            device_array=self.normalize().device_array,
-            model=model,
-            model_type="b",
-            binarize=False,
-        )
-        return self.model_copy(update={"device_array": segmented_array})
 
     def to_ndarray(self) -> npt.NDArray[Any]:
         """
@@ -459,7 +423,7 @@ class Device(BaseModel):
                 min_x:max_x,
             ]
 
-        _ = cv2.imwrite(img_path, 255 * device_array)
+        _ = cv2.imwrite(img_path, (255 * device_array).astype(np.uint8))
         print(f"Saved Device image to '{img_path}'")
 
     def to_gds(
@@ -662,47 +626,6 @@ class Device(BaseModel):
             layered_array[:, :, i] = dt_interp >= 0
         return layered_array
 
-    def to_stl(self, thickness_nm: int, filename: str = "prefab_device.stl") -> None:
-        """
-        Export the device geometry as an STL file.
-
-        Parameters
-        ----------
-        thickness_nm : int
-            The thickness of the 3D representation in nanometers.
-        filename : str
-            The name of the STL file to save. Defaults to "prefab_device.stl".
-
-        Raises
-        ------
-        ValueError
-            If the thickness is not a positive integer.
-        ImportError
-            If the numpy-stl package is not installed.
-        """
-        try:
-            from stl import mesh  # type: ignore
-        except ImportError:
-            raise ImportError(
-                "The stl package is required to use this function; "
-                + "try `pip install numpy-stl`."
-            ) from None
-
-        if thickness_nm <= 0:
-            raise ValueError("Thickness must be a positive integer.")
-
-        layered_array = self.to_3d(thickness_nm)
-        layered_array = np.pad(
-            layered_array, ((0, 0), (0, 0), (10, 10)), mode="constant"
-        )
-        verts, faces, _, _ = measure.marching_cubes(layered_array, level=0.5)
-        cube = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
-        for i, f in enumerate(faces):
-            for j in range(3):
-                cube.vectors[i][j] = verts[f[j], :]
-        cube.save(filename)
-        print(f"Saved Device to '{filename}'")
-
     def _plot_base(
         self,
         plot_array: npt.NDArray[Any],
@@ -886,8 +809,9 @@ class Device(BaseModel):
             device_array = self.device_array[:, :, level]
 
         kwargs.setdefault("cmap", "spring")
-        if linewidth is None:
-            linewidth = device_array.shape[0] // 100
+        linewidth_value = (
+            linewidth if linewidth is not None else device_array.shape[0] // 100
+        )
 
         contours, _ = cv2.findContours(
             geometry.binarize_hard(device_array).astype(np.uint8),
@@ -895,7 +819,7 @@ class Device(BaseModel):
             cv2.CHAIN_APPROX_SIMPLE,
         )
         contour_array = np.zeros_like(device_array, dtype=np.uint8)
-        _ = cv2.drawContours(contour_array, contours, -1, (255,), linewidth)
+        _ = cv2.drawContours(contour_array, contours, -1, (255,), linewidth_value)
         contour_array = np.ma.masked_equal(contour_array, 0)
 
         _, ax = self._plot_base(
