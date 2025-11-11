@@ -38,12 +38,8 @@ flowchart LR
     D --> E[Compare<br>Results]
     A --> D
     E -.-> |Manual Design Iteration| A
-    style A fill:none,color:white,stroke:white
-    style B fill:none,color:white,stroke:lightgreen
-    style C fill:none,color:white,stroke:white
-    style D fill:none,color:white,stroke:yellow
-    style E fill:none,color:white,stroke:white
-    linkStyle default stroke:white
+    style B stroke:#4ade80,stroke-width:2px
+    style D stroke:#fbbf24,stroke-width:2px
 ```
 
 Design verification uses prediction models to assess how fabrication will affect device performance before committing to manufacturing.
@@ -67,11 +63,7 @@ flowchart LR
     A[Device<br>Design] --> B[Correction<br>Model]
     B --> C[Corrected<br>Design]
     C -.-> D[Design<br>Verification]
-    style A fill:none,color:white,stroke:white
-    style B fill:none,color:white,stroke:lightgreen
-    style C fill:none,color:white,stroke:white
-    style D fill:none,color:white
-    linkStyle default stroke:white
+    style B stroke:#4ade80,stroke-width:2px
 ```
 
 Design correction automatically compensates for fabrication effects by pre-distorting layouts to account for known manufacturing variations.
@@ -93,12 +85,8 @@ flowchart LR
     C --> D[EM<br>Simulation]
     D --> E[Gradient<br>Calculation]
     E --> |Optimization| A
-    style A fill:none,color:white,stroke:white
-    style B fill:none,color:white,stroke:lightgreen
-    style C fill:none,color:white,stroke:white
-    style D fill:none,color:white,stroke:yellow
-    style E fill:none,color:white,stroke:white
-    linkStyle default stroke:white
+    style B stroke:#4ade80,stroke-width:2px
+    style D stroke:#fbbf24,stroke-width:2px
 ```
 
 Fabrication-aware inverse design (FAID) integrates fabrication effects directly into the optimization process rather than treating them as a post-processing step.
