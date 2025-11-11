@@ -41,7 +41,7 @@ theme:
     text: Geist
     code: Geist Mono
   language: en
-  logo: assets/prefab_logo_box.svg
+  logo: assets/prefab-logo-notext.svg
   favicon: assets/favicon.ico
   icon:
     repo: fontawesome/brands/github
