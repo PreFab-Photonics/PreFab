@@ -14,11 +14,6 @@ nav:
   - Examples:
       - Making a prediction: examples/1_prediction.ipynb
       - Making a correction: examples/2_correction.ipynb
-      - Working with sidewall angles: examples/3_sidewall_angle.ipynb
-      - SEM generation: examples/4_SEM_generation.ipynb
-      - Simulating a predicted device: examples/5_prediction_simulation.ipynb
-      - Fabrication-aware inverse design: examples/6_fabrication-aware_inverse_design.ipynb
-      - Simulating sidewall angle: examples/7_sidewall_simulation.ipynb
   - Reference:
       - Compare: reference/compare.md
       - Device: reference/device.md
@@ -32,13 +27,11 @@ theme:
   name: "material"
   custom_dir: docs/overrides
   palette:
-    # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
       scheme: prefab-light
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-    # Palette toggle for dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: prefab
       toggle:
