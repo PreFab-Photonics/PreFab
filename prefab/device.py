@@ -38,7 +38,7 @@ class BufferSpec(BaseModel):
     providing extra space for device fabrication processes or for ensuring that the
     device is isolated from surrounding structures.
 
-    Parameters
+    Attributes
     ----------
     mode : dict[str, str]
         A dictionary that defines the buffer mode for each side of the device
@@ -58,8 +58,8 @@ class BufferSpec(BaseModel):
         allowed values ('constant', 'edge', 'none'). Or if any of the thickness values
         are negative.
 
-    Example
-    -------
+    Examples
+    --------
         import prefab as pf
 
         buffer_spec = pf.BufferSpec(
