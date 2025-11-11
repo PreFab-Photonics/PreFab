@@ -1,8 +1,7 @@
 # Models
 
-| Foundry | Process | Latest Version    | Latest Dataset   | Model Name  | Model Tag |
-| ------- | ------- | ----------------- | ---------------- | ----------- | --------- |
-| ANT     | NanoSOI | ANF1 (May 6 2024) | d10 (Jun 8 2024) | ANT_NanoSOI | ANF1-d10  |
-| ANT     | SiN     | ANF1 (May 6 2024) | d1 (Jan 31 2024) | ANT_SiN     | ANF1-d1   |
+| Foundry | Process | Latest Version    | Latest Dataset  | Model Name  | Model Tag |
+| ------- | ------- | ----------------- | --------------- | ----------- | --------- |
+| Generic | SOI     | ANF1 (Nov 7 2025) | d0 (Nov 7 2025) | Generic_SOI | ANF1-d0   |
 
-For additional foundry and process models, feel free to contact us.
+Please contact us at [hi@prefabphotonics.com](mailto:hi@prefabphotonics.com) for additional foundry and process models.
