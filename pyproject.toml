@@ -48,8 +48,6 @@ docs = [
     "mkdocs",
     "mkdocs-material",
     "mkdocstrings[python]",
-    "mkdocs-jupyter",
-    "mistune==3.0",
 ]
 
 [project.urls]

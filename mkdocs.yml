@@ -12,8 +12,8 @@ nav:
   - Model library: models.md
   - Changelog: CHANGELOG.md
   - Examples:
-      - Making a prediction: examples/1_prediction.ipynb
-      - Making a correction: examples/2_correction.ipynb
+      - Making a prediction: examples/1_prediction.md
+      - Making a correction: examples/2_correction.md
   - Reference:
       - Compare: reference/compare.md
       - Device: reference/device.md
@@ -108,9 +108,6 @@ plugins:
             show_source: true
             docstring_style: numpy
             show_docstring_examples: true
-  - mkdocs-jupyter:
-      include_source: true
-      theme: dark
 
 extra_css:
   - stylesheets/extra.css
