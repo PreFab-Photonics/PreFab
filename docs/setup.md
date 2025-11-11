@@ -7,7 +7,7 @@ Follow the steps below to install and authenticate the [PreFab Python package](h
 
 !!! info "Python"
 
-    If you are newer to Python, we recommend reading our [Python for Photonics](blog/posts/python-for-photonics.md) blog post.
+    If you are newer to Python, we recommend reading our [Python for Photonics](python-for-photonics.md) guide.
 
 ## Install PreFab
 

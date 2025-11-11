@@ -7,10 +7,10 @@ repo_name: PreFab-Photonics/PreFab
 nav:
   - Home: index.md
   - Setup: setup.md
+  - Python for photonics: python-for-photonics.md
   - Fab-aware design: fab_aware_design.md
   - Model library: models.md
   - Changelog: CHANGELOG.md
-  - Blog: blog/index.md
   - Examples:
       - Making a prediction: examples/1_prediction.ipynb
       - Making a correction: examples/2_correction.ipynb
@@ -101,8 +101,6 @@ markdown_extensions:
 
 plugins:
   - search
-  - blog:
-      authors: true
   - mkdocstrings:
       handlers:
         python:
