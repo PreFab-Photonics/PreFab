@@ -12,6 +12,7 @@ dist/
 build/
 
 # Documentation
+archive/
 site/
 docs/blog/archive/
 docs/examples/archive/
