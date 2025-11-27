@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "prefab"
-version = "1.4.0"
+version = "1.4.1"
 description = "Artificial nanofabrication of integrated photonic circuits using deep learning"
 authors = [{ name = "PreFab Photonics Inc.", email = "hi@prefabphotonics.com" }]
 keywords = [
