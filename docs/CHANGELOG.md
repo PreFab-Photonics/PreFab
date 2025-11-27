@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.4.1](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.4.1) - 2025-11-27
+
+- Change to the `models.py` module to allow easy expandability (for custom/future models).
+
 ## [1.4.0](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.4.0) - 2025-11-11
 
 - Migrated to [uv](https://docs.astral.sh/uv/) for dependency management.
