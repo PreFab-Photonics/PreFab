@@ -34,3 +34,9 @@ docs/examples/data/
 local/
 publish.md
 .claude/
+
+# Custom model files
+prefab/models/*.py
+!prefab/models/__init__.py
+!prefab/models/base.py
+!prefab/models/evaluation.py

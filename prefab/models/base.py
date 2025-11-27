@@ -1,11 +1,8 @@
 """
-Fabrication process model definitions and configurations.
+Base model definitions for fabrication processes.
 
-This module defines the data structures for representing nanofabrication processes
-and their associated machine learning models. It includes Pydantic models for
-fabrication specifications (foundry, process) and versioned model configurations
-(dataset, version, release dates). Pre-configured model instances are provided
-for common fabrication processes.
+This module defines the core data structures for representing nanofabrication
+processes and their associated models.
 """
 
 import json
@@ -64,22 +61,3 @@ class Model(BaseModel):
 
     def to_json(self):
         return json.dumps(self.model_dump(), default=str)
-
-
-Generic = Fab(
-    foundry="Generic",
-    process="SOI",
-)
-
-Generic_SOI_ANF1_d0 = Model(
-    fab=Generic,
-    version="ANF1",
-    version_date=date(2025, 11, 7),
-    dataset="d0",
-    dataset_date=date(2025, 11, 7),
-    tag="",
-)
-
-models = dict(
-    Generic_SOI=Generic_SOI_ANF1_d0,
-)
