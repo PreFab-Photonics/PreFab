@@ -517,6 +517,12 @@ def _decode_array(encoded_png: str) -> npt.NDArray[Any]:
 
 def _prepare_headers() -> dict[str, str]:
     """Prepare HTTP headers for a server request."""
+    # Check for API key first (for headless/server environments)
+    api_key = os.environ.get("PREFAB_API_KEY")
+    if api_key:
+        return {"X-API-Key": api_key}
+
+    # Fall back to token file (browser OAuth flow)
     token_file_path = os.path.expanduser("~/.prefab.toml")
     try:
         with open(token_file_path) as file:
@@ -532,7 +538,6 @@ def _prepare_headers() -> dict[str, str]:
     except FileNotFoundError:
         raise FileNotFoundError(
             "Could not validate user.\n"
-            + "Please update prefab using: pip install --upgrade prefab.\n"
-            + "Signup/login and generate a new token.\n"
+            + "Set PREFAB_API_KEY environment variable, or run 'prefab setup'.\n"
             + "See https://docs.prefabphotonics.com/."
         ) from None

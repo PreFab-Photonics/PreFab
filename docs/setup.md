@@ -47,13 +47,33 @@ pip install -e .
 
 Before you can make PreFab requests, you will need to create an account. Sign up [here](https://www.prefabphotonics.com/auth/signup).
 
-## Authenticate PreFab token
+## Authenticate PreFab token (easiest)
 
 To link your PreFab account to the API, you will need to create an authentication token. You can do this by running the following shell command. This will open a browser window where you can log in and generate a token.
 
 ```sh
 prefab setup
 ```
+
+## Remote server authentication (alternative)
+
+For remote servers, CI/CD pipelines, or environments without browser access, you can use an API key instead of the browser-based setup above.
+
+### Generate an API key
+
+1. Log in to your [account dashboard](https://www.prefabphotonics.com/settings/profile)
+2. Find the **API Keys** section
+3. Click **Generate** and copy the key (it will only be shown once)
+
+### Set the environment variable
+
+Set the `PREFAB_API_KEY` environment variable with your key:
+
+```sh
+export PREFAB_API_KEY=<your_key_here>
+```
+
+For persistent configuration, add the above line to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.) or your deployment environment's secrets configuration.
 
 ## Verify installation
 
