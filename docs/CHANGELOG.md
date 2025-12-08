@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.4.2](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.4.2) - 2025-12-08
+
+- Added ability to authenticate using an API key. See `docs/setup.md` for more information.
+
 ## [1.4.1](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.4.1) - 2025-11-27
 
 - Change to the `models.py` module to allow easy expandability (for custom/future models).
