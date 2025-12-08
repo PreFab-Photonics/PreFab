@@ -1,4 +1,4 @@
-site_name: "PreFab Docs"
+site_name: "PreFab Documentation"
 
 site_url: https://docs.prefabphotonics.com/
 repo_url: https://github.com/PreFab-Photonics/PreFab
@@ -41,7 +41,7 @@ theme:
     code: Geist Mono
   language: en
   logo: assets/prefab-logo-notext.svg
-  favicon: assets/favicon.ico
+  favicon: assets/favicon.svg
   icon:
     repo: fontawesome/brands/github
   features:
