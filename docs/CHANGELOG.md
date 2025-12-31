@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.5.0) - 2025-12-31
+
+- Added `predict.predict_array_diff` for differentiable fab prediction with exact gradient computation via server-side VJP.
+- Replaced approximate diagonal Jacobian gradients with exact gradients computed through CNN backpropagation.
+- Cleaned up endpoint configuration in `predict` module.
+- Updated auth setup welcome message.
+
 ## [1.4.2](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.4.2) - 2025-12-08
 
 - Added ability to authenticate using an API key. See `docs/setup.md` for more information.
