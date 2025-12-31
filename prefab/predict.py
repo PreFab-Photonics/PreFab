@@ -3,9 +3,9 @@ Serverless prediction interface for nanofabrication modeling.
 
 This module provides functions for predicting nanofabrication outcomes using machine
 learning models hosted on a serverless platform. It supports multiple input formats
-(ndarrays, polygons, GDSII files) and model types (prediction, correction,
-segmentation). Gradient computation is available for inverse design applications
-using automatic differentiation.
+(ndarrays, polygons, GDSII files) and model types (prediction and correction). Gradient
+computation is available for inverse design applications using automatic
+differentiation.
 """
 
 import base64
@@ -26,8 +26,17 @@ from PIL import Image
 from .geometry import binarize_hard
 from .models import Model
 
-BASE_ENDPOINT_URL = "https://prefab-photonics--predict"
-ENDPOINT_VERSION = "3"
+BASE_URL = "https://prefab-photonics"
+
+# Endpoint versions
+PREDICT_VERSION = "3"
+PREDICT_POLY_VERSION = "3"
+VJP_VERSION = "3"
+
+# Endpoint URLs
+PREDICT_ENDPOINT = f"{BASE_URL}--predict-v{PREDICT_VERSION}.modal.run"
+PREDICT_POLY_ENDPOINT = f"{BASE_URL}--predict-poly-v{PREDICT_POLY_VERSION}.modal.run"
+VJP_ENDPOINT = f"{BASE_URL}--vjp-v{VJP_VERSION}.modal.run"
 
 
 def predict_array(
@@ -75,7 +84,7 @@ def predict_array(
     ValueError
         If the server returns an error or invalid response.
     """
-    endpoint_url = f"{BASE_ENDPOINT_URL}-v{ENDPOINT_VERSION}.modal.run"
+    endpoint_url = PREDICT_ENDPOINT
     predict_data = {
         "device_array": _encode_array(np.squeeze(device_array)),
         "model": model.to_json(),
@@ -167,7 +176,7 @@ def _predict_poly(
         "eta": eta,
     }
 
-    endpoint_url = f"{BASE_ENDPOINT_URL}-poly-v{ENDPOINT_VERSION}.modal.run"
+    endpoint_url = PREDICT_POLY_ENDPOINT
     headers = _prepare_headers()
 
     try:
@@ -364,47 +373,28 @@ def predict_gdstk(
     return result_cell
 
 
-def _predict_array_with_grad(
-    device_array: npt.NDArray[Any], model: Model
-) -> tuple[npt.NDArray[Any], npt.NDArray[Any]]:
-    """
-    Predict the nanofabrication outcome of a device array and compute its gradient.
+# Storage for caching prediction results for VJP computation
+_diff_cache: dict[int, tuple[npt.NDArray[Any], Model]] = {}
 
-    This function predicts the outcome of the nanofabrication process for a given
-    device array using a specified model. It also computes the gradient of the
-    prediction with respect to the input device array.
 
-    Parameters
-    ----------
-    device_array : np.ndarray
-        A 2D array representing the planar geometry of the device.
-    model : Model
-        The model to use for prediction, representing a specific fabrication process.
-
-    Returns
-    -------
-    tuple[np.ndarray, np.ndarray]
-        The predicted output array and gradient array.
-
-    Raises
-    ------
-    RuntimeError
-        If the request to the prediction service fails.
-    ValueError
-        If the server returns an error or invalid response.
-    """
+def _compute_vjp(
+    device_array: npt.NDArray[Any],
+    upstream_gradient: npt.NDArray[Any],
+    model: Model,
+) -> npt.NDArray[Any]:
+    """Compute J.T @ upstream_gradient via the server-side VJP endpoint."""
     headers = _prepare_headers()
-    predict_data = {
+    vjp_data = {
         "device_array": _encode_array(np.squeeze(device_array)),
+        "upstream_gradient": _encode_array(np.squeeze(upstream_gradient)),
         "model": model.to_json(),
         "model_type": "p",
-        "binary": False,
     }
-    endpoint_url = f"{BASE_ENDPOINT_URL}-with-grad-v{ENDPOINT_VERSION}.modal.run"
+    endpoint_url = VJP_ENDPOINT
 
     try:
         response = requests.post(
-            endpoint_url, data=json.dumps(predict_data), headers=headers
+            endpoint_url, data=json.dumps(vjp_data), headers=headers
         )
         response.raise_for_status()
 
@@ -414,89 +404,87 @@ def _predict_array_with_grad(
         response_data = response.json()
 
         if "error" in response_data:
-            raise ValueError(f"Prediction error: {response_data['error']}")
+            raise ValueError(f"VJP error: {response_data['error']}")
 
-        prediction_array = _decode_array(response_data["prediction_array"])
-        gradient_array = _decode_array(response_data["gradient_array"])
-        gradient_min = response_data["gradient_min"]
-        gradient_max = response_data["gradient_max"]
-        gradient_range = gradient_max - gradient_min
-        gradient_array = gradient_array * gradient_range + gradient_min
-        return (prediction_array, gradient_array)
+        vjp_array = _decode_array(response_data["vjp_array"])
+        vjp_min = response_data["vjp_min"]
+        vjp_max = response_data["vjp_max"]
+        vjp_range = vjp_max - vjp_min
+        vjp_array = vjp_array * vjp_range + vjp_min
+        return vjp_array
 
     except requests.exceptions.RequestException as e:
-        raise RuntimeError(f"Request failed: {e}") from e
+        raise RuntimeError(f"VJP request failed: {e}") from e
     except json.JSONDecodeError as e:
         raise ValueError(f"JSON decode error: {e}") from e
 
 
 @primitive
-def predict_array_with_grad(
+def predict_array_diff(
     device_array: npt.NDArray[Any], model: Model
 ) -> npt.NDArray[Any]:
     """
-    Predict the nanofabrication outcome of a device array and compute its gradient.
+    Differentiable fab prediction with exact gradient support.
 
-    This function predicts the outcome of the nanofabrication process for a given
-    device array using a specified model. It also computes the gradient of the
-    prediction with respect to the input device array, making it suitable for use in
-    automatic differentiation applications (e.g., autograd).
+    Compatible with autograd for automatic differentiation. Gradients are computed via
+    a server-side VJP endpoint during the backward pass.
 
     Parameters
     ----------
     device_array : np.ndarray
         A 2D array representing the planar geometry of the device.
     model : Model
-        The model to use for prediction, representing a specific fabrication process.
+        The model to use for prediction.
 
     Returns
     -------
     np.ndarray
-        The predicted output array.
-
-    Raises
-    ------
-    RuntimeError
-        If the request to the prediction service fails.
-    ValueError
-        If the server returns an error or invalid response.
+        The predicted fabrication outcome array.
     """
-    prediction_array, gradient_array = _predict_array_with_grad(
-        device_array=device_array, model=model
+    # Use standard forward pass
+    prediction_array = predict_array(
+        device_array=device_array,
+        model=model,
+        model_type="p",
+        binarize=False,
     )
-    predict_array_with_grad.gradient_array = gradient_array  # pyright: ignore[reportFunctionMemberAccess]
+
+    # Cache the input for VJP computation during backward pass
+    _diff_cache[id(prediction_array)] = (device_array.copy(), model)
+
     return prediction_array
 
 
-def predict_array_with_grad_vjp(
-    ans: npt.NDArray[Any], device_array: npt.NDArray[Any], *args: Any
+def _predict_array_diff_vjp(
+    ans: npt.NDArray[Any], device_array: npt.NDArray[Any], model: Model
 ) -> Any:
-    """
-    Define the vector-Jacobian product (VJP) for the prediction function.
+    """Define the exact VJP for predict_array_diff using server-side computation."""
+    cache_key = id(ans)
+    cached_device_array, cached_model = _diff_cache.get(
+        cache_key, (device_array, model)
+    )
 
-    Parameters
-    ----------
-    ans : np.ndarray
-        The output of the `predict_array_with_grad` function.
-    device_array : np.ndarray
-        The input device array for which the gradient is computed.
-    *args :
-        Additional arguments that aren't used in the VJP computation.
-
-    Returns
-    -------
-    function
-        A function that computes the VJP given an upstream gradient `g`.
-    """
-    grad_x = predict_array_with_grad.gradient_array  # pyright: ignore[reportFunctionMemberAccess]
-
-    def vjp(g: npt.NDArray[Any]) -> npt.NDArray[Any]:
-        return g * grad_x  # type: ignore[no-any-return]
+    def vjp(g: npt.NDArray[Any]) -> tuple[npt.NDArray[Any], None]:
+        # Compute exact VJP: J.T @ g via server endpoint
+        vjp_result = _compute_vjp(
+            device_array=cached_device_array,
+            upstream_gradient=g,
+            model=cached_model,
+        )
+        # Clean up cache
+        _diff_cache.pop(cache_key, None)
+        # Return gradient for device_array, None for model (not differentiable)
+        return (vjp_result, None)
 
     return vjp
 
 
-defvjp(predict_array_with_grad, predict_array_with_grad_vjp)
+defvjp(predict_array_diff, _predict_array_diff_vjp)
+
+
+# Alias for backward compatibility with existing code
+predict_array_with_grad = predict_array_diff
+"""Alias for predict_array_diff. Deprecated, use predict_array_diff directly."""
 
 
 def _encode_array(array: npt.NDArray[Any]) -> str:
