@@ -500,7 +500,7 @@ def _decode_array(encoded_png: str) -> npt.NDArray[Any]:
     """Decode a base64 encoded image and return an ndarray."""
     binary_data = base64.b64decode(encoded_png)
     image = Image.open(io.BytesIO(binary_data))
-    return np.array(image) / 255  # type: ignore[no-any-return]
+    return np.array(image) / 255
 
 
 def _prepare_headers() -> dict[str, str]:
