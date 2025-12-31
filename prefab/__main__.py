@@ -18,8 +18,8 @@ def store_jwt(jwt, refresh_token):
     print(
         f"Token successfully stored in {prefab_file_path}.\n\n"
         "🎉 Welcome to PreFab.\n"
-        "See our examples at https://docs.prefabphotonics.com/examples to start.\n"
-        "Reach out to us at hi@prefabphotonics.com for support."
+        "See our examples at https://docs.prefabphotonics.com to start.\n"
+        "Reach out to us at support@prefabphotonics.com for support."
     )
 
 
