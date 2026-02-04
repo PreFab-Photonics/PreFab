@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.0](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.6.0) - 2026-02-04
+
+- Fixed VJP upstream gradient encoding to use full float32 precision instead of 8-bit PNG.
+- Small gradient values (< 0.004) are no longer quantized to zero.
+- Large gradient values (> 1.0) no longer overflow.
+- Users no longer need to manually scale gradients for VJP computation.
+- VJP gradient shape now matches input device array shape.
+- Added `predict.differentiable(model)` for cleaner autograd integration without tuple unpacking.
+
 ## [1.5.0](https://github.com/PreFab-Photonics/PreFab/releases/tag/v1.5.0) - 2025-12-31
 
 - Added `predict.predict_array_diff` for differentiable fab prediction with exact gradient computation via server-side VJP.
