@@ -478,6 +478,8 @@ def _predict_array_diff_vjp(
         )
         # Clean up cache
         _diff_cache.pop(cache_key, None)
+        # Ensure gradient shape matches input shape
+        vjp_result = vjp_result.reshape(cached_device_array.shape)
         # Return gradient for device_array, None for model (not differentiable)
         return (vjp_result, None)
 
@@ -490,6 +492,69 @@ defvjp(predict_array_diff, _predict_array_diff_vjp)
 # Alias for backward compatibility with existing code
 predict_array_with_grad = predict_array_diff
 """Alias for predict_array_diff. Deprecated, use predict_array_diff directly."""
+
+
+def differentiable(model: Model):
+    """
+    Create a model-bound differentiable predictor for clean autograd integration.
+
+    Returns a function that takes only `device_array` as input, enabling seamless
+    composition with other differentiable functions. The VJP returns a single
+    gradient array (not a tuple), making it compatible with standard autograd workflows.
+
+    Parameters
+    ----------
+    model : Model
+        The model to use for prediction.
+
+    Returns
+    -------
+    callable
+        A differentiable prediction function that takes `device_array` and returns
+        the predicted fabrication outcome.
+
+    Examples
+    --------
+    >>> predictor = pf.predict.differentiable(model)
+    >>> def loss_fn(x):
+    ...     pred = predictor(x)
+    ...     return np.mean((pred - target) ** 2)
+    >>> gradient = grad(loss_fn)(device_array)  # Returns array, not tuple
+    """
+
+    @primitive
+    def predict(device_array: npt.NDArray[Any]) -> npt.NDArray[Any]:
+        prediction = predict_array(
+            device_array=device_array,
+            model=model,
+            model_type="p",
+            binarize=False,
+        )
+        _diff_cache[id(prediction)] = (device_array.copy(), model)
+        return prediction
+
+    def predict_vjp(
+        ans: npt.NDArray[Any], device_array: npt.NDArray[Any]
+    ) -> Any:
+        cache_key = id(ans)
+        cached_device_array, cached_model = _diff_cache.get(
+            cache_key, (device_array, model)
+        )
+
+        def vjp(g: npt.NDArray[Any]) -> npt.NDArray[Any]:
+            vjp_result = _compute_vjp(
+                device_array=cached_device_array,
+                upstream_gradient=g,
+                model=cached_model,
+            )
+            _diff_cache.pop(cache_key, None)
+            # Ensure gradient shape matches input shape
+            return vjp_result.reshape(device_array.shape)
+
+        return vjp
+
+    defvjp(predict, predict_vjp)
+    return predict
 
 
 def _encode_array(array: npt.NDArray[Any]) -> str:
