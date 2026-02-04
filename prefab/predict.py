@@ -9,6 +9,7 @@ differentiation.
 """
 
 import base64
+import gzip
 import io
 import json
 import os
@@ -384,9 +385,13 @@ def _compute_vjp(
 ) -> npt.NDArray[Any]:
     """Compute J.T @ upstream_gradient via the server-side VJP endpoint."""
     headers = _prepare_headers()
+    upstream_arr = np.squeeze(upstream_gradient).astype(np.float32)
     vjp_data = {
         "device_array": _encode_array(np.squeeze(device_array)),
-        "upstream_gradient": _encode_array(np.squeeze(upstream_gradient)),
+        "upstream_gradient": base64.b64encode(
+            gzip.compress(upstream_arr.tobytes(), compresslevel=1)
+        ).decode("utf-8"),
+        "upstream_gradient_shape": list(upstream_arr.shape),
         "model": model.to_json(),
         "model_type": "p",
     }
